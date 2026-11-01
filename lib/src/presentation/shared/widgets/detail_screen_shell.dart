@@ -16,6 +16,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   const DetailScreenShell({
     super.key,
     required this.asyncValue,
+    this.entityId,
     this.loadingImageUrl,
     required this.entityType,
     this.initialChildSize = 0.55,
@@ -44,6 +45,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   });
 
   final AsyncValue<T> asyncValue;
+  final int? entityId;
   final String? loadingImageUrl;
   final String entityType;
   final double initialChildSize;
@@ -78,16 +80,24 @@ class DetailScreenShell<T> extends ConsumerWidget {
       return _buildData(context, ref, asyncValue.requireValue);
     }
     return asyncValue.when(
-      loading: () => _buildLoading(context),
+      loading: () => _buildLoading(context, ref),
       error: (error, _) => _buildError(context, error),
       data: (data) => _buildData(context, ref, data),
     );
   }
 
-  Widget _buildLoading(BuildContext context) {
+  Widget _buildLoading(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scaffoldBg = theme.colorScheme.surface;
-    final hasImage = loadingImageUrl != null && loadingImageUrl!.isNotEmpty;
+    final fallbackLoadingImage = entityId != null
+        ? watchEntityImageUrl(ref, entityType, entityId)
+        : null;
+    final effectiveLoadingImage =
+        (loadingImageUrl != null && loadingImageUrl!.isNotEmpty)
+        ? loadingImageUrl
+        : fallbackLoadingImage;
+    final hasImage =
+        effectiveLoadingImage != null && effectiveLoadingImage.isNotEmpty;
 
     return Scaffold(
       body: Stack(
@@ -101,7 +111,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
                   ImageFiltered(
                     imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                     child: CachedNetworkImage(
-                      imageUrl: loadingImageUrl!,
+                      imageUrl: effectiveLoadingImage,
                       fit: BoxFit.cover,
                       memCacheWidth: 720,
                     ),
@@ -218,10 +228,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(),
       body: Center(
-        child: AsyncStatePanel.fromFailure(
-          failure: failure,
-          onRetry: onRetry,
-        ),
+        child: AsyncStatePanel.fromFailure(failure: failure, onRetry: onRetry),
       ),
     );
   }
@@ -232,8 +239,16 @@ class DetailScreenShell<T> extends ConsumerWidget {
     final isRevalidating =
         asyncValue.isRefreshing ||
         (asyncValue.isLoading && asyncValue.hasValue);
-    final imageUrl = toImageUrl(data);
+    final resolvedImageUrl = toImageUrl(data);
     final fallbackImageUrl = toFallbackImageUrl?.call(data);
+    final cachedDbImage = entityId != null
+        ? watchEntityImageUrl(ref, entityType, entityId)
+        : null;
+    final imageUrl = (resolvedImageUrl != null && resolvedImageUrl.isNotEmpty)
+        ? resolvedImageUrl
+        : (fallbackImageUrl != null && fallbackImageUrl.isNotEmpty
+              ? fallbackImageUrl
+              : cachedDbImage);
     final heroTag = toHeroTag(data);
     final title = toTitle(data);
     final subtitle = toSubtitle?.call(data);
@@ -329,6 +344,11 @@ class DetailScreenShell<T> extends ConsumerWidget {
                   child: AppBar(
                     backgroundColor: Colors.transparent,
                     elevation: 0,
+                    leading: Center(
+                      child: BackButton(
+                        style: detailHeaderIconButtonStyle(theme),
+                      ),
+                    ),
                     actions: [
                       if (isRevalidating)
                         Padding(
@@ -414,20 +434,25 @@ class DetailScreenShell<T> extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      if (appBarTrailingAction != null)
-                        appBarTrailingAction!(data)
-                      else
-                        EntityDetailActions(
-                          onRefresh: onRefresh != null
-                              ? () => onRefresh!(data)
-                              : null,
-                          onShare: onShare != null
-                              ? () => onShare!(data)
-                              : null,
-                          onOpenInBrowser: onOpenInBrowser != null
-                              ? () => onOpenInBrowser!(data)
-                              : null,
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Center(
+                          child: appBarTrailingAction != null
+                              ? appBarTrailingAction!(data)
+                              : EntityDetailActions(
+                                  style: detailHeaderIconButtonStyle(theme),
+                                  onRefresh: onRefresh != null
+                                      ? () => onRefresh!(data)
+                                      : null,
+                                  onShare: onShare != null
+                                      ? () => onShare!(data)
+                                      : null,
+                                  onOpenInBrowser: onOpenInBrowser != null
+                                      ? () => onOpenInBrowser!(data)
+                                      : null,
+                                ),
                         ),
+                      ),
                     ],
                   ),
                 ),

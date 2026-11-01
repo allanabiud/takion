@@ -21,6 +21,9 @@ class FakeMetronRemoteDataSource implements MetronRemoteDataSource {
     int page = 1,
     String? ordering,
     DateTime? modifiedGt,
+    DateTime? coverDateRangeAfter,
+    DateTime? coverDateRangeBefore,
+    bool? descIsSolicitation,
     int? limit,
     CancelToken? cancelToken,
   }) async {

@@ -415,111 +415,111 @@ abstract class MetronListLocalDataSource {
 
 class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
   MetronListLocalDataSourceImpl(AppDatabase db)
-      : _issueList = PagedLocalCache<IssueListDto>(
-          db: db,
-          cacheKeyPrefix: "issue_list",
-          entityType: "issue_list",
-          fromJson: IssueListDto.fromJson,
-          toJson: (i) => i.toJson(),
-        ),
-        _seriesList = PagedLocalCache<SeriesListDto>(
-          db: db,
-          cacheKeyPrefix: "series_list",
-          entityType: "series_list",
-          fromJson: SeriesListDto.fromJson,
-          toJson: (s) => s.toJson(),
-        ),
-        _seriesIssueList = PagedLocalCache<IssueListDto>(
-          db: db,
-          cacheKeyPrefix: "series_issue_list",
-          entityType: "series_issue_list",
-          fromJson: IssueListDto.fromJson,
-          toJson: (i) => i.toJson(),
-        ),
-        _characterList = PagedLocalCache<CharacterListDto>(
-          db: db,
-          cacheKeyPrefix: "character_list",
-          entityType: "character_list",
-          fromJson: CharacterListDto.fromJson,
-          toJson: (c) => c.toJson(),
-        ),
-        _characterIssueList = PagedLocalCache<IssueListDto>(
-          db: db,
-          cacheKeyPrefix: "character_issue_list",
-          entityType: "character_issue_list",
-          fromJson: IssueListDto.fromJson,
-          toJson: (i) => i.toJson(),
-        ),
-        _creatorList = PagedLocalCache<CreatorListDto>(
-          db: db,
-          cacheKeyPrefix: "creator_list",
-          entityType: "creator_list",
-          fromJson: CreatorListDto.fromJson,
-          toJson: (c) => c.toJson(),
-        ),
-        _imprintList = PagedLocalCache<ImprintListDto>(
-          db: db,
-          cacheKeyPrefix: "imprint_list",
-          entityType: "imprint_list",
-          fromJson: ImprintListDto.fromJson,
-          toJson: (i) => i.toJson(),
-        ),
-        _publisherList = PagedLocalCache<PublisherListDto>(
-          db: db,
-          cacheKeyPrefix: "publisher_list",
-          entityType: "publisher_list",
-          fromJson: PublisherListDto.fromJson,
-          toJson: (p) => p.toJson(),
-        ),
-        _publisherSeriesList = PagedLocalCache<SeriesListDto>(
-          db: db,
-          cacheKeyPrefix: "publisher_series_list",
-          entityType: "publisher_series_list",
-          fromJson: SeriesListDto.fromJson,
-          toJson: (s) => s.toJson(),
-        ),
-        _teamList = PagedLocalCache<TeamListDto>(
-          db: db,
-          cacheKeyPrefix: "team_list",
-          entityType: "team_list",
-          fromJson: TeamListDto.fromJson,
-          toJson: (t) => t.toJson(),
-        ),
-        _teamIssueList = PagedLocalCache<IssueListDto>(
-          db: db,
-          cacheKeyPrefix: "team_issue_list",
-          entityType: "team_issue_list",
-          fromJson: IssueListDto.fromJson,
-          toJson: (i) => i.toJson(),
-        ),
-        _universeList = PagedLocalCache<UniverseListDto>(
-          db: db,
-          cacheKeyPrefix: "universe_list",
-          entityType: "universe_list",
-          fromJson: UniverseListDto.fromJson,
-          toJson: (u) => u.toJson(),
-        ),
-        _arcList = PagedLocalCache<ArcListDto>(
-          db: db,
-          cacheKeyPrefix: "arc_list",
-          entityType: "arc_list",
-          fromJson: ArcListDto.fromJson,
-          toJson: (a) => a.toJson(),
-        ),
-        _arcIssueList = PagedLocalCache<IssueListDto>(
-          db: db,
-          cacheKeyPrefix: "arc_issue_list",
-          entityType: "arc_issue_list",
-          fromJson: IssueListDto.fromJson,
-          toJson: (i) => i.toJson(),
-        ),
-        _readingList = PagedLocalCache<ReadingListDto>(
-          db: db,
-          cacheKeyPrefix: "reading_list",
-          entityType: "reading_list",
-          fromJson: ReadingListDto.fromJson,
-          toJson: (r) => r.toJson(),
-        );
+    : _issueList = PagedLocalCache<IssueListDto>(
+        db: db,
+        cacheKeyPrefix: "issue_list",
+        entityType: "issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      ),
+      _seriesList = PagedLocalCache<SeriesListDto>(
+        db: db,
+        cacheKeyPrefix: "series_list",
+        entityType: "series_list",
+        fromJson: SeriesListDto.fromJson,
+        toJson: (s) => s.toJson(),
+      ),
+      _seriesIssueList = PagedLocalCache<IssueListDto>(
+        db: db,
+        cacheKeyPrefix: "series_issue_list",
+        entityType: "series_issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      ),
+      _characterList = PagedLocalCache<CharacterListDto>(
+        db: db,
+        cacheKeyPrefix: "character_list",
+        entityType: "character_list",
+        fromJson: CharacterListDto.fromJson,
+        toJson: (c) => c.toJson(),
+      ),
+      _characterIssueList = PagedLocalCache<IssueListDto>(
+        db: db,
+        cacheKeyPrefix: "character_issue_list",
+        entityType: "character_issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      ),
+      _creatorList = PagedLocalCache<CreatorListDto>(
+        db: db,
+        cacheKeyPrefix: "creator_list",
+        entityType: "creator_list",
+        fromJson: CreatorListDto.fromJson,
+        toJson: (c) => c.toJson(),
+      ),
+      _imprintList = PagedLocalCache<ImprintListDto>(
+        db: db,
+        cacheKeyPrefix: "imprint_list",
+        entityType: "imprint_list",
+        fromJson: ImprintListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      ),
+      _publisherList = PagedLocalCache<PublisherListDto>(
+        db: db,
+        cacheKeyPrefix: "publisher_list",
+        entityType: "publisher_list",
+        fromJson: PublisherListDto.fromJson,
+        toJson: (p) => p.toJson(),
+      ),
+      _publisherSeriesList = PagedLocalCache<SeriesListDto>(
+        db: db,
+        cacheKeyPrefix: "publisher_series_list",
+        entityType: "publisher_series_list",
+        fromJson: SeriesListDto.fromJson,
+        toJson: (s) => s.toJson(),
+      ),
+      _teamList = PagedLocalCache<TeamListDto>(
+        db: db,
+        cacheKeyPrefix: "team_list",
+        entityType: "team_list",
+        fromJson: TeamListDto.fromJson,
+        toJson: (t) => t.toJson(),
+      ),
+      _teamIssueList = PagedLocalCache<IssueListDto>(
+        db: db,
+        cacheKeyPrefix: "team_issue_list",
+        entityType: "team_issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      ),
+      _universeList = PagedLocalCache<UniverseListDto>(
+        db: db,
+        cacheKeyPrefix: "universe_list",
+        entityType: "universe_list",
+        fromJson: UniverseListDto.fromJson,
+        toJson: (u) => u.toJson(),
+      ),
+      _arcList = PagedLocalCache<ArcListDto>(
+        db: db,
+        cacheKeyPrefix: "arc_list",
+        entityType: "arc_list",
+        fromJson: ArcListDto.fromJson,
+        toJson: (a) => a.toJson(),
+      ),
+      _arcIssueList = PagedLocalCache<IssueListDto>(
+        db: db,
+        cacheKeyPrefix: "arc_issue_list",
+        entityType: "arc_issue_list",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      ),
+      _readingList = PagedLocalCache<ReadingListDto>(
+        db: db,
+        cacheKeyPrefix: "reading_list",
+        entityType: "reading_list",
+        fromJson: ReadingListDto.fromJson,
+        toJson: (r) => r.toJson(),
+      );
 
   final PagedLocalCache<IssueListDto> _issueList;
   final PagedLocalCache<SeriesListDto> _seriesList;
@@ -621,7 +621,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.seriesList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.seriesList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     await _seriesList.cache(
       key,
       series,
@@ -637,7 +641,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.seriesList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.seriesList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _seriesList.get(key);
   }
 
@@ -647,7 +655,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.seriesList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.seriesList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _seriesList.cachedAt(key);
   }
 
@@ -657,7 +669,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.seriesList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.seriesList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _seriesList.meta(key);
   }
 
@@ -761,7 +777,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.characterList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.characterList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     await _characterList.cache(
       key,
       characters,
@@ -777,7 +797,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.characterList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.characterList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _characterList.get(key);
   }
 
@@ -787,7 +811,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.characterList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.characterList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _characterList.cachedAt(key);
   }
 
@@ -797,7 +825,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.characterList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.characterList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _characterList.meta(key);
   }
 
@@ -811,7 +843,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.characterIssueList(characterId, page, limit);
+    final key = MetronPageCacheKeys.characterIssueList(
+      characterId,
+      page,
+      limit,
+    );
     await _characterIssueList.cache(
       key,
       issues,
@@ -827,7 +863,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final key = MetronPageCacheKeys.characterIssueList(characterId, page, limit);
+    final key = MetronPageCacheKeys.characterIssueList(
+      characterId,
+      page,
+      limit,
+    );
     return _characterIssueList.get(key);
   }
 
@@ -837,7 +877,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final key = MetronPageCacheKeys.characterIssueList(characterId, page, limit);
+    final key = MetronPageCacheKeys.characterIssueList(
+      characterId,
+      page,
+      limit,
+    );
     return _characterIssueList.cachedAt(key);
   }
 
@@ -847,7 +891,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final key = MetronPageCacheKeys.characterIssueList(characterId, page, limit);
+    final key = MetronPageCacheKeys.characterIssueList(
+      characterId,
+      page,
+      limit,
+    );
     return _characterIssueList.meta(key);
   }
 
@@ -861,7 +909,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.creatorList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.creatorList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     await _creatorList.cache(
       key,
       creators,
@@ -877,7 +929,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.creatorList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.creatorList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _creatorList.get(key);
   }
 
@@ -887,7 +943,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.creatorList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.creatorList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _creatorList.cachedAt(key);
   }
 
@@ -897,7 +957,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.creatorList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.creatorList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _creatorList.meta(key);
   }
 
@@ -911,7 +975,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.imprintList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.imprintList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     await _imprintList.cache(
       key,
       imprints,
@@ -927,7 +995,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.imprintList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.imprintList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _imprintList.get(key);
   }
 
@@ -937,7 +1009,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.imprintList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.imprintList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _imprintList.cachedAt(key);
   }
 
@@ -947,7 +1023,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.imprintList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.imprintList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _imprintList.meta(key);
   }
 
@@ -961,7 +1041,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.publisherList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.publisherList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     await _publisherList.cache(
       key,
       publishers,
@@ -977,7 +1061,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.publisherList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.publisherList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _publisherList.get(key);
   }
 
@@ -987,7 +1075,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.publisherList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.publisherList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _publisherList.cachedAt(key);
   }
 
@@ -997,7 +1089,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.publisherList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.publisherList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _publisherList.meta(key);
   }
 
@@ -1011,7 +1107,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.publisherSeriesList(publisherId, page, limit);
+    final key = MetronPageCacheKeys.publisherSeriesList(
+      publisherId,
+      page,
+      limit,
+    );
     await _publisherSeriesList.cache(
       key,
       series,
@@ -1027,7 +1127,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final key = MetronPageCacheKeys.publisherSeriesList(publisherId, page, limit);
+    final key = MetronPageCacheKeys.publisherSeriesList(
+      publisherId,
+      page,
+      limit,
+    );
     return _publisherSeriesList.get(key);
   }
 
@@ -1037,7 +1141,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final key = MetronPageCacheKeys.publisherSeriesList(publisherId, page, limit);
+    final key = MetronPageCacheKeys.publisherSeriesList(
+      publisherId,
+      page,
+      limit,
+    );
     return _publisherSeriesList.cachedAt(key);
   }
 
@@ -1047,7 +1155,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int page,
     required int limit,
   }) async {
-    final key = MetronPageCacheKeys.publisherSeriesList(publisherId, page, limit);
+    final key = MetronPageCacheKeys.publisherSeriesList(
+      publisherId,
+      page,
+      limit,
+    );
     return _publisherSeriesList.meta(key);
   }
 
@@ -1061,7 +1173,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.teamList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.teamList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     await _teamList.cache(
       key,
       teams,
@@ -1077,7 +1193,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.teamList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.teamList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _teamList.get(key);
   }
 
@@ -1087,7 +1207,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.teamList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.teamList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _teamList.cachedAt(key);
   }
 
@@ -1097,7 +1221,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.teamList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.teamList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _teamList.meta(key);
   }
 
@@ -1161,7 +1289,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.universeList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.universeList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     await _universeList.cache(
       key,
       universes,
@@ -1177,7 +1309,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.universeList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.universeList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _universeList.get(key);
   }
 
@@ -1187,7 +1323,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.universeList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.universeList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _universeList.cachedAt(key);
   }
 
@@ -1197,7 +1337,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.universeList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.universeList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _universeList.meta(key);
   }
 
@@ -1211,7 +1355,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     String? next,
     String? previous,
   }) async {
-    final key = MetronPageCacheKeys.arcList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.arcList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     await _arcList.cache(
       key,
       arcs,
@@ -1227,7 +1375,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.arcList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.arcList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _arcList.get(key);
   }
 
@@ -1237,7 +1389,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.arcList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.arcList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _arcList.cachedAt(key);
   }
 
@@ -1247,7 +1403,11 @@ class MetronListLocalDataSourceImpl implements MetronListLocalDataSource {
     required int limit,
     DateTime? modifiedGt,
   }) async {
-    final key = MetronPageCacheKeys.arcList(page, limit, modifiedGt: modifiedGt);
+    final key = MetronPageCacheKeys.arcList(
+      page,
+      limit,
+      modifiedGt: modifiedGt,
+    );
     return _arcList.meta(key);
   }
 

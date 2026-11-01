@@ -110,7 +110,8 @@ class CollectionAnalyticsEngine {
     }
     final since = DateTime.parse(firstRead);
     final effectiveNow = now ?? DateTime.now();
-    final days = effectiveNow.difference(since).inMilliseconds /
+    final days =
+        effectiveNow.difference(since).inMilliseconds /
         Duration.millisecondsPerDay;
     final weeks = days < 7 ? 1.0 : days / 7;
     return ReadingVelocity(
@@ -161,8 +162,7 @@ class CollectionAnalyticsEngine {
       for (var i = 0; i < months; i++)
         () {
           final month = DateTime.utc(startMonth.year, startMonth.month + i, 1);
-          final key =
-              "${month.year}-${month.month.toString().padLeft(2, "0")}";
+          final key = "${month.year}-${month.month.toString().padLeft(2, "0")}";
           return MonthlyReadingTotal(
             year: month.year,
             month: month.month,
@@ -219,7 +219,8 @@ class CollectionAnalyticsEngine {
       ),
   ];
 
-  static const String _topPublishersSql = """
+  static const String _topPublishersSql =
+      """
     SELECT mp.id AS id, mp.name AS name,
            COUNT(DISTINCT li.metron_issue_id) AS cnt
     FROM library_items li
@@ -245,19 +246,19 @@ class CollectionAnalyticsEngine {
     },
   );
 
-  Stream<List<RankedEntity>> watchTopPublishers({int limit = 10}) =>
-      _rankWatch(
-        _topPublishersSql,
-        limit: limit,
-        readsFrom: {
-          _db.libraryItems,
-          _db.metronIssues,
-          _db.metronSeries,
-          _db.metronPublishers,
-        },
-      );
+  Stream<List<RankedEntity>> watchTopPublishers({int limit = 10}) => _rankWatch(
+    _topPublishersSql,
+    limit: limit,
+    readsFrom: {
+      _db.libraryItems,
+      _db.metronIssues,
+      _db.metronSeries,
+      _db.metronPublishers,
+    },
+  );
 
-  static const String _topSeriesSql = """
+  static const String _topSeriesSql =
+      """
     SELECT ms.id AS id, ms.name AS name,
            COUNT(DISTINCT li.metron_issue_id) AS cnt
     FROM library_items li
@@ -282,7 +283,8 @@ class CollectionAnalyticsEngine {
     readsFrom: {_db.libraryItems, _db.metronIssues, _db.metronSeries},
   );
 
-  static const String _topCreatorsSql = """
+  static const String _topCreatorsSql =
+      """
     SELECT mc.id AS id, mc.name AS name,
            COUNT(DISTINCT li.metron_issue_id) AS cnt
     FROM library_items li
@@ -306,7 +308,8 @@ class CollectionAnalyticsEngine {
     readsFrom: {_db.libraryItems, _db.issueCreators, _db.metronCreators},
   );
 
-  static const String _topCharactersSql = """
+  static const String _topCharactersSql =
+      """
     SELECT mch.id AS id, mch.name AS name,
            COUNT(DISTINCT li.metron_issue_id) AS cnt
     FROM library_items li
@@ -348,9 +351,9 @@ class CollectionAnalyticsEngine {
     SpendBucket bucket = SpendBucket.month,
   }) async {
     final now = DateTime.now();
-    final effectiveTo =
-        to ?? DateTime.utc(now.year, now.month + 1, 1).toUtc();
-    final effectiveFrom = from ??
+    final effectiveTo = to ?? DateTime.utc(now.year, now.month + 1, 1).toUtc();
+    final effectiveFrom =
+        from ??
         DateTime.utc(effectiveTo.year, effectiveTo.month - 12, 1).toUtc();
     final fromDate = _atUtcStartOfDay(effectiveFrom);
     final toDate = _atUtcStartOfDay(effectiveTo);
@@ -374,7 +377,8 @@ class CollectionAnalyticsEngine {
         .get();
     final amounts = <String, double>{
       for (final row in rows)
-        row.read<String>("bucket"): (row.data["amount"] as num?)?.toDouble() ?? 0,
+        row.read<String>("bucket"):
+            (row.data["amount"] as num?)?.toDouble() ?? 0,
     };
 
     // Fill every bucket in the window, including a partial trailing
@@ -394,9 +398,7 @@ class CollectionAnalyticsEngine {
       final key = bucket == SpendBucket.day
           ? _datePrefix(cursor)
           : "${cursor.year}-${cursor.month.toString().padLeft(2, "0")}";
-      points.add(
-        SpendTimeSeriesPoint(date: cursor, amount: amounts[key] ?? 0),
-      );
+      points.add(SpendTimeSeriesPoint(date: cursor, amount: amounts[key] ?? 0));
       cursor = bucket == SpendBucket.day
           ? cursor.add(const Duration(days: 1))
           : DateTime.utc(cursor.year, cursor.month + 1, 1);
@@ -414,7 +416,10 @@ class CollectionAnalyticsEngine {
   ({DateTime from, DateTime to}) _goalWindow(String period, DateTime now) {
     final u = now.toUtc();
     if (period.toLowerCase() == "yearly") {
-      return (from: DateTime.utc(u.year, 1, 1), to: DateTime.utc(u.year + 1, 1, 1));
+      return (
+        from: DateTime.utc(u.year, 1, 1),
+        to: DateTime.utc(u.year + 1, 1, 1),
+      );
     }
     return (
       from: DateTime.utc(u.year, u.month, 1),
@@ -465,12 +470,7 @@ class CollectionAnalyticsEngine {
   }) async {
     final effectiveNow = now ?? DateTime.now();
     final row = await _goalCountQuery(period, effectiveNow).getSingle();
-    return _goalProgress(
-      target,
-      period,
-      effectiveNow,
-      row.read<int>("cnt"),
-    );
+    return _goalProgress(target, period, effectiveNow, row.read<int>("cnt"));
   }
 
   /// Reactive variant of [getReadingGoalProgress]; re-emits whenever
@@ -481,15 +481,13 @@ class CollectionAnalyticsEngine {
     DateTime? now,
   }) {
     final effectiveNow = now ?? DateTime.now();
-    return _goalCountQuery(period, effectiveNow)
-        .watch()
-        .map(
-          (rows) => _goalProgress(
-            target,
-            period,
-            effectiveNow,
-            rows.first.read<int>("cnt"),
-          ),
-        );
+    return _goalCountQuery(period, effectiveNow).watch().map(
+      (rows) => _goalProgress(
+        target,
+        period,
+        effectiveNow,
+        rows.first.read<int>("cnt"),
+      ),
+    );
   }
 }

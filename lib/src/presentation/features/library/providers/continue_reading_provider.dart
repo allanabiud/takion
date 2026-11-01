@@ -86,21 +86,22 @@ Future<IssueList?> _findNextUnreadIssueForSeries(
 
   // 1. Try local SQLite query first (sub-5ms)
   try {
-    final localIssues = await (db.select(db.metronIssues)
-          ..where((tbl) => tbl.seriesId.equals(seriesId))
-          ..orderBy([
-            (t) => OrderingTerm(
+    final localIssues =
+        await (db.select(db.metronIssues)
+              ..where((tbl) => tbl.seriesId.equals(seriesId))
+              ..orderBy([
+                (t) => OrderingTerm(
                   expression: const CustomExpression<double>(
                     "CAST(number AS REAL)",
                   ),
                   mode: OrderingMode.asc,
                 ),
-            (t) => OrderingTerm(
+                (t) => OrderingTerm(
                   expression: t.storeDate,
                   mode: OrderingMode.asc,
                 ),
-          ]))
-        .get();
+              ]))
+            .get();
 
     if (localIssues.isNotEmpty) {
       bool hasSeenLastRead = false;
@@ -110,9 +111,9 @@ Future<IssueList?> _findNextUnreadIssueForSeries(
           continue;
         }
         if (hasSeenLastRead && !readIssueIds.contains(issue.id)) {
-          final seriesRow = await (db.select(db.metronSeries)
-                ..where((tbl) => tbl.id.equals(seriesId)))
-              .getSingleOrNull();
+          final seriesRow = await (db.select(
+            db.metronSeries,
+          )..where((tbl) => tbl.id.equals(seriesId))).getSingleOrNull();
 
           return IssueList(
             id: issue.id,
@@ -143,7 +144,9 @@ Future<IssueList?> _findNextUnreadIssueForSeries(
       }
     }
   } catch (e) {
-    AppLogger.debug("Local continue reading query fallback for series $seriesId: $e");
+    AppLogger.debug(
+      "Local continue reading query fallback for series $seriesId: $e",
+    );
   }
 
   // 2. Remote lookahead (1 page) fallback
@@ -164,7 +167,9 @@ Future<IssueList?> _findNextUnreadIssueForSeries(
       }
     }
   } catch (e) {
-    AppLogger.debug("Remote continue reading fallback failed for series $seriesId: $e");
+    AppLogger.debug(
+      "Remote continue reading fallback failed for series $seriesId: $e",
+    );
   }
 
   return null;

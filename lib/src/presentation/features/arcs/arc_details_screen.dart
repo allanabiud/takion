@@ -104,9 +104,7 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
 
     if (confirmed != true) return;
 
-    await ref
-        .read(localReadingListsProvider.notifier)
-        .deleteList(localList.id);
+    await ref.read(localReadingListsProvider.notifier).deleteList(localList.id);
 
     if (mounted) {
       TakionAlerts.success(context, "Removed from Library");
@@ -186,7 +184,8 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
   Widget build(BuildContext context) {
     final detailsAsync = ref.watch(arcDetailsProvider(widget.arcId));
     final importedLists =
-        ref.watch(localReadingListsProvider).value ?? const <LocalReadingList>[];
+        ref.watch(localReadingListsProvider).value ??
+        const <LocalReadingList>[];
     final localList = importedLists.cast<LocalReadingList?>().firstWhere(
       (l) => l?.metronArcId == widget.arcId,
       orElse: () => null,
@@ -194,6 +193,7 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
 
     return DetailScreenShell<ArcDetails>(
       asyncValue: detailsAsync,
+      entityId: widget.arcId,
       entityType: "arc",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,

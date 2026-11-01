@@ -201,6 +201,36 @@ mixin _RepositoryState {
     }
   }
 
+  void _autoAddPullListEntryForIssue(IssueDetailsDto dto) {
+    final seriesId = dto.series?.id;
+    if (seriesId == null || seriesId <= 0) return;
+    unawaited(_autoAddPullListEntryForIssueAsync(dto, seriesId));
+  }
+
+  Future<void> _autoAddPullListEntryForIssueAsync(
+    IssueDetailsDto dto,
+    int seriesId,
+  ) async {
+    try {
+      final database = _metronEntityDao.attachedDatabase;
+      final sub = await database.subscriptionDao.getBySeriesId(seriesId);
+      if (sub == null || !sub.isActive || !sub.autoAddPull) return;
+      final rawRelease = dto.storeDate ?? dto.coverDate;
+      final releaseDate = rawRelease != null
+          ? DateTime.tryParse(rawRelease)
+          : null;
+      await database.pullListDao.upsertSubscriptionEntries([
+        (
+          metronSeriesId: seriesId,
+          metronIssueId: dto.id,
+          releaseDate: releaseDate,
+        ),
+      ]);
+    } catch (e) {
+      AppLogger.debug("Auto-add pull list entry for issue failed", error: e);
+    }
+  }
+
   void _upsertSeriesListStubs(Iterable<SeriesListDto> dtos) {
     final seriesStubs = <MetronSeriesCompanion>[];
     for (final dto in dtos) {

@@ -235,8 +235,7 @@ class _WishlistBrowseTabState extends ConsumerState<_WishlistBrowseTab>
                   SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final summary = filtered[index];
-                      final seriesSyncStatus =
-                          syncStatuses.value?[summary.id];
+                      final seriesSyncStatus = syncStatuses.value?[summary.id];
                       return RepaintBoundary(
                         child: SeriesListTile(
                           series: summary,

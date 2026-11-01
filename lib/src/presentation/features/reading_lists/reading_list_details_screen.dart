@@ -205,7 +205,9 @@ class _ReadingListDetailsScreenState
     }
   }
 
-  Future<void> _addMissingIssuesToWishlist(List<LocalReadingListItem> items) async {
+  Future<void> _addMissingIssuesToWishlist(
+    List<LocalReadingListItem> items,
+  ) async {
     setState(() => _isAddingMissingToWishlist = true);
     try {
       final statusMap = await ref.read(collectionIssueStatusMapProvider.future);
@@ -218,7 +220,8 @@ class _ReadingListDetailsScreenState
         if (id == null || id <= 0) continue;
 
         final status = statusMap[id];
-        final isCollected = status != null && (status.isCollected || status.isRead);
+        final isCollected =
+            status != null && (status.isCollected || status.isRead);
         final isWishlisted = status != null && status.isWishlisted;
 
         if (!isCollected && !isWishlisted) {
@@ -228,7 +231,10 @@ class _ReadingListDetailsScreenState
 
       if (missingIssueIds.isEmpty) {
         if (mounted) {
-          TakionAlerts.info(context, "All issues are already in your collection or wishlist!");
+          TakionAlerts.info(
+            context,
+            "All issues are already in your collection or wishlist!",
+          );
         }
         return;
       }
@@ -309,12 +315,17 @@ class _ReadingListDetailsScreenState
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: _isLoadingFollow ? null : () => _followMetronList(metronData),
+              onPressed: _isLoadingFollow
+                  ? null
+                  : () => _followMetronList(metronData),
               icon: _isLoadingFollow
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.bookmark_add_outlined, size: 22),
               label: const Text("Follow List"),
@@ -385,8 +396,10 @@ class _ReadingListDetailsScreenState
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () =>
-                          AddLocalReadingListItemsBottomSheet.show(context, list),
+                      onPressed: () => AddLocalReadingListItemsBottomSheet.show(
+                        context,
+                        list,
+                      ),
                       icon: const Icon(Icons.add, size: 22),
                       label: const Text("Add Items"),
                     ),
@@ -452,7 +465,9 @@ class _ReadingListDetailsScreenState
 
     for (int i = 0; i < items.length; i++) {
       final it = items[i];
-      final readAsync = ref.watch(readingListItemEffectiveReadStatusProvider(it));
+      final readAsync = ref.watch(
+        readingListItemEffectiveReadStatusProvider(it),
+      );
       final isRead = readAsync.value ?? it.isRead;
       if (!isRead) {
         nextItem = it;
@@ -476,7 +491,9 @@ class _ReadingListDetailsScreenState
     final cached = cachedMetadataAsync.asData?.value;
     String? coverUrl;
     String title = nextItem.seriesName ?? "Issue";
-    String subtitle = nextItem.issueNumber != null ? "#${nextItem.issueNumber}" : "";
+    String subtitle = nextItem.issueNumber != null
+        ? "#${nextItem.issueNumber}"
+        : "";
 
     if (cached is IssueDetails) {
       coverUrl = cached.image;
@@ -572,7 +589,10 @@ class _ReadingListDetailsScreenState
                 const SizedBox(width: 8),
                 FilledButton.tonalIcon(
                   style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -638,70 +658,80 @@ class _ReadingListDetailsScreenState
             child: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
+              leading: Center(
+                child: BackButton(style: detailHeaderIconButtonStyle(theme)),
+              ),
               actions: [
-                PopupMenuButton<_ReadingListMenuAction>(
-                  tooltip: "More options",
-                  onSelected: (action) async {
-                    switch (action) {
-                      case _ReadingListMenuAction.edit:
-                        context.pushRoute(
-                          LocalReadingListEditRoute(listId: list.id),
-                        );
-                      case _ReadingListMenuAction.share:
-                        if (detail != null) {
-                          shareResourceUrl(context, detail);
-                        } else {
-                          ref
-                              .read(readingListSharingServiceProvider)
-                              .shareReadingList(list);
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Center(
+                    child: PopupMenuButton<_ReadingListMenuAction>(
+                      tooltip: "More options",
+                      style: detailHeaderIconButtonStyle(theme),
+                      onSelected: (action) async {
+                        switch (action) {
+                          case _ReadingListMenuAction.edit:
+                            context.pushRoute(
+                              LocalReadingListEditRoute(listId: list.id),
+                            );
+                          case _ReadingListMenuAction.share:
+                            if (detail != null) {
+                              shareResourceUrl(context, detail);
+                            } else {
+                              ref
+                                  .read(readingListSharingServiceProvider)
+                                  .shareReadingList(list);
+                            }
+                          case _ReadingListMenuAction.browser:
+                            final url =
+                                detail?.attributionUrl ??
+                                list.metronAttributionUrl;
+                            if (url != null) {
+                              final uri = Uri.tryParse(url);
+                              if (uri != null) await launchUrl(uri);
+                            }
+                          case _ReadingListMenuAction.refresh:
+                            final mId = _resolvedMetronId;
+                            if (mId != null) {
+                              await _refreshMetronReadingListData(mId);
+                            }
+                          case _ReadingListMenuAction.delete:
+                            _confirmDelete(context, list);
                         }
-                      case _ReadingListMenuAction.browser:
-                        final url = detail?.attributionUrl ??
-                            list.metronAttributionUrl;
-                        if (url != null) {
-                          final uri = Uri.tryParse(url);
-                          if (uri != null) await launchUrl(uri);
-                        }
-                      case _ReadingListMenuAction.refresh:
-                        final mId = _resolvedMetronId;
-                        if (mId != null) {
-                          await _refreshMetronReadingListData(mId);
-                        }
-                      case _ReadingListMenuAction.delete:
-                        _confirmDelete(context, list);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    if (!list.isMetronImported && detail == null)
-                      const PopupMenuItem(
-                        value: _ReadingListMenuAction.edit,
-                        child: Text("Edit"),
-                      ),
-                    const PopupMenuItem(
-                      value: _ReadingListMenuAction.share,
-                      child: Text("Share"),
-                    ),
-                    if (detail?.attributionUrl != null ||
-                        list.metronAttributionUrl != null)
-                      const PopupMenuItem(
-                        value: _ReadingListMenuAction.browser,
-                        child: Text("Open in Browser"),
-                      ),
-                    if (_resolvedMetronId != null)
-                      const PopupMenuItem(
-                        value: _ReadingListMenuAction.refresh,
-                        child: Text("Refresh from Metron"),
-                      ),
-                    if (list.id.isNotEmpty && !list.id.startsWith("temp-"))
-                      PopupMenuItem(
-                        value: _ReadingListMenuAction.delete,
-                        child: Text(
-                          list.isMetronImported
-                              ? "Remove from Library"
-                              : "Delete",
+                      },
+                      itemBuilder: (context) => [
+                        if (!list.isMetronImported && detail == null)
+                          const PopupMenuItem(
+                            value: _ReadingListMenuAction.edit,
+                            child: Text("Edit"),
+                          ),
+                        const PopupMenuItem(
+                          value: _ReadingListMenuAction.share,
+                          child: Text("Share"),
                         ),
-                      ),
-                  ],
+                        if (detail?.attributionUrl != null ||
+                            list.metronAttributionUrl != null)
+                          const PopupMenuItem(
+                            value: _ReadingListMenuAction.browser,
+                            child: Text("Open in Browser"),
+                          ),
+                        if (_resolvedMetronId != null)
+                          const PopupMenuItem(
+                            value: _ReadingListMenuAction.refresh,
+                            child: Text("Refresh from Metron"),
+                          ),
+                        if (list.id.isNotEmpty && !list.id.startsWith("temp-"))
+                          PopupMenuItem(
+                            value: _ReadingListMenuAction.delete,
+                            child: Text(
+                              list.isMetronImported
+                                  ? "Remove from Library"
+                                  : "Delete",
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -872,7 +902,8 @@ class _ReadingListDetailsScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final allLocalLists =
-        ref.watch(localReadingListsProvider).value ?? const <LocalReadingList>[];
+        ref.watch(localReadingListsProvider).value ??
+        const <LocalReadingList>[];
 
     LocalReadingList? localList;
     if (widget.listId != null) {
@@ -890,8 +921,11 @@ class _ReadingListDetailsScreenState
 
     if (localList != null) {
       final displayItems = localList.items;
-      final statusAsync = ref.watch(readingListEffectiveStatusProvider(localList));
-      final status = statusAsync.value ??
+      final statusAsync = ref.watch(
+        readingListEffectiveStatusProvider(localList),
+      );
+      final status =
+          statusAsync.value ??
           (readCount: 0, totalCount: displayItems.length, progress: 0.0);
 
       return Scaffold(
@@ -943,7 +977,9 @@ class _ReadingListDetailsScreenState
 
     final metronId = _resolvedMetronId;
     if (metronId == null) {
-      return const Scaffold(body: Center(child: Text("Reading list not found")));
+      return const Scaffold(
+        body: Center(child: Text("Reading list not found")),
+      );
     }
 
     final metronAsync = ref.watch(metronReadingListDetailProvider(metronId));
@@ -1009,13 +1045,23 @@ class _ReadingListDetailsScreenState
                 ],
               ),
               const SizedBox(height: 8),
-              const SkeletonBox(height: 8, width: double.infinity, borderRadius: 4),
+              const SkeletonBox(
+                height: 8,
+                width: double.infinity,
+                borderRadius: 4,
+              ),
               const SizedBox(height: 20),
               const Row(
                 children: [
-                  Expanded(flex: 3, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  Expanded(
+                    flex: 3,
+                    child: SkeletonBox(height: 48, borderRadius: 12),
+                  ),
                   SizedBox(width: 6),
-                  Expanded(flex: 1, child: SkeletonBox(height: 48, borderRadius: 12)),
+                  Expanded(
+                    flex: 1,
+                    child: SkeletonBox(height: 48, borderRadius: 12),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -1035,9 +1081,17 @@ class _ReadingListDetailsScreenState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SkeletonBox(height: 14, width: 200, borderRadius: 4),
+                            SkeletonBox(
+                              height: 14,
+                              width: 200,
+                              borderRadius: 4,
+                            ),
                             SizedBox(height: 6),
-                            SkeletonBox(height: 12, width: 140, borderRadius: 4),
+                            SkeletonBox(
+                              height: 12,
+                              width: 140,
+                              borderRadius: 4,
+                            ),
                           ],
                         ),
                       ),
@@ -1053,7 +1107,10 @@ class _ReadingListDetailsScreenState
         appBar: AppBar(),
         body: Center(
           child: Text(
-            TakionAlerts.cleanError(error, fallback: "Failed to load reading list"),
+            TakionAlerts.cleanError(
+              error,
+              fallback: "Failed to load reading list",
+            ),
           ),
         ),
       ),
@@ -1094,9 +1151,11 @@ class _ReadingListDetailsScreenState
           lastSyncedAt: DateTime.now(),
         );
 
-        final statusAsync =
-            ref.watch(readingListEffectiveStatusProvider(syntheticList));
-        final status = statusAsync.value ??
+        final statusAsync = ref.watch(
+          readingListEffectiveStatusProvider(syntheticList),
+        );
+        final status =
+            statusAsync.value ??
             (readCount: 0, totalCount: readingListItems.length, progress: 0.0);
 
         return Scaffold(

@@ -18,9 +18,7 @@ void main() {
     });
 
     test("getPullListSeries maps DTOs to domain entities", () async {
-      when(
-        () => remoteDataSource.getPullListSeries(page: 1),
-      ).thenAnswer(
+      when(() => remoteDataSource.getPullListSeries(page: 1)).thenAnswer(
         (_) async => [
           const PullListSeriesDto(
             id: 1,
@@ -42,14 +40,9 @@ void main() {
     });
 
     test("addSeriesToPullList delegates to remote data source", () async {
-      when(
-        () => remoteDataSource.addSeriesToPullList(100),
-      ).thenAnswer(
-        (_) async => const PullListSeriesDto(
-          id: 2,
-          seriesId: 100,
-          seriesName: "Batman",
-        ),
+      when(() => remoteDataSource.addSeriesToPullList(100)).thenAnswer(
+        (_) async =>
+            const PullListSeriesDto(id: 2, seriesId: 100, seriesName: "Batman"),
       );
 
       final result = await repository.addSeriesToPullList(100);
@@ -93,6 +86,48 @@ void main() {
       expect(result.first.issueId, 501);
       expect(result.first.seriesName, "Batman");
       expect(result.first.price, 3.99);
+    });
+
+    test(
+      "PullListSeriesDto parses series name from 'series' field (PullListSeriesInfo)",
+      () {
+        final json = {
+          "id": 101,
+          "series": {
+            "id": 3856,
+            "series": "The 06 Protocol",
+            "volume": 1,
+            "year_began": 2022,
+            "year_end": null,
+            "modified": "2024-12-23T16:17:29Z",
+          },
+          "added_on": "2026-07-24T06:42:18Z",
+        };
+
+        final dto = PullListSeriesDto.fromJson(json);
+        expect(dto.id, 101);
+        expect(dto.seriesId, 3856);
+        expect(dto.seriesName, "The 06 Protocol");
+        expect(dto.volume, 1);
+        expect(dto.yearBegan, 2022);
+      },
+    );
+
+    test("PullListSeriesDto parses legacy series name from 'name' field", () {
+      final json = {
+        "id": 102,
+        "series": {
+          "id": 100,
+          "name": "Detective Comics",
+          "volume": 1,
+          "year_began": 1937,
+        },
+      };
+
+      final dto = PullListSeriesDto.fromJson(json);
+      expect(dto.id, 102);
+      expect(dto.seriesId, 100);
+      expect(dto.seriesName, "Detective Comics");
     });
   });
 }

@@ -76,23 +76,23 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
     final currencyFormat = NumberFormat("#,##0.00");
     final remote = lastRemoteStats;
 
-    final totalValueStr = (remote != null &&
+    final totalValueStr =
+        (remote != null &&
             remote.totalValue.isNotEmpty &&
             remote.totalValue != "0.00" &&
             remote.totalValue != r"$0.00")
         ? (remote.totalValue.startsWith(r"$")
-            ? remote.totalValue
-            : r"$" + remote.totalValue)
+              ? remote.totalValue
+              : r"$" + remote.totalValue)
         : r"$" + currencyFormat.format(localTotalValue);
 
     final mergedByFormat = (remote != null && remote.byFormat.isNotEmpty)
         ? remote.byFormat
         : localByFormat;
 
-    final mergedRatingCount =
-        (remote != null && remote.ratingCount > 0)
-            ? remote.ratingCount
-            : localRatedCount;
+    final mergedRatingCount = (remote != null && remote.ratingCount > 0)
+        ? remote.ratingCount
+        : localRatedCount;
 
     final mergedAvgRating = (remote != null && remote.averageRating != null)
         ? remote.averageRating
@@ -140,9 +140,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
       final repo = ref.read(metronCollectionRepositoryProvider);
       final remote = await repo.getCollectionStats();
       lastRemoteStats = remote;
-      ref.read(allLibraryItemsProvider).whenOrNull(
-            data: computeStats,
-          );
+      ref.read(allLibraryItemsProvider).whenOrNull(data: computeStats);
     } catch (_) {
       // Fallback gracefully to local calculation
     }
@@ -182,9 +180,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
   ) {
     if (!next.hasValue) return;
     refreshIssueData(next.value!);
-    ref.read(allLibraryItemsProvider).whenOrNull(
-          data: computeStats,
-        );
+    ref.read(allLibraryItemsProvider).whenOrNull(data: computeStats);
   });
 
   ref.listen<AsyncValue<bool>>(metronConnectionProvider, (_, next) {
@@ -194,9 +190,7 @@ final collectionStatsProvider = StreamProvider.autoDispose<CollectionStats>((
   ref.listen<AsyncValue<List>>(allWishlistItemsStreamProvider, (_, next) {
     if (!next.hasValue) return;
     wishlistCountFromDao = next.value!.length;
-    ref.read(allLibraryItemsProvider).whenOrNull(
-          data: computeStats,
-        );
+    ref.read(allLibraryItemsProvider).whenOrNull(data: computeStats);
   }, fireImmediately: true);
 
   fetchRemoteStats();

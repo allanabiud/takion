@@ -26,17 +26,32 @@ abstract class LocalCatalogRepository {
 
   Future<List<SeriesList>> searchSeriesLocally(String query, {int limit = 50});
 
-  Future<List<CreatorList>> searchCreatorsLocally(String query, {int limit = 50});
+  Future<List<CreatorList>> searchCreatorsLocally(
+    String query, {
+    int limit = 50,
+  });
 
-  Future<List<CharacterList>> searchCharactersLocally(String query, {int limit = 50});
+  Future<List<CharacterList>> searchCharactersLocally(
+    String query, {
+    int limit = 50,
+  });
 
-  Future<List<PublisherList>> searchPublishersLocally(String query, {int limit = 50});
+  Future<List<PublisherList>> searchPublishersLocally(
+    String query, {
+    int limit = 50,
+  });
 
   Future<List<TeamList>> searchTeamsLocally(String query, {int limit = 50});
 
-  Future<List<UniverseList>> searchUniversesLocally(String query, {int limit = 50});
+  Future<List<UniverseList>> searchUniversesLocally(
+    String query, {
+    int limit = 50,
+  });
 
-  Future<List<ImprintList>> searchImprintsLocally(String query, {int limit = 50});
+  Future<List<ImprintList>> searchImprintsLocally(
+    String query, {
+    int limit = 50,
+  });
 
   Future<List<ArcList>> searchArcsLocally(String query, {int limit = 50});
 

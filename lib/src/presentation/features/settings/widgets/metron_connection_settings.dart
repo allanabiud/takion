@@ -2,7 +2,9 @@ import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/constants/settings_keys.dart";
 import "package:takion/src/core/network/metron_account_service.dart";
+import "package:takion/src/core/sync/periodic_sync_manager.dart";
 
 import "package:takion/src/presentation/features/settings/providers/metron_account_provider.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
@@ -144,6 +146,8 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
   late final Animation<double> _syncRotation;
   bool _isManualSyncing = false;
 
+  int _syncFrequencyHours = 24;
+
   @override
   void initState() {
     super.initState();
@@ -153,6 +157,30 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
     );
     _syncRotation = Tween<double>(begin: 0, end: -1).animate(
       CurvedAnimation(parent: _syncAnimController, curve: Curves.linear),
+    );
+    Future.microtask(_loadSyncFrequency);
+  }
+
+  Future<void> _loadSyncFrequency() async {
+    final db = ref.read(driftDatabaseProvider);
+    final hours = await db.settingsDao.getInt(
+      SettingsKeys.metronSyncFrequencyHours,
+      defaultValue: 24,
+    );
+    if (mounted) {
+      setState(() => _syncFrequencyHours = hours);
+    }
+  }
+
+  Future<void> _updateSyncFrequency(int hours) async {
+    final db = ref.read(driftDatabaseProvider);
+    await db.settingsDao.setInt(SettingsKeys.metronSyncFrequencyHours, hours);
+    if (mounted) {
+      setState(() => _syncFrequencyHours = hours);
+    }
+    await PeriodicSyncManager.instance.scheduleMetronSync(
+      database: db,
+      forceReschedule: true,
     );
   }
 
@@ -197,8 +225,7 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
     final syncState = syncStateAsync.value ?? syncManager.currentState;
     final pendingCount =
         ref.watch(pendingOfflineWritesCountProvider).value ?? 0;
-    final failedCount =
-        ref.watch(failedOfflineWritesCountProvider).value ?? 0;
+    final failedCount = ref.watch(failedOfflineWritesCountProvider).value ?? 0;
     final isSyncing = syncState.isSyncing || _isManualSyncing;
 
     if (isSyncing && !_syncAnimController.isAnimating) {
@@ -223,7 +250,8 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
       syncSubtitleText = "Please wait while data is synchronizing";
       syncSubtitleStyle = null;
     } else if (syncState.hasError) {
-      syncSubtitleText = syncState.errorMessage ?? "An error occurred during sync";
+      syncSubtitleText =
+          syncState.errorMessage ?? "An error occurred during sync";
       syncSubtitleStyle = theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.error,
       );
@@ -267,10 +295,7 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
               : "Metron Sync",
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(
-          syncSubtitleText,
-          style: syncSubtitleStyle,
-        ),
+        subtitle: Text(syncSubtitleText, style: syncSubtitleStyle),
       ),
       if (isRateLimited)
         Padding(
@@ -307,6 +332,31 @@ class _MetronSyncCardState extends ConsumerState<_MetronSyncCard>
                 )
               : const Text("Sync Now"),
         ),
+      ),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<int>(
+        initialValue: _syncFrequencyHours,
+        decoration: InputDecoration(
+          labelText: "Background Sync Schedule",
+          prefixIcon: const Icon(Icons.schedule, size: 20),
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        items: const [
+          DropdownMenuItem(value: 24, child: Text("Daily (Recommended)")),
+          DropdownMenuItem(value: 12, child: Text("Every 12 Hours")),
+          DropdownMenuItem(value: 6, child: Text("Every 6 Hours")),
+          DropdownMenuItem(value: 0, child: Text("Manual Only")),
+        ],
+        onChanged: (val) {
+          if (val != null) {
+            _updateSyncFrequency(val);
+          }
+        },
       ),
       if (failedCount > 0)
         Padding(
@@ -459,7 +509,7 @@ class _FailedChangesSheetContent extends StatefulWidget {
 
 class _FailedChangesSheetContentState
     extends State<_FailedChangesSheetContent> {
-  List<OfflineWriteQueueData>? _failedEntries;
+  List<OutboxOperation>? _failedEntries;
   bool _isLoading = true;
 
   @override
@@ -469,8 +519,8 @@ class _FailedChangesSheetContentState
   }
 
   Future<void> _loadEntries() async {
-    final queue = widget.ref.read(offlineWriteQueueProvider);
-    final entries = await queue.getFailedEntries();
+    final db = widget.ref.read(driftDatabaseProvider);
+    final entries = await db.outboxDao.getFailedEntries();
     if (mounted) {
       setState(() {
         _failedEntries = entries;
@@ -479,22 +529,24 @@ class _FailedChangesSheetContentState
     }
   }
 
-  String _formatOperation(OfflineWriteQueueData entry) {
+  String _formatOperation(OutboxOperation entry) {
     final entity = switch (entry.entityType) {
       "collection" => "Collection",
-      "pull_list" => "Pull List",
-      "wish_list" => "Wishlist",
+      "subscription" || "pull_list" => "Pull List",
+      "wishlist" || "wish_list" => "Wishlist",
       _ => entry.entityType,
     };
     final op = switch (entry.operation) {
       "create" => "Add to",
       "delete" => "Remove from",
-      "update" => "Update in",
+      "patch" || "update" => "Update in",
       "scrobble" => "Mark read in",
       "acquire" => "Acquire in",
       _ => entry.operation,
     };
-    final idStr = entry.entityId != null ? " (#${entry.entityId})" : "";
+    final idStr = entry.entityRemoteId != null
+        ? " (#${entry.entityRemoteId})"
+        : " (Local #${entry.entityLocalId})";
     return "$op $entity$idStr";
   }
 
@@ -515,9 +567,7 @@ class _FailedChangesSheetContentState
     if (entries.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
-        child: Center(
-          child: Text("No failed changes in queue"),
-        ),
+        child: Center(child: Text("No failed changes in queue")),
       );
     }
 
@@ -560,14 +610,14 @@ class _FailedChangesSheetContentState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      entry.lastError ?? "Unknown error",
+                      entry.lastErrorMessage ?? "Unknown error",
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.error,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      "Attempted ${entry.retryCount} times",
+                      "Attempted ${entry.attemptCount} times • State: ${entry.state}",
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -578,8 +628,8 @@ class _FailedChangesSheetContentState
                   icon: const Icon(Icons.delete_outline, size: 20),
                   tooltip: "Remove from queue",
                   onPressed: () async {
-                    final queue = widget.ref.read(offlineWriteQueueProvider);
-                    await queue.deleteEntry(entry.id);
+                    final db = widget.ref.read(driftDatabaseProvider);
+                    await db.outboxDao.deleteById(entry.id);
                     await _loadEntries();
                     if (entries.length <= 1 && ctx.mounted) {
                       Navigator.of(ctx).pop();
@@ -596,8 +646,8 @@ class _FailedChangesSheetContentState
             Expanded(
               child: OutlinedButton(
                 onPressed: () async {
-                  final queue = widget.ref.read(offlineWriteQueueProvider);
-                  await queue.clearFailedEntries();
+                  final db = widget.ref.read(driftDatabaseProvider);
+                  await db.outboxDao.clearFailedEntries();
                   if (context.mounted) Navigator.of(context).pop();
                 },
                 child: const Text("Clear All"),
@@ -607,11 +657,13 @@ class _FailedChangesSheetContentState
             Expanded(
               child: FilledButton(
                 onPressed: () async {
-                  final queue = widget.ref.read(offlineWriteQueueProvider);
-                  await queue.retryFailedEntries();
+                  final db = widget.ref.read(driftDatabaseProvider);
+                  await db.outboxDao.retryFailedEntries();
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    final syncManager = widget.ref.read(metronSyncManagerProvider);
+                    final syncManager = widget.ref.read(
+                      metronSyncManagerProvider,
+                    );
                     syncManager.syncAll();
                   }
                 },

@@ -1,16 +1,13 @@
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
+import "package:takion/src/presentation/features/library/providers/reading_history_provider.dart";
 
 final dailyReadActivityProvider =
     FutureProvider.autoDispose<Map<DateTime, int>>((ref) async {
-      final libraryItems = await ref.watch(allLibraryItemsProvider.future);
-      final readItems = libraryItems.where((item) => item.isRead).toList();
-
+      final entries = await ref.watch(readingHistoryProvider.future);
       final activity = <DateTime, int>{};
-      for (final item in readItems) {
-        final date = item.firstReadAt?.toLocal();
-        if (date == null) continue;
-        final day = DateTime(date.year, date.month, date.day);
+      for (final entry in entries) {
+        final local = entry.readAt.toLocal();
+        final day = DateTime(local.year, local.month, local.day);
         activity.update(day, (count) => count + 1, ifAbsent: () => 1);
       }
       return activity;

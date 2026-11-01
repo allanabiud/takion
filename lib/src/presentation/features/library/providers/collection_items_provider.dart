@@ -120,10 +120,12 @@ final allCollectionItemsProvider =
         final backfill = <int, double>{};
         final items = rows
             .map((r) => hydratedRowToCollectionItem(r, priceBackfill: backfill))
-            .where((item) =>
-                item.quantity > 0 ||
-                item.isRead ||
-                item.ownershipStatus == LibraryOwnershipStatus.wishlist)
+            .where(
+              (item) =>
+                  item.quantity > 0 ||
+                  item.isRead ||
+                  item.ownershipStatus == LibraryOwnershipStatus.wishlist,
+            )
             .toList();
         if (backfill.isNotEmpty) {
           schedulePriceBackfill(ref, backfill);

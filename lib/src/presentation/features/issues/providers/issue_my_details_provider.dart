@@ -148,11 +148,15 @@ class IssueMyDetailsController extends Notifier<AsyncValue<void>> {
           await recordEvents();
         } else {
           final now = DateTime.now().toUtc();
-          final resolvedRating = isRead ? rating : null;
+          final resolvedRating = isRead
+              ? ((rating != null && rating > 0) ? rating : null)
+              : null;
           final firstReadAt = isRead ? (existing?.firstReadAt ?? now) : null;
 
           if (isCollected) {
-            await ref.read(wishlistRepositoryProvider).removeFromWishListByIssueId(_issueId);
+            await ref
+                .read(wishlistRepositoryProvider)
+                .removeFromWishListByIssueId(_issueId);
           }
 
           await libraryRepository.upsertItem(

@@ -57,6 +57,47 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase> {
     )..where((t) => t.metronSeriesId.isIn(metronSeriesIds))).get();
   }
 
+  Future<SeriesSubscription?> getById(String id) => (select(
+    attachedDatabase.seriesSubscriptions,
+  )..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<void> applyOptimisticPatch(
+    String id, {
+    Value<bool>? isActive,
+    Value<bool>? autoAddPull,
+    Value<String>? syncStatus,
+    Value<String?>? remoteModified,
+    Value<String?>? deletedAt,
+  }) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await (update(
+      attachedDatabase.seriesSubscriptions,
+    )..where((t) => t.id.equals(id))).write(
+      SeriesSubscriptionsCompanion(
+        isActive: isActive ?? const Value.absent(),
+        autoAddPull: autoAddPull ?? const Value.absent(),
+        syncStatus: syncStatus ?? const Value.absent(),
+        remoteModified: remoteModified ?? const Value.absent(),
+        deletedAt: deletedAt ?? const Value.absent(),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  Future<void> applyOptimisticDelete(String id) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await (update(
+      attachedDatabase.seriesSubscriptions,
+    )..where((t) => t.id.equals(id))).write(
+      SeriesSubscriptionsCompanion(
+        isActive: const Value(false),
+        deletedAt: Value(now),
+        syncStatus: const Value("pending"),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
   Future<void> upsert(SeriesSubscriptionsCompanion entry) async {
     await transaction(() async {
       await into(
@@ -80,5 +121,35 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase> {
         DateTime.now().toUtc().toIso8601String(),
       );
     });
+  }
+
+  /// Marks local synced subscriptions inactive/deleted if they were missing from complete snapshot [scanId].
+  /// Preserves pending local operations.
+  Future<int> reconcileMissingFromScan(String scanId) async {
+    final missing =
+        await (select(attachedDatabase.seriesSubscriptions)..where(
+              (t) =>
+                  t.syncStatus.equals("synced") &
+                  t.isActive.equals(true) &
+                  t.deletedAt.isNull() &
+                  (t.lastSeenScanId.isNull() |
+                      t.lastSeenScanId.equals(scanId).not()),
+            ))
+            .get();
+
+    final now = DateTime.now().toUtc().toIso8601String();
+    for (final sub in missing) {
+      await (update(
+        attachedDatabase.seriesSubscriptions,
+      )..where((t) => t.id.equals(sub.id))).write(
+        SeriesSubscriptionsCompanion(
+          isActive: const Value(false),
+          deletedAt: Value(now),
+          syncStatus: const Value("synced"),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+    return missing.length;
   }
 }

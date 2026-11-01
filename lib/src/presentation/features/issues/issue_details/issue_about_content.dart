@@ -310,23 +310,25 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Creators",
           itemCount: credits.length,
-          height: 150,
+          height: 164,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final credit = credits[index];
             final creator = credit.creator?.trim();
+            final creatorId =
+                credit.creatorId ?? (credit.id > 0 ? credit.id : null);
             final roles = credit.roles
                 .map((r) => r.name.trim())
                 .where((n) => n.isNotEmpty)
                 .toSet()
                 .toList();
             return PersonCard(
-              creatorId: credit.id,
+              creatorId: creatorId,
               name: creator != null && creator.isNotEmpty
                   ? creator
                   : "Unknown Creator",
               subtitle: roles.isNotEmpty ? roles.join(", ") : null,
-              width: 95,
+              width: 105,
             );
           },
         ),
@@ -348,7 +350,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Characters",
           itemCount: characters.length,
-          height: 136,
+          height: 160,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final character = characters[index];
@@ -357,7 +359,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: character.name.trim().isNotEmpty
                   ? character.name.trim()
                   : "Unknown Character",
-              width: 95,
+              width: 105,
             );
           },
         ),
@@ -377,7 +379,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Teams",
           itemCount: teams.length,
-          height: 152,
+          height: 168,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final team = teams[index];
@@ -387,7 +389,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: team.name.trim().isNotEmpty
                   ? team.name.trim()
                   : "Unknown Team",
-              width: 100,
+              width: 115,
+              imageHeight: 105,
               onTap: () => context.pushRoute(TeamDetailsRoute(teamId: team.id)),
             );
           },
@@ -408,7 +411,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Arcs",
           itemCount: arcs.length,
-          height: 152,
+          height: 168,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final arc = arcs[index];
@@ -418,7 +421,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: arc.name.trim().isNotEmpty
                   ? arc.name.trim()
                   : "Unknown Arc",
-              width: 100,
+              width: 115,
+              imageHeight: 105,
               onTap: () => context.pushRoute(ArcDetailsRoute(arcId: arc.id)),
             );
           },
@@ -439,7 +443,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Universes",
           itemCount: universes.length,
-          height: 136,
+          height: 168,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final universe = universes[index];
@@ -449,8 +453,8 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: universe.name.trim().isNotEmpty
                   ? universe.name.trim()
                   : "Unknown Universe",
-              width: 100,
-              imageHeight: 80,
+              width: 115,
+              imageHeight: 105,
               onTap: () => context.pushRoute(
                 UniverseDetailsRoute(universeId: universe.id),
               ),

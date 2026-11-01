@@ -45,9 +45,7 @@ void main() {
         ),
       );
 
-      when(
-        () => remoteDataSource.addSeriesToPullList(50),
-      ).thenAnswer(
+      when(() => remoteDataSource.addSeriesToPullList(50)).thenAnswer(
         (_) async => const PullListSeriesDto(
           id: 888,
           seriesId: 50,

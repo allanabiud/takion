@@ -10,18 +10,20 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
     String? entityId,
     required String payload,
   }) async {
-    final existing = await (select(attachedDatabase.offlineWriteQueue)
-          ..where((t) =>
-              t.operation.equals(operation) &
-              t.entityType.equals(entityType) &
-              t.entityId.equals(entityId ?? "") &
-              t.status.equals("pending")))
-        .getSingleOrNull();
+    final existing =
+        await (select(attachedDatabase.offlineWriteQueue)..where(
+              (t) =>
+                  t.operation.equals(operation) &
+                  t.entityType.equals(entityType) &
+                  t.entityId.equals(entityId ?? "") &
+                  t.status.equals("pending"),
+            ))
+            .getSingleOrNull();
 
     if (existing != null) {
-      await (update(attachedDatabase.offlineWriteQueue)
-            ..where((t) => t.id.equals(existing.id)))
-          .write(
+      await (update(
+        attachedDatabase.offlineWriteQueue,
+      )..where((t) => t.id.equals(existing.id))).write(
         OfflineWriteQueueCompanion(
           payload: Value(payload),
           createdAt: Value(DateTime.now().millisecondsSinceEpoch),
@@ -44,7 +46,9 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
     );
   }
 
-  Future<List<OfflineWriteQueueData>> getPendingEntries({int limit = 50}) async {
+  Future<List<OfflineWriteQueueData>> getPendingEntries({
+    int limit = 50,
+  }) async {
     return (select(attachedDatabase.offlineWriteQueue)
           ..where((t) => t.status.equals("pending"))
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)])
@@ -69,11 +73,19 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<void> markCompleted(int id) async {
-    await (delete(attachedDatabase.offlineWriteQueue)..where((t) => t.id.equals(id))).go();
+    await (delete(
+      attachedDatabase.offlineWriteQueue,
+    )..where((t) => t.id.equals(id))).go();
   }
 
-  Future<void> markFailed(int id, {required String error, required int retryCount}) async {
-    await (update(attachedDatabase.offlineWriteQueue)..where((t) => t.id.equals(id))).write(
+  Future<void> markFailed(
+    int id, {
+    required String error,
+    required int retryCount,
+  }) async {
+    await (update(
+      attachedDatabase.offlineWriteQueue,
+    )..where((t) => t.id.equals(id))).write(
       OfflineWriteQueueCompanion(
         retryCount: Value(retryCount),
         lastError: Value(error),
@@ -84,7 +96,9 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<void> clearCompleted() async {
-    await (delete(attachedDatabase.offlineWriteQueue)..where((t) => t.status.equals("completed"))).go();
+    await (delete(
+      attachedDatabase.offlineWriteQueue,
+    )..where((t) => t.status.equals("completed"))).go();
   }
 
   Future<void> clearAll() async {
@@ -99,21 +113,21 @@ class OfflineQueueDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<void> deleteEntry(int id) async {
-    await (delete(attachedDatabase.offlineWriteQueue)
-          ..where((t) => t.id.equals(id)))
-        .go();
+    await (delete(
+      attachedDatabase.offlineWriteQueue,
+    )..where((t) => t.id.equals(id))).go();
   }
 
   Future<void> clearFailedEntries() async {
-    await (delete(attachedDatabase.offlineWriteQueue)
-          ..where((t) => t.status.equals("failed")))
-        .go();
+    await (delete(
+      attachedDatabase.offlineWriteQueue,
+    )..where((t) => t.status.equals("failed"))).go();
   }
 
   Future<void> resetFailedEntries() async {
-    await (update(attachedDatabase.offlineWriteQueue)
-          ..where((t) => t.status.equals("failed")))
-        .write(
+    await (update(
+      attachedDatabase.offlineWriteQueue,
+    )..where((t) => t.status.equals("failed"))).write(
       const OfflineWriteQueueCompanion(
         status: Value("pending"),
         retryCount: Value(0),

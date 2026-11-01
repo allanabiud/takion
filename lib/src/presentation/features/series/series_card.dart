@@ -1,10 +1,11 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:takion/src/domain/entities.dart";
-import "package:takion/src/presentation/shared/widgets/components.dart";
-import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
+import "package:takion/src/domain/entities.dart";
+import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/features/series/providers/series_cover_provider.dart";
 import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
+import "package:takion/src/presentation/shared/widgets/components.dart";
 
 class SeriesCard extends ConsumerWidget {
   final SeriesList series;
@@ -36,7 +37,11 @@ class SeriesCard extends ConsumerWidget {
       favoriteSeriesIdsSetProvider.select((set) => set.contains(series.id)),
     );
 
-    final coverImage = imageUrl;
+    final coverImage = (imageUrl != null && imageUrl!.trim().isNotEmpty)
+        ? imageUrl
+        : (series.id > 0
+              ? ref.watch(seriesCoverImageProvider(series.id)).asData?.value
+              : null);
 
     const cacheWidth = 300;
     const cacheHeight = 450;

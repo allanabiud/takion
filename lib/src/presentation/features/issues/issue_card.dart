@@ -61,17 +61,24 @@ class IssueCard extends ConsumerWidget {
     final providerStatus = id == null
         ? null
         : ref.watch(issueCollectionStatusProvider(id));
-    final pullEntryAsync = id == null || isPulled != null
+    final pullEntryAsync = id == null
         ? null
         : ref.watch(issuePullListEntryProvider(id));
+    final subAsync = seriesId != null
+        ? ref.watch(seriesSubscriptionProvider(seriesId!))
+        : null;
+    final isSubscribed = subAsync?.asData?.value?.isActive == true;
 
     final effectiveIsCollected =
-        isCollected ?? providerStatus?.isCollected ?? false;
+        providerStatus?.isCollected ?? isCollected ?? false;
     final effectiveIsWishlisted =
-        isWishlisted ?? providerStatus?.isWishlisted ?? false;
-    final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
-    final effectiveIsPulled = isPulled ?? pullEntryAsync?.asData?.value != null;
-    final effectiveSyncStatus = syncStatus ?? providerStatus?.syncStatus;
+        providerStatus?.isWishlisted ?? isWishlisted ?? false;
+    final effectiveIsRead = providerStatus?.isRead ?? isRead ?? false;
+    final effectiveIsPulled =
+        isPulled == true ||
+        (pullEntryAsync?.asData?.value != null) ||
+        isSubscribed;
+    final effectiveSyncStatus = providerStatus?.syncStatus ?? syncStatus;
 
     final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
     final cacheWidth = width.isInfinite

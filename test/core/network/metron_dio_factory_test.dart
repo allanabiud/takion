@@ -3,7 +3,6 @@ import "dart:typed_data";
 import "package:dio/dio.dart";
 import "package:drift/native.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:takion/src/core/cache/cache_header_store.dart";
 import "package:takion/src/core/constants/settings_keys.dart";
 import "package:takion/src/core/network/conditional_interceptor.dart";
 import "package:takion/src/core/network/metron_dio_factory.dart";
@@ -34,7 +33,10 @@ class QueueHttpClientAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-ResponseBody jsonResponse(int statusCode, {Map<String, String> headers = const {}}) {
+ResponseBody jsonResponse(
+  int statusCode, {
+  Map<String, String> headers = const {},
+}) {
   return ResponseBody.fromString(
     "{}",
     statusCode,
@@ -65,7 +67,10 @@ void main() {
     await db.settingsDao.setString(SettingsKeys.metronApiToken, "secret-token");
     await dio.get("issue/");
 
-    expect(adapter.requests.single.headers["Authorization"], "Bearer secret-token");
+    expect(
+      adapter.requests.single.headers["Authorization"],
+      "Bearer secret-token",
+    );
   });
 
   test("omits the Authorization header when no token is stored", () async {
@@ -79,37 +84,41 @@ void main() {
     expect(adapter.requests.single.headers["Authorization"], isNull);
   });
 
-  test("always attaches the rate limiter; conditional requests need a store",
-      () async {
-    final withStore = buildMetronDio(
-      readToken: () async => null,
-      db: db,
-      cacheHeaderStore: CacheHeaderStore(),
-    );
-    final backgroundStyle = buildMetronDio(
-      readToken: () async => null,
-      db: db,
-    );
+  test(
+    "always attaches the rate limiter; conditional requests need a store",
+    () async {
+      final withStore = buildMetronDio(readToken: () async => null, db: db);
+      final backgroundStyle = buildMetronDio(readToken: () async => null);
 
-    expect(withStore.interceptors.whereType<RateLimitInterceptor>().length, 1);
-    expect(
-      withStore.interceptors.whereType<ConditionalRequestInterceptor>().length,
-      1,
-    );
+      expect(
+        withStore.interceptors.whereType<RateLimitInterceptor>().length,
+        1,
+      );
+      expect(
+        withStore.interceptors
+            .whereType<ConditionalRequestInterceptor>()
+            .length,
+        1,
+      );
 
-    // Background sync style: rate limited and authenticated, but no ETag
-    // revalidation for sync endpoints.
-    expect(backgroundStyle.interceptors.whereType<RateLimitInterceptor>().length, 1);
-    expect(
-      backgroundStyle.interceptors.whereType<ConditionalRequestInterceptor>(),
-      isEmpty,
-    );
-  });
+      // Background sync style without DB: rate limited and authenticated, but no ETag
+      // revalidation for sync endpoints.
+      expect(
+        backgroundStyle.interceptors.whereType<RateLimitInterceptor>().length,
+        1,
+      );
+      expect(
+        backgroundStyle.interceptors.whereType<ConditionalRequestInterceptor>(),
+        isEmpty,
+      );
+    },
+  );
 
   test("waits out a 429 using rate-limit headers and retries once", () async {
     final reset = DateTime.now().millisecondsSinceEpoch ~/ 1000 + 1;
     final adapter = QueueHttpClientAdapter([
-      () => jsonResponse(429, headers: {"x-ratelimit-sustained-reset": "$reset"}),
+      () =>
+          jsonResponse(429, headers: {"x-ratelimit-sustained-reset": "$reset"}),
       () => jsonResponse(200),
     ]);
     final dio = buildMetronDio(readToken: () async => null)
@@ -120,6 +129,22 @@ void main() {
     expect(response.statusCode, 200);
     expect(adapter.requests.length, 2);
     expect(adapter.requests.last.extra["retried_after_429"], isTrue);
+  }, timeout: const Timeout(Duration(seconds: 15)));
+
+  test("waits out a 429 honoring Retry-After header and retries", () async {
+    final adapter = QueueHttpClientAdapter([
+      () => jsonResponse(429, headers: {"retry-after": "1"}),
+      () => jsonResponse(200),
+    ]);
+    final dio = buildMetronDio(readToken: () async => null)
+      ..httpClientAdapter = adapter;
+
+    final response = await dio.get("issue/");
+
+    expect(response.statusCode, 200);
+    expect(adapter.requests.length, 2);
+    expect(adapter.requests.last.extra["retried_after_429"], isTrue);
+    expect(adapter.requests.last.extra["retry_429_count"], 1);
   }, timeout: const Timeout(Duration(seconds: 15)));
 
   test("retries a transient 500 and succeeds", () async {
@@ -163,14 +188,14 @@ void main() {
       onAuthFailure: () => authFailureNotified = true,
     )..httpClientAdapter = adapter;
 
-    await db.settingsDao.setString(SettingsKeys.metronApiToken, "expired-token");
+    await db.settingsDao.setString(
+      SettingsKeys.metronApiToken,
+      "expired-token",
+    );
 
     await expectLater(dio.get("issue/"), throwsA(isA<DioException>()));
 
-    expect(
-      await db.settingsDao.getString(SettingsKeys.metronApiToken),
-      isNull,
-    );
+    expect(await db.settingsDao.getString(SettingsKeys.metronApiToken), isNull);
     expect(authFailureNotified, isTrue);
   });
 }

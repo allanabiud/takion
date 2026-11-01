@@ -46,8 +46,11 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   final db = AppDatabase();
   final metronToken = await db.settingsDao.getString("metron_api_token");
   if (metronToken != null && metronToken.trim().isNotEmpty) {
-    await PeriodicSyncManager.instance.scheduleMetronSync();
+    await PeriodicSyncManager.instance.scheduleMetronSync(database: db);
   }
+
+  // Clean up legacy cache header keys from sync_meta since remote_cache_entries now manages validators
+  await db.syncMetaDao.deleteByPrefix("cache_headers:");
 
   final cacheHeaderStore = CacheHeaderStore();
   await cacheHeaderStore.init(db);

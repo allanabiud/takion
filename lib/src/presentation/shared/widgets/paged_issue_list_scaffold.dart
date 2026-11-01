@@ -113,10 +113,7 @@ class _PagedIssueListScaffoldState extends State<PagedIssueListScaffold> {
     );
 
     if (widget.onRefresh != null) {
-      content = RefreshIndicator(
-        onRefresh: widget.onRefresh!,
-        child: content,
-      );
+      content = RefreshIndicator(onRefresh: widget.onRefresh!, child: content);
     }
 
     return Scaffold(

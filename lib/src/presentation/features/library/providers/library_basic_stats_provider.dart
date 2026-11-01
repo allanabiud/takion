@@ -177,9 +177,7 @@ final libraryBasicStatsProvider = StreamProvider.autoDispose
 
       streamSubscriptions.add(
         db.libraryItemDao
-            .watchReadsCount(
-              startDate: startDate?.toUtc().toIso8601String(),
-            )
+            .watchReadsCount(startDate: startDate?.toUtc().toIso8601String())
             .listen((count) {
               readsInPeriod = count;
               debounced.schedule(emitStats);

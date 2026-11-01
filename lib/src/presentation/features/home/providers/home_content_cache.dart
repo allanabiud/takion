@@ -44,10 +44,7 @@ class HomeContentCache {
     String key,
     List<Map<String, dynamic>> value,
   ) async {
-    await _db.syncMetaDao.set(
-      "$_homeContentPrefix$key",
-      jsonEncode(value),
-    );
+    await _db.syncMetaDao.set("$_homeContentPrefix$key", jsonEncode(value));
   }
 }
 

@@ -59,6 +59,7 @@ class _ImprintDetailsScreenState extends ConsumerState<ImprintDetailsScreen>
 
     return DetailScreenShell<ImprintDetails>(
       asyncValue: detailsAsync,
+      entityId: widget.imprintId,
       entityType: "imprint",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,

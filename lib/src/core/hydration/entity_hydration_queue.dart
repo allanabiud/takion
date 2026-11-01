@@ -25,13 +25,7 @@ enum HydrationEntityType {
 }
 
 /// Hydration lifecycle state for a given entity key.
-enum HydrationStatus {
-  queued,
-  inFlight,
-  succeeded,
-  failed,
-  notFound,
-}
+enum HydrationStatus { queued, inFlight, succeeded, failed, notFound }
 
 /// Unique key representing an entity hydration task.
 class HydrationKey {
@@ -219,7 +213,9 @@ class EntityHydrationQueue {
         _statuses[key] = HydrationStatus.notFound;
         _retryAttempts.remove(key);
         _failedCount++;
-        AppLogger.info("EntityHydrationQueue: ${key.toString()} not found (404)");
+        AppLogger.info(
+          "EntityHydrationQueue: ${key.toString()} not found (404)",
+        );
       } else {
         final attempts = (_retryAttempts[key] ?? 0) + 1;
         _retryAttempts[key] = attempts;

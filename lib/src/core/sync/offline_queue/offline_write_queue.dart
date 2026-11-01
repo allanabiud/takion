@@ -10,14 +10,15 @@ class OfflineWriteQueue {
   OfflineWriteQueue({
     required OfflineQueueDao dao,
     required OfflineQueueProcessor processor,
-  })  : _dao = dao,
-        _processor = processor;
+  }) : _dao = dao,
+       _processor = processor;
 
   Stream<int> watchPendingCount() => _dao.watchPendingCount();
 
   Stream<int> watchFailedCount() => _dao.watchFailedCount();
 
-  Future<List<OfflineWriteQueueData>> getFailedEntries() => _dao.getFailedEntries();
+  Future<List<OfflineWriteQueueData>> getFailedEntries() =>
+      _dao.getFailedEntries();
 
   Future<void> deleteEntry(int id) => _dao.deleteEntry(id);
 
@@ -65,11 +66,18 @@ class OfflineWriteQueue {
     required int metronCollectionId,
     Map<String, dynamic> updates = const {},
   }) {
+    final sanitizedUpdates = Map<String, dynamic>.from(updates);
+    if (sanitizedUpdates.containsKey("rating")) {
+      final r = sanitizedUpdates["rating"];
+      if (r is int && r <= 0) {
+        sanitizedUpdates["rating"] = null;
+      }
+    }
     return _dao.enqueue(
       operation: "update",
       entityType: "collection",
       entityId: metronCollectionId.toString(),
-      payload: jsonEncode(updates),
+      payload: jsonEncode(sanitizedUpdates),
     );
   }
 
@@ -87,10 +95,11 @@ class OfflineWriteQueue {
     DateTime? dateRead,
     int? rating,
   }) {
+    final sanitizedRating = (rating != null && rating > 0) ? rating : null;
     final payload = <String, dynamic>{
       "issue_id": issueId,
       if (dateRead != null) "date_read": dateRead.toUtc().toIso8601String(),
-      "rating": ?rating,
+      "rating": ?sanitizedRating,
     };
 
     return _dao.enqueue(

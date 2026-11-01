@@ -1,16 +1,19 @@
 import "package:dio/dio.dart";
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/data/wishlist/dto/wishlist_dto.dart";
 
 abstract class MetronWishlistRemoteDataSource {
+  Future<RemotePage<WishListItemDto>> getWishListPage({
+    Uri? pageUrl,
+    CancelToken? cancelToken,
+  });
+
   Future<List<WishListReadDto>> getWishLists({
     int page = 1,
     CancelToken? cancelToken,
   });
 
-  Future<WishListReadDto> getWishList(
-    int id, {
-    CancelToken? cancelToken,
-  });
+  Future<WishListReadDto> getWishList(int id, {CancelToken? cancelToken});
 
   Future<List<WishListItemDto>> getWishListItems({
     int page = 1,
@@ -29,8 +32,5 @@ abstract class MetronWishlistRemoteDataSource {
     CancelToken? cancelToken,
   });
 
-  Future<void> removeFromWishList(
-    int itemId, {
-    CancelToken? cancelToken,
-  });
+  Future<void> removeFromWishList(int itemId, {CancelToken? cancelToken});
 }

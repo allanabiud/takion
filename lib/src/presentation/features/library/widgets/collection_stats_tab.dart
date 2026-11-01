@@ -21,7 +21,11 @@ class CollectionStatsTab extends ConsumerStatefulWidget {
 class _CollectionStatsTabState extends ConsumerState<CollectionStatsTab> {
   LibraryFilter _filter = LibraryFilter.allTime;
 
-  void _showRecapCard(BuildContext context, LibraryBasicStats stats, CollectionStats? colStats) {
+  void _showRecapCard(
+    BuildContext context,
+    LibraryBasicStats stats,
+    CollectionStats? colStats,
+  ) {
     final theme = Theme.of(context);
     showDialog(
       context: context,
@@ -46,11 +50,17 @@ class _CollectionStatsTabState extends ConsumerState<CollectionStatsTab> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.auto_awesome, color: theme.colorScheme.primary, size: 28),
+                  Icon(
+                    Icons.auto_awesome,
+                    color: theme.colorScheme.primary,
+                    size: 28,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     "Comic Recap",
-                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Spacer(),
                   IconButton(
@@ -64,10 +74,10 @@ class _CollectionStatsTabState extends ConsumerState<CollectionStatsTab> {
                 _filter == LibraryFilter.week
                     ? "This Week in Comics"
                     : _filter == LibraryFilter.month
-                        ? "This Month in Comics"
-                        : _filter == LibraryFilter.year
-                            ? "This Year in Comics"
-                            : "All-Time Comic Journey",
+                    ? "This Month in Comics"
+                    : _filter == LibraryFilter.year
+                    ? "This Year in Comics"
+                    : "All-Time Comic Journey",
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w600,
@@ -107,7 +117,9 @@ class _CollectionStatsTabState extends ConsumerState<CollectionStatsTab> {
                   Expanded(
                     child: _RecapStatBox(
                       label: "Rating",
-                      value: stats.averageRating > 0 ? stats.averageRating.toStringAsFixed(1) : "--",
+                      value: stats.averageRating > 0
+                          ? stats.averageRating.toStringAsFixed(1)
+                          : "--",
                       icon: Icons.star,
                     ),
                   ),
@@ -127,12 +139,16 @@ class _CollectionStatsTabState extends ConsumerState<CollectionStatsTab> {
                     children: [
                       Text(
                         "Top Series",
-                        style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         stats.mostReadSeries!,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -163,10 +179,22 @@ class _CollectionStatsTabState extends ConsumerState<CollectionStatsTab> {
               children: [
                 SegmentedButton<LibraryFilter>(
                   segments: const [
-                    ButtonSegment(value: LibraryFilter.week, label: Text("Week")),
-                    ButtonSegment(value: LibraryFilter.month, label: Text("Month")),
-                    ButtonSegment(value: LibraryFilter.year, label: Text("Year")),
-                    ButtonSegment(value: LibraryFilter.allTime, label: Text("All")),
+                    ButtonSegment(
+                      value: LibraryFilter.week,
+                      label: Text("Week"),
+                    ),
+                    ButtonSegment(
+                      value: LibraryFilter.month,
+                      label: Text("Month"),
+                    ),
+                    ButtonSegment(
+                      value: LibraryFilter.year,
+                      label: Text("Year"),
+                    ),
+                    ButtonSegment(
+                      value: LibraryFilter.allTime,
+                      label: Text("All"),
+                    ),
                   ],
                   selected: {_filter},
                   onSelectionChanged: (selected) {
@@ -180,7 +208,9 @@ class _CollectionStatsTabState extends ConsumerState<CollectionStatsTab> {
                   tooltip: "Comic Recap",
                   icon: const Icon(Icons.auto_awesome, size: 20),
                   onPressed: () {
-                    final stats = basicStatsAsync.value ?? LibraryBasicStats.zero(_filter);
+                    final stats =
+                        basicStatsAsync.value ??
+                        LibraryBasicStats.zero(_filter);
                     _showRecapCard(context, stats, collectionStatsAsync.value);
                   },
                 ),
@@ -206,7 +236,11 @@ class _CollectionStatsTabState extends ConsumerState<CollectionStatsTab> {
 }
 
 class _RecapStatBox extends StatelessWidget {
-  const _RecapStatBox({required this.label, required this.value, required this.icon});
+  const _RecapStatBox({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   final String label;
   final String value;
@@ -228,8 +262,18 @@ class _RecapStatBox extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-              Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              Text(
+                value,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
         ],
@@ -249,7 +293,9 @@ class _StatsCards extends ConsumerWidget {
     final theme = Theme.of(context);
 
     final stats = basicStatsAsync.value ?? LibraryBasicStats.zero(filter);
-    final totalVal = collectionStatsAsync.hasValue ? collectionStatsAsync.value!.totalValue : r"$0.00";
+    final totalVal = collectionStatsAsync.hasValue
+        ? collectionStatsAsync.value!.totalValue
+        : r"$0.00";
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -459,12 +505,14 @@ class _TopCreatorsSection extends ConsumerWidget {
                 children: entityStats.topCreators
                     .asMap()
                     .entries
-                    .map((entry) => TopEntityTile(
-                          index: entry.key + 1,
-                          entity: entry.value,
-                          isCharacter: false,
-                          isLast: entry.key == entityStats.topCreators.length - 1,
-                        ))
+                    .map(
+                      (entry) => TopEntityTile(
+                        index: entry.key + 1,
+                        entity: entry.value,
+                        isCharacter: false,
+                        isLast: entry.key == entityStats.topCreators.length - 1,
+                      ),
+                    )
                     .toList(),
               ),
             ),

@@ -59,6 +59,7 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen>
 
     return DetailScreenShell<UniverseDetails>(
       asyncValue: detailsAsync,
+      entityId: widget.universeId,
       entityType: "universe",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,
@@ -69,9 +70,9 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen>
       onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
-      heroWidth: 300,
-      heroHeight: 260,
-      initialChildSize: 0.55,
+      heroWidth: 260,
+      heroHeight: 240,
+      initialChildSize: 0.50,
       sheetContentBuilder: (context, d, ref) =>
           _buildUniverseSheetSlivers(d, context, ref),
     );

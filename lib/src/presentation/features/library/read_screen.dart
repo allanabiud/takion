@@ -433,10 +433,10 @@ class _ReadStatsCardsState extends ConsumerState<ReadStatsCards> {
     // Use Metron's all-time average rating when available.
     final avgRating =
         (collectionStats != null &&
-                collectionStats.averageRating != null &&
-                collectionStats.averageRating! > 0)
-            ? collectionStats.averageRating!
-            : displayStats.averageRating;
+            collectionStats.averageRating != null &&
+            collectionStats.averageRating! > 0)
+        ? collectionStats.averageRating!
+        : displayStats.averageRating;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -565,10 +565,7 @@ class _ReadTrendsChartState extends ConsumerState<_ReadTrendsChart> {
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SizedBox(
-            height: 200,
-            child: ReadingTrendChart(data: trends),
-          ),
+          child: SizedBox(height: 200, child: ReadingTrendChart(data: trends)),
         ),
       ],
     );

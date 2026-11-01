@@ -1,10 +1,17 @@
 import "package:dio/dio.dart";
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/data/collection/dto/collection_item_dto.dart";
 import "package:takion/src/data/collection/dto/collection_stats_dto.dart";
 import "package:takion/src/data/collection/dto/missing_issues_dto.dart";
 import "package:takion/src/data/collection/dto/scrobble_dto.dart";
 
 abstract class MetronCollectionRemoteDataSource {
+  Future<RemotePage<CollectionItemDto>> getCollectionPage({
+    Uri? pageUrl,
+    DateTime? modifiedGt,
+    CancelToken? cancelToken,
+  });
+
   Future<List<CollectionItemDto>> getCollection({
     int page = 1,
     String? bookFormat,
@@ -43,19 +50,14 @@ abstract class MetronCollectionRemoteDataSource {
     CancelToken? cancelToken,
   });
 
-  Future<void> removeFromCollection(
-    int id, {
-    CancelToken? cancelToken,
-  });
+  Future<void> removeFromCollection(int id, {CancelToken? cancelToken});
 
   Future<ScrobbleResponseDto> scrobble(
     ScrobbleRequestDto request, {
     CancelToken? cancelToken,
   });
 
-  Future<CollectionStatsDto> getCollectionStats({
-    CancelToken? cancelToken,
-  });
+  Future<CollectionStatsDto> getCollectionStats({CancelToken? cancelToken});
 
   Future<MissingIssuesPageDto> getMissingIssues(
     int seriesId, {

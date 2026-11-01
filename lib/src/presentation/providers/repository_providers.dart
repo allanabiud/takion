@@ -1,3 +1,4 @@
+import "dart:math";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/network/dio_client.dart";
 import "package:takion/src/core/network/metron_request_scheduler.dart";
@@ -30,21 +31,32 @@ import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/daos/offline_queue_dao.dart";
 import "package:takion/src/data/collection/repositories/metron_collection_repository_impl.dart";
 import "package:takion/src/data/collection/sync/collection_sync_manager.dart";
+import "package:takion/src/core/commands/command_services.dart";
+import "package:takion/src/data/common/drift/daos/outbox_dao.dart";
 import "package:takion/src/core/migration/collection_migrator.dart";
 import "package:takion/src/core/migration/migration_manager.dart";
 import "package:takion/src/core/migration/migration_state.dart";
 import "package:takion/src/core/migration/pull_list_migrator.dart";
 import "package:takion/src/core/migration/wishlist_migrator.dart";
+import "package:takion/src/core/sync/adapters/adapters.dart";
 import "package:takion/src/core/sync/connectivity_monitor.dart";
 import "package:takion/src/core/sync/metron_sync_manager.dart";
 import "package:takion/src/core/sync/metron_sync_state.dart";
+import "package:takion/src/core/sync/outbox/outbox_executor.dart";
+import "package:takion/src/core/sync/outbox/outbox_projection_applier.dart";
+import "package:takion/src/core/sync/outbox/outbox_remote_dispatcher.dart";
+import "package:takion/src/core/sync/sync_engine.dart";
+import "package:takion/src/core/cache/cache_pinning_service.dart";
+import "package:takion/src/data/common/drift/daos/sync_conflict_dao.dart";
+import "package:takion/src/data/common/drift/daos/sync_cursor_dao.dart";
+import "package:takion/src/data/common/drift/daos/sync_job_dao.dart";
+import "package:takion/src/data/common/drift/daos/sync_lease_dao.dart";
 import "package:takion/src/data/pull_list/repositories/metron_pull_list_repository_impl.dart";
 import "package:takion/src/data/pull_list/sync/pull_list_sync_manager.dart";
 import "package:takion/src/data/wishlist/repositories/local_wishlist_repository.dart";
 import "package:takion/src/data/wishlist/repositories/metron_wishlist_repository_impl.dart";
 import "package:takion/src/data/wishlist/sync/wishlist_sync_manager.dart";
 import "package:takion/src/domain/repositories.dart";
-
 
 final offlineQueueDaoProvider = Provider<OfflineQueueDao>((ref) {
   final db = ref.watch(driftDatabaseProvider);
@@ -82,21 +94,21 @@ final metronRemoteDataSourceProvider = Provider<MetronRemoteDataSource>((ref) {
 
 final metronCollectionRemoteDataSourceProvider =
     Provider<MetronCollectionRemoteDataSource>((ref) {
-  final dio = ref.watch(dioProvider);
-  return MetronCollectionRemoteDataSourceImpl(dio);
-});
+      final dio = ref.watch(dioProvider);
+      return MetronCollectionRemoteDataSourceImpl(dio);
+    });
 
 final metronPullListRemoteDataSourceProvider =
     Provider<MetronPullListRemoteDataSource>((ref) {
-  final dio = ref.watch(dioProvider);
-  return MetronPullListRemoteDataSourceImpl(dio);
-});
+      final dio = ref.watch(dioProvider);
+      return MetronPullListRemoteDataSourceImpl(dio);
+    });
 
 final metronWishlistRemoteDataSourceProvider =
     Provider<MetronWishlistRemoteDataSource>((ref) {
-  final dio = ref.watch(dioProvider);
-  return MetronWishlistRemoteDataSourceImpl(dio);
-});
+      final dio = ref.watch(dioProvider);
+      return MetronWishlistRemoteDataSourceImpl(dio);
+    });
 
 final metronLocalDataSourceProvider = Provider<MetronLocalDataSource>((ref) {
   final db = ref.watch(driftDatabaseProvider);
@@ -150,7 +162,9 @@ final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
   return ref.watch(metronRepositoryProvider);
 });
 
-final metronCollectionRepositoryProvider = Provider<CollectionRepository>((ref) {
+final metronCollectionRepositoryProvider = Provider<CollectionRepository>((
+  ref,
+) {
   final remote = ref.watch(metronCollectionRemoteDataSourceProvider);
   return MetronCollectionRepositoryImpl(remote);
 });
@@ -162,25 +176,52 @@ final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
 final collectionSyncManagerProvider = Provider<CollectionSyncManager>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final repo = ref.watch(metronCollectionRepositoryProvider);
-  return CollectionSyncManager(
-    database: db,
-    collectionRepository: repo,
-  );
+  return CollectionSyncManager(database: db, collectionRepository: repo);
 });
 
-final collectionAnalyticsEngineProvider =
-    Provider<CollectionAnalyticsEngine>((ref) {
-      final db = ref.watch(driftDatabaseProvider);
-      return CollectionAnalyticsEngine(db);
-    });
+final collectionAnalyticsEngineProvider = Provider<CollectionAnalyticsEngine>((
+  ref,
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  return CollectionAnalyticsEngine(db);
+});
+
+final outboxDaoProvider = Provider<OutboxDao>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return db.outboxDao;
+});
+
+final collectionCommandServiceProvider = Provider<CollectionCommandService>((
+  ref,
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  return CollectionCommandService(db);
+});
+
+final pullListCommandServiceProvider = Provider<PullListCommandService>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return PullListCommandService(db);
+});
+
+final wishlistCommandServiceProvider = Provider<WishlistCommandService>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return WishlistCommandService(db);
+});
 
 final libraryRepositoryProvider = Provider<LibraryRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final offlineQueue = ref.watch(offlineWriteQueueProvider);
-  return LocalLibraryRepository(db, offlineQueue: offlineQueue);
+  final commandService = ref.watch(collectionCommandServiceProvider);
+  return LocalLibraryRepository(
+    db,
+    offlineQueue: offlineQueue,
+    commandService: commandService,
+  );
 });
 
-final metronPullListRepositoryProvider = Provider<MetronPullListRepository>((ref) {
+final metronPullListRepositoryProvider = Provider<MetronPullListRepository>((
+  ref,
+) {
   final remote = ref.watch(metronPullListRemoteDataSourceProvider);
   return MetronPullListRepositoryImpl(remote);
 });
@@ -188,16 +229,18 @@ final metronPullListRepositoryProvider = Provider<MetronPullListRepository>((ref
 final pullListSyncManagerProvider = Provider<PullListSyncManager>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final repo = ref.watch(metronPullListRepositoryProvider);
-  return PullListSyncManager(
-    database: db,
-    pullListRepository: repo,
-  );
+  return PullListSyncManager(database: db, pullListRepository: repo);
 });
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final offlineQueue = ref.watch(offlineWriteQueueProvider);
-  return LocalSubscriptionRepository(db, offlineQueue: offlineQueue);
+  final commandService = ref.watch(pullListCommandServiceProvider);
+  return LocalSubscriptionRepository(
+    db,
+    offlineQueue: offlineQueue,
+    commandService: commandService,
+  );
 });
 
 final pullListRepositoryProvider = Provider<PullListRepository>((ref) {
@@ -221,8 +264,9 @@ final activityRepositoryProvider = Provider<ActivityRepository>((ref) {
   return LocalActivityRepository(db);
 });
 
-final metronWishlistRepositoryProvider =
-    Provider<MetronWishlistRepository>((ref) {
+final metronWishlistRepositoryProvider = Provider<MetronWishlistRepository>((
+  ref,
+) {
   final remote = ref.watch(metronWishlistRemoteDataSourceProvider);
   return MetronWishlistRepositoryImpl(remoteDataSource: remote);
 });
@@ -230,16 +274,18 @@ final metronWishlistRepositoryProvider =
 final wishlistSyncManagerProvider = Provider<WishlistSyncManager>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final repo = ref.watch(metronWishlistRepositoryProvider);
-  return WishlistSyncManager(
-    database: db,
-    wishlistRepository: repo,
-  );
+  return WishlistSyncManager(database: db, wishlistRepository: repo);
 });
 
 final localWishlistRepositoryProvider = Provider<WishlistRepository>((ref) {
   final db = ref.watch(driftDatabaseProvider);
   final offlineQueue = ref.watch(offlineWriteQueueProvider);
-  return LocalWishlistRepository(db, offlineQueue: offlineQueue);
+  final commandService = ref.watch(wishlistCommandServiceProvider);
+  return LocalWishlistRepository(
+    db,
+    offlineQueue: offlineQueue,
+    commandService: commandService,
+  );
 });
 
 final wishlistRepositoryProvider = Provider<WishlistRepository>((ref) {
@@ -248,11 +294,136 @@ final wishlistRepositoryProvider = Provider<WishlistRepository>((ref) {
 
 final connectivityMonitorProvider = Provider<ConnectivityMonitor>((ref) {
   final monitor = ConnectivityMonitor();
+  final syncEngine = ref.watch(syncEngineProvider);
+  final random = Random();
+
+  monitor.startMonitoring(
+    onReconnected: () {
+      final jitterSeconds = 1 + random.nextInt(4);
+      syncEngine.scheduleSync(
+        debounce: Duration(seconds: jitterSeconds),
+        reason: "reconnect",
+      );
+    },
+  );
+
   ref.onDispose(monitor.dispose);
   return monitor;
 });
 
+final syncLeaseDaoProvider = Provider<SyncLeaseDao>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return db.syncLeaseDao;
+});
+
+final syncJobDaoProvider = Provider<SyncJobDao>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return db.syncJobDao;
+});
+
+final syncCursorDaoProvider = Provider<SyncCursorDao>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return db.syncCursorDao;
+});
+
+final syncConflictDaoProvider = Provider<SyncConflictDao>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return db.syncConflictDao;
+});
+
+final outboxRemoteDispatcherProvider = Provider<OutboxRemoteDispatcher>((ref) {
+  return OutboxRemoteDispatcher(
+    collectionRemote: ref.watch(metronCollectionRemoteDataSourceProvider),
+    pullListRemote: ref.watch(metronPullListRemoteDataSourceProvider),
+    wishlistRemote: ref.watch(metronWishlistRemoteDataSourceProvider),
+  );
+});
+
+final outboxProjectionApplierProvider = Provider<OutboxProjectionApplier>((
+  ref,
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  return OutboxProjectionApplier(db);
+});
+
+final outboxExecutorProvider = Provider<OutboxExecutor>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return OutboxExecutor(
+    db: db,
+    outboxDao: ref.watch(outboxDaoProvider),
+    dispatcher: ref.watch(outboxRemoteDispatcherProvider),
+    projectionApplier: ref.watch(outboxProjectionApplierProvider),
+    conflictDao: ref.watch(syncConflictDaoProvider),
+  );
+});
+
+final collectionDeltaAdapterProvider = Provider<CollectionDeltaAdapter>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return CollectionDeltaAdapter(
+    db: db,
+    remoteDataSource: ref.watch(metronCollectionRemoteDataSourceProvider),
+    libraryItemDao: db.libraryItemDao,
+    cursorDao: ref.watch(syncCursorDaoProvider),
+  );
+});
+
+final pullSeriesSnapshotAdapterProvider = Provider<PullSeriesSnapshotAdapter>((
+  ref,
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  return PullSeriesSnapshotAdapter(
+    db: db,
+    remoteDataSource: ref.watch(metronPullListRemoteDataSourceProvider),
+    subscriptionDao: db.subscriptionDao,
+    cursorDao: ref.watch(syncCursorDaoProvider),
+  );
+});
+
+final wishlistSnapshotAdapterProvider = Provider<WishlistSnapshotAdapter>((
+  ref,
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  return WishlistSnapshotAdapter(
+    db: db,
+    remoteDataSource: ref.watch(metronWishlistRemoteDataSourceProvider),
+    wishlistDao: db.wishlistDao,
+    cursorDao: ref.watch(syncCursorDaoProvider),
+  );
+});
+
+final pullIssuesWindowAdapterProvider = Provider<PullIssuesWindowAdapter>((
+  ref,
+) {
+  final db = ref.watch(driftDatabaseProvider);
+  return PullIssuesWindowAdapter(
+    db: db,
+    remoteDataSource: ref.watch(metronPullListRemoteDataSourceProvider),
+    pullListDao: db.pullListDao,
+    cursorDao: ref.watch(syncCursorDaoProvider),
+  );
+});
+
+final syncEngineProvider = Provider<SyncEngine>((ref) {
+  final engine = SyncEngine(
+    leaseDao: ref.watch(syncLeaseDaoProvider),
+    jobDao: ref.watch(syncJobDaoProvider),
+    outboxDao: ref.watch(outboxDaoProvider),
+    outboxExecutor: ref.watch(outboxExecutorProvider),
+    adapters: [
+      ref.watch(collectionDeltaAdapterProvider),
+      ref.watch(pullSeriesSnapshotAdapterProvider),
+      ref.watch(wishlistSnapshotAdapterProvider),
+      ref.watch(pullIssuesWindowAdapterProvider),
+    ],
+    scheduler: ref.watch(rateLimitInterceptorProvider).scheduler,
+    runnerId: "foreground-isolate",
+  );
+  ref.onDispose(engine.dispose);
+  return engine;
+});
+
 final metronSyncManagerProvider = Provider<MetronSyncManager>((ref) {
+  final syncEngine = ref.watch(syncEngineProvider);
   final colSync = ref.watch(collectionSyncManagerProvider);
   final pullSync = ref.watch(pullListSyncManagerProvider);
   final wishSync = ref.watch(wishlistSyncManagerProvider);
@@ -260,6 +431,7 @@ final metronSyncManagerProvider = Provider<MetronSyncManager>((ref) {
   final offlineQueue = ref.watch(offlineWriteQueueProvider);
 
   final manager = MetronSyncManager(
+    syncEngine: syncEngine,
     collectionSyncManager: colSync,
     pullListSyncManager: pullSync,
     wishlistSyncManager: wishSync,
@@ -347,5 +519,7 @@ final failedOfflineWritesCountProvider = StreamProvider<int>((ref) {
   return queue.watchFailedCount();
 });
 
-
-
+final cachePinningServiceProvider = Provider<CachePinningService>((ref) {
+  final db = ref.watch(driftDatabaseProvider);
+  return CachePinningService(db);
+});

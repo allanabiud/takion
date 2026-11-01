@@ -162,4 +162,31 @@ class PullListDao extends DatabaseAccessor<AppDatabase> {
       }
     });
   }
+
+  /// Reconciles entries in the given date window that were not returned in the authoritative scan.
+  /// Only affects entries with [syncStatus] == 'synced'.
+  Future<int> reconcileMissingInWindow({
+    required DateTime storeDateAfter,
+    required DateTime storeDateBefore,
+    required Set<int> seenIssueIds,
+  }) async {
+    final entries =
+        await (select(attachedDatabase.pullListEntries)..where(
+              (t) =>
+                  t.syncStatus.equals("synced") &
+                  t.releaseDate.isBiggerOrEqualValue(storeDateAfter) &
+                  t.releaseDate.isSmallerOrEqualValue(storeDateBefore),
+            ))
+            .get();
+
+    final toRemove = entries
+        .where((e) => !seenIssueIds.contains(e.metronIssueId))
+        .toList();
+    for (final e in toRemove) {
+      await (delete(
+        attachedDatabase.pullListEntries,
+      )..where((t) => t.id.equals(e.id))).go();
+    }
+    return toRemove.length;
+  }
 }

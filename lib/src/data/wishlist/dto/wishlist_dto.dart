@@ -91,7 +91,10 @@ class WishListItemDto {
 
     return WishListItemDto(
       id: (json["id"] as num?)?.toInt() ?? 0,
-      issueId: (issueMap["id"] as num?)?.toInt() ?? (json["issue_id"] as num?)?.toInt() ?? 0,
+      issueId:
+          (issueMap["id"] as num?)?.toInt() ??
+          (json["issue_id"] as num?)?.toInt() ??
+          0,
       seriesId: (seriesMap["id"] as num?)?.toInt() ?? 0,
       seriesName: seriesMap["name"] as String? ?? "Unknown Series",
       issueNumber: issueMap["number"] as String? ?? "",
@@ -201,7 +204,8 @@ class AcquireWishListItemDto {
 
   Map<String, dynamic> toJson() => {
     if (purchaseDate != null) "purchase_date": purchaseDate,
-    if (purchasePrice != null) "purchase_price": purchasePrice?.toStringAsFixed(2),
+    if (purchasePrice != null)
+      "purchase_price": purchasePrice?.toStringAsFixed(2),
     "purchase_price_currency": purchasePriceCurrency,
     if (purchaseStore != null) "purchase_store": purchaseStore,
     if (notes != null) "notes": notes,

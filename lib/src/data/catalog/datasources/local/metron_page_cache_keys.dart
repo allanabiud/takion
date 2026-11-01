@@ -11,7 +11,8 @@ abstract final class MetronPageCacheKeys {
     return "${sunday.year}-${sunday.month}-${sunday.day}";
   }
 
-  static String normalizeSearchQuery(String query) => query.trim().toLowerCase();
+  static String normalizeSearchQuery(String query) =>
+      query.trim().toLowerCase();
   static String normalizeLimit(int? limit) =>
       limit != null && limit > 0 ? "$limit" : "";
   static String normalizeOrdering(String? ordering) => ordering?.trim() ?? "";

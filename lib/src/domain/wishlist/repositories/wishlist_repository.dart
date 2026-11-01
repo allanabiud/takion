@@ -1,7 +1,10 @@
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/domain/wishlist/entities/wishlist_item.dart";
 
 abstract class WishlistRepository {
   Stream<List<WishlistItem>> watchWishListItems({int? seriesId});
+
+  Future<RemotePage<WishlistItem>> getWishListPage({Uri? pageUrl});
 
   Future<List<WishlistItem>> getWishListItems({
     int page = 1,

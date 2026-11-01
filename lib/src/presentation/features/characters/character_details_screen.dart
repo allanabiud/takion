@@ -101,6 +101,7 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
 
     return DetailScreenShell<CharacterDetails>(
       asyncValue: detailsAsync,
+      entityId: widget.characterId,
       loadingImageUrl: widget.initialImageUrl,
       entityType: "character",
       initialChildSize: 0.60,
@@ -323,7 +324,7 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 152,
+                    height: 168,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -335,7 +336,8 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
                           entityType: "team",
                           entityId: team.id,
                           name: team.name,
-                          width: 110,
+                          width: 115,
+                          imageHeight: 105,
                           onTap: () => context.pushRoute(
                             TeamDetailsRoute(teamId: team.id),
                           ),
@@ -359,7 +361,7 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 136,
+                    height: 168,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -371,8 +373,8 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
                           entityType: "universe",
                           entityId: universe.id,
                           name: universe.name,
-                          width: 140,
-                          imageHeight: 80,
+                          width: 115,
+                          imageHeight: 105,
                           onTap: () => context.pushRoute(
                             UniverseDetailsRoute(universeId: universe.id),
                           ),

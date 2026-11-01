@@ -25,12 +25,12 @@ class OfflineQueueProcessor {
     required MetronPullListRemoteDataSource pullListRemote,
     required MetronWishlistRemoteDataSource wishlistRemote,
     Duration Function()? rateLimitDelay,
-  })  : _dao = dao,
-        _database = database,
-        _collectionRemote = collectionRemote,
-        _pullListRemote = pullListRemote,
-        _wishlistRemote = wishlistRemote,
-        _rateLimitDelay = rateLimitDelay;
+  }) : _dao = dao,
+       _database = database,
+       _collectionRemote = collectionRemote,
+       _pullListRemote = pullListRemote,
+       _wishlistRemote = wishlistRemote,
+       _rateLimitDelay = rateLimitDelay;
 
   Duration get _currentDelay =>
       _rateLimitDelay?.call() ?? const Duration(milliseconds: 3200);
@@ -75,11 +75,13 @@ class OfflineQueueProcessor {
       } on DioException catch (e, st) {
         final statusCode = e.response?.statusCode;
         final responseData = e.response?.data?.toString().toLowerCase() ?? "";
-        final isAlreadyPresent = (statusCode == 400 || statusCode == 409) &&
+        final isAlreadyPresent =
+            (statusCode == 400 || statusCode == 409) &&
             (responseData.contains("already") ||
                 responseData.contains("duplicate") ||
                 responseData.contains("exists"));
-        final isAlreadyDeleted = statusCode == 404 && entry.operation == "delete";
+        final isAlreadyDeleted =
+            statusCode == 404 && entry.operation == "delete";
 
         if (isAlreadyPresent || isAlreadyDeleted) {
           AppLogger.info(
@@ -184,13 +186,13 @@ class OfflineQueueProcessor {
             syncStatus: const Value("synced"),
             updatedAt: Value(nowIso),
           );
-          await (_database.update(_database.libraryItems)
-                ..where((t) => t.metronIssueId.equals(issueId)))
-              .write(updates);
+          await (_database.update(
+            _database.libraryItems,
+          )..where((t) => t.metronIssueId.equals(issueId))).write(updates);
           if (remoteId != null) {
-            await (_database.update(_database.libraryItems)
-                  ..where((t) => t.metronIssueId.equals(issueId)))
-                .write(
+            await (_database.update(
+              _database.libraryItems,
+            )..where((t) => t.metronIssueId.equals(issueId))).write(
               LibraryItemsCompanion(metronCollectionId: Value(remoteId)),
             );
             final item = await _database.libraryItemDao.getByIssueId(issueId);
@@ -207,9 +209,9 @@ class OfflineQueueProcessor {
       case "update":
         final collectionId = int.tryParse(entityId);
         if (collectionId != null) {
-          await (_database.update(_database.libraryItems)
-                ..where((t) => t.metronCollectionId.equals(collectionId)))
-              .write(
+          await (_database.update(
+            _database.libraryItems,
+          )..where((t) => t.metronCollectionId.equals(collectionId))).write(
             LibraryItemsCompanion(
               syncStatus: const Value("synced"),
               updatedAt: Value(nowIso),
@@ -219,9 +221,9 @@ class OfflineQueueProcessor {
       case "delete":
         final collectionId = int.tryParse(entityId);
         if (collectionId != null) {
-          await (_database.delete(_database.libraryItems)
-                ..where((t) => t.metronCollectionId.equals(collectionId)))
-              .go();
+          await (_database.delete(
+            _database.libraryItems,
+          )..where((t) => t.metronCollectionId.equals(collectionId))).go();
         }
       case "scrobble":
         break;
@@ -238,18 +240,18 @@ class OfflineQueueProcessor {
 
     switch (operation) {
       case "create":
-        await (_database.update(_database.seriesSubscriptions)
-              ..where((t) => t.metronSeriesId.equals(seriesId)))
-            .write(
+        await (_database.update(
+          _database.seriesSubscriptions,
+        )..where((t) => t.metronSeriesId.equals(seriesId))).write(
           SeriesSubscriptionsCompanion(
             syncStatus: const Value("synced"),
             updatedAt: Value(nowIso),
           ),
         );
       case "delete":
-        await (_database.update(_database.seriesSubscriptions)
-              ..where((t) => t.metronSeriesId.equals(seriesId)))
-            .write(
+        await (_database.update(
+          _database.seriesSubscriptions,
+        )..where((t) => t.metronSeriesId.equals(seriesId))).write(
           SeriesSubscriptionsCompanion(
             syncStatus: const Value("synced"),
             isActive: const Value(false),
@@ -334,9 +336,8 @@ class OfflineQueueProcessor {
   ) async {
     switch (operation) {
       case "create":
-        final issueId = payload["issue_id"] as int? ??
-            int.tryParse(entityId ?? "") ??
-            0;
+        final issueId =
+            payload["issue_id"] as int? ?? int.tryParse(entityId ?? "") ?? 0;
         final result = await _collectionRemote.addToCollection(
           issueId: issueId,
           quantity: payload["quantity"] as int? ?? 1,
@@ -356,21 +357,31 @@ class OfflineQueueProcessor {
         return result.id;
       case "update":
         final id = int.parse(entityId!);
-        await _collectionRemote.updateCollectionItem(id, payload);
+        final cleanPayload = Map<String, dynamic>.from(payload);
+        if (cleanPayload.containsKey("rating")) {
+          final r = cleanPayload["rating"];
+          if (r is int && r <= 0) {
+            cleanPayload["rating"] = null;
+          }
+        }
+        await _collectionRemote.updateCollectionItem(id, cleanPayload);
         return null;
       case "delete":
         final id = int.parse(entityId!);
         await _collectionRemote.removeFromCollection(id);
         return null;
       case "scrobble":
-        final issueId = payload["issue_id"] as int? ??
-            int.tryParse(entityId ?? "") ??
-            0;
+        final issueId =
+            payload["issue_id"] as int? ?? int.tryParse(entityId ?? "") ?? 0;
+        final rawRating = payload["rating"] as int?;
+        final sanitizedRating = (rawRating != null && rawRating > 0)
+            ? rawRating
+            : null;
         await _collectionRemote.scrobble(
           ScrobbleRequestDto(
             issueId: issueId,
             dateRead: payload["date_read"] as String?,
-            rating: payload["rating"] as int?,
+            rating: sanitizedRating,
           ),
         );
         return null;
@@ -386,14 +397,12 @@ class OfflineQueueProcessor {
   ) async {
     switch (operation) {
       case "create":
-        final seriesId = payload["series_id"] as int? ??
-            int.tryParse(entityId ?? "") ??
-            0;
+        final seriesId =
+            payload["series_id"] as int? ?? int.tryParse(entityId ?? "") ?? 0;
         await _pullListRemote.addSeriesToPullList(seriesId);
       case "delete":
-        final seriesId = payload["series_id"] as int? ??
-            int.tryParse(entityId ?? "") ??
-            0;
+        final seriesId =
+            payload["series_id"] as int? ?? int.tryParse(entityId ?? "") ?? 0;
         await _pullListRemote.removeSeriesFromPullList(seriesId);
       default:
         throw ArgumentError("Unknown pull_list operation: $operation");
@@ -407,17 +416,15 @@ class OfflineQueueProcessor {
   ) async {
     switch (operation) {
       case "create":
-        final issueId = payload["issue_id"] as int? ??
-            int.tryParse(entityId ?? "") ??
-            0;
+        final issueId =
+            payload["issue_id"] as int? ?? int.tryParse(entityId ?? "") ?? 0;
         await _wishlistRemote.addToWishList(
           WishListAddItemDto(
             issueId: issueId,
             priority: payload["priority"] as int? ?? 3,
             desiredGrade: (payload["desired_grade"] as num?)?.toDouble(),
             maxPrice: (payload["max_price"] as num?)?.toDouble(),
-            maxPriceCurrency:
-                payload["max_price_currency"] as String? ?? "USD",
+            maxPriceCurrency: payload["max_price_currency"] as String? ?? "USD",
             notes: payload["notes"] as String?,
           ),
         );

@@ -86,7 +86,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Arc'
+                $ref: '#/components/schemas/ArcRead'
           description: ''
   /api/arc/{id}/issue_list/:
     get:
@@ -889,7 +889,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Creator'
+                $ref: '#/components/schemas/CreatorRead'
           description: ''
   /api/imprint/:
     get:
@@ -1005,6 +1005,16 @@ paths:
           type: integer
         description: Character Metron ID
       - in: query
+        name: cover_date_range_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: cover_date_range_before
+        schema:
+          type: string
+          format: date
+      - in: query
         name: cover_hash
         schema:
           type: string
@@ -1029,6 +1039,11 @@ paths:
         schema:
           type: integer
         description: Comic Vine ID
+      - in: query
+        name: desc_is_solicitation
+        schema:
+          type: boolean
+        description: Description is the publisher's solicitation text
       - in: query
         name: foc_date
         schema:
@@ -1321,7 +1336,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Publisher'
+                $ref: '#/components/schemas/PublisherRead'
           description: ''
   /api/publisher/{id}/series_list/:
     get:
@@ -2593,7 +2608,24 @@ components:
         notes:
           type: string
           default: ''
-    Arc:
+    ArcList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    ArcRead:
       type: object
       properties:
         id:
@@ -2627,28 +2659,17 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
+      - attribution
       - id
       - modified
       - name
       - resource_url
-    ArcList:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-          maxLength: 255
-        modified:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - id
-      - modified
-      - name
     AssociatedSeries:
       type: object
       properties:
@@ -2660,6 +2681,20 @@ components:
       required:
       - id
       - series
+    Attribution:
+      type: object
+      properties:
+        source:
+          allOf:
+          - $ref: '#/components/schemas/ResourceAttributionSourceEnum'
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+      required:
+      - source
+      - url
     AttributionSourceEnum:
       enum:
       - CBRO
@@ -2788,7 +2823,13 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
+      - attribution
       - creators
       - id
       - modified
@@ -3557,7 +3598,7 @@ components:
         * `MZ` - Mozambique
         * `MM` - Myanmar
         * `NA` - Namibia
-        * `NR` - Nauru
+        * `NR` - Naoero
         * `NP` - Nepal
         * `NL` - Netherlands
         * `NC` - New Caledonia
@@ -3655,7 +3696,24 @@ components:
         * `YE` - Yemen
         * `ZM` - Zambia
         * `ZW` - Zimbabwe
-    Creator:
+    CreatorList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    CreatorRead:
       type: object
       properties:
         id:
@@ -3704,28 +3762,17 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
+      - attribution
       - id
       - modified
       - name
       - resource_url
-    CreatorList:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-          maxLength: 255
-        modified:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - id
-      - modified
-      - name
     CreditRead:
       type: object
       properties:
@@ -3893,7 +3940,13 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
+      - attribution
       - id
       - modified
       - name
@@ -4018,7 +4071,7 @@ components:
             format: decimal
             pattern: ^\d+\.\d{2}$
             example: '3.99'
-            description: Decimal string — defaults to USD (e.g. '3.99').
+            description: Decimal string - defaults to USD (e.g. '3.99').
           - type: object
             properties:
               amount:
@@ -4068,6 +4121,10 @@ components:
         desc:
           type: string
           title: Description
+        desc_is_solicitation:
+          type: boolean
+          title: Description is a solicitation
+          description: The description is the publisher's solicitation text.
         image:
           type: string
           format: uri
@@ -4140,8 +4197,14 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
       - arcs
+      - attribution
       - average_rating
       - characters
       - cover_date
@@ -5026,7 +5089,24 @@ components:
         * `3` - 3
         * `4` - 4
         * `5` - 5
-    Publisher:
+    PublisherList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - name
+    PublisherRead:
       type: object
       properties:
         id:
@@ -5075,28 +5155,17 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
+      - attribution
       - id
       - modified
       - name
       - resource_url
-    PublisherList:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-          maxLength: 255
-        modified:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - id
-      - modified
-      - name
     PullListIssue:
       type: object
       properties:
@@ -5165,7 +5234,7 @@ components:
           readOnly: true
         series:
           allOf:
-          - $ref: '#/components/schemas/SeriesList'
+          - $ref: '#/components/schemas/PullListSeriesInfo'
           readOnly: true
         added_on:
           type: string
@@ -5174,6 +5243,39 @@ components:
       - added_on
       - id
       - series
+    PullListSeriesInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        series:
+          type: string
+        year_began:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        year_end:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Year Ended
+        volume:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Volume Number
+        modified:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - modified
+      - series
+      - volume
+      - year_began
     Rating:
       type: object
       properties:
@@ -5307,6 +5409,7 @@ components:
           type: boolean
           description: Whether this list is private (only visible to the owner)
         attribution_source:
+          default: ''
           description: |-
             Source where this reading list information was obtained
 
@@ -5333,7 +5436,6 @@ components:
           format: date-time
           readOnly: true
       required:
-      - attribution_source
       - average_rating
       - id
       - list_type
@@ -5401,10 +5503,12 @@ components:
         previous:
           allOf:
           - $ref: '#/components/schemas/ReadingListNav'
+          nullable: true
           readOnly: true
         next:
           allOf:
           - $ref: '#/components/schemas/ReadingListNav'
+          nullable: true
           readOnly: true
         average_rating:
           type: number
@@ -5450,6 +5554,18 @@ components:
       required:
       - id
       - issue
+    ResourceAttributionSourceEnum:
+      enum:
+      - Marvel
+      - Wikipedia
+      - Grand Comics Database
+      - DC
+      type: string
+      description: |-
+        * `Marvel` - Marvel
+        * `Wikipedia` - Wikipedia
+        * `Grand Comics Database` - Grand Comics Database
+        * `DC` - DC
     Role:
       type: object
       properties:
@@ -5551,6 +5667,25 @@ components:
         issue_count:
           type: integer
           readOnly: true
+        publisher:
+          allOf:
+          - $ref: '#/components/schemas/BasicPublisher'
+          readOnly: true
+        series_type:
+          allOf:
+          - $ref: '#/components/schemas/SeriesType'
+          readOnly: true
+        cv_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Comic Vine ID
+        gcd_id:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
         modified:
           type: string
           format: date-time
@@ -5559,7 +5694,9 @@ components:
       - id
       - issue_count
       - modified
+      - publisher
       - series
+      - series_type
       - volume
       - year_began
     SeriesRead:
@@ -5648,8 +5785,14 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
       - associated
+      - attribution
       - genres
       - id
       - imprint
@@ -5736,7 +5879,13 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
+      - attribution
       - creators
       - id
       - modified
@@ -5775,6 +5924,7 @@ components:
           maxLength: 255
         designation:
           type: string
+          default: ''
           maxLength: 255
         desc:
           type: string
@@ -5795,8 +5945,13 @@ components:
           type: string
           format: date-time
           readOnly: true
+        attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribution'
+          readOnly: true
       required:
-      - designation
+      - attribution
       - id
       - modified
       - name
@@ -5829,7 +5984,7 @@ components:
             format: decimal
             pattern: ^\d+\.\d{2}$
             example: '3.99'
-            description: Decimal string — defaults to USD (e.g. '3.99').
+            description: Decimal string - defaults to USD (e.g. '3.99').
           - type: object
             properties:
               amount:

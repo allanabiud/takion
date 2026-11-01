@@ -50,7 +50,6 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
         ResourceUrlActions<SeriesDetails>,
         FavoriteToggleActions,
         DetailRefreshActions<SeriesDetails> {
-
   @override
   String? resourceUrlOf(SeriesDetails details) => details.resourceUrl;
 
@@ -75,7 +74,11 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
     ref.invalidate(seriesDetailsProvider(widget.seriesId));
     ref.invalidate(seriesFullDetailsProvider(widget.seriesId));
     ref.invalidate(seriesIssueListProvider);
-    ref.invalidate(seriesMissingIssuesProvider(SeriesMissingIssuesArgs(seriesId: widget.seriesId)));
+    ref.invalidate(
+      seriesMissingIssuesProvider(
+        SeriesMissingIssuesArgs(seriesId: widget.seriesId),
+      ),
+    );
   }
 
   bool _isUpdatingSubscription = false;
@@ -158,6 +161,7 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
     return Scaffold(
       body: DetailScreenShell<SeriesDetails>(
         asyncValue: detailsAsync,
+        entityId: widget.seriesId,
         loadingImageUrl: widget.initialImageUrl,
         entityType: "series",
         initialChildSize: 0.60,
@@ -166,8 +170,13 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
         toImageUrl: (d) => null,
         toHeroTag: (d) => "series-${d.id}",
         toTitle: (d) {
-          final cleanName = d.name.toUpperCase().replaceAll(RegExp(r"\s*\(\d{4}\)\s*$"), "");
-          return d.yearBegan != null ? "$cleanName (${d.yearBegan})" : cleanName;
+          final cleanName = d.name.toUpperCase().replaceAll(
+            RegExp(r"\s*\(\d{4}\)\s*$"),
+            "",
+          );
+          return d.yearBegan != null
+              ? "$cleanName (${d.yearBegan})"
+              : cleanName;
         },
         toHeaderExtra: (d) {
           final theme = Theme.of(context);
@@ -357,9 +366,13 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Theme.of(context).colorScheme.surface.withValues(alpha: 0.75),
+                    Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.75),
                     Colors.transparent,
-                    Theme.of(context).colorScheme.surface.withValues(alpha: 0.75),
+                    Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.75),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ),
@@ -417,7 +430,10 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
             ],
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
                 child: DatabaseIdsSection(
                   metronId: d.id,
                   comicVineId: d.cvId,
@@ -489,8 +505,8 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
                   final title = issueNum.isNotEmpty
                       ? "${series.name} #$issueNum"
                       : (issue.name.trim().isNotEmpty
-                          ? issue.name.trim()
-                          : series.name);
+                            ? issue.name.trim()
+                            : series.name);
                   return IssueCard(
                     issueId: issueId,
                     imageUrl: issue.image,
@@ -501,11 +517,11 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
                     onTap: issueId == null
                         ? null
                         : () => context.pushRoute(
-                              IssueDetailsRoute(
-                                issueId: issueId,
-                                initialImageUrl: issue.image,
-                              ),
+                            IssueDetailsRoute(
+                              issueId: issueId,
+                              initialImageUrl: issue.image,
                             ),
+                          ),
                   );
                 },
               ),
@@ -516,4 +532,3 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
     );
   }
 }
-

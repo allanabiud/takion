@@ -75,10 +75,11 @@ class SeriesSubscriptionCard extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: (isFailedSync
-                                ? theme.colorScheme.errorContainer
-                                : theme.colorScheme.surface)
-                            .withValues(alpha: 0.9),
+                        color:
+                            (isFailedSync
+                                    ? theme.colorScheme.errorContainer
+                                    : theme.colorScheme.surface)
+                                .withValues(alpha: 0.9),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

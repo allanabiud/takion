@@ -28,10 +28,8 @@ class SyncProgressState {
     required this.updatedAt,
   });
 
-  factory SyncProgressState.initial() => SyncProgressState(
-    phase: SyncPhase.idle,
-    updatedAt: DateTime.now(),
-  );
+  factory SyncProgressState.initial() =>
+      SyncProgressState(phase: SyncPhase.idle, updatedAt: DateTime.now());
 
   SyncProgressState copyWith({
     SyncPhase? phase,

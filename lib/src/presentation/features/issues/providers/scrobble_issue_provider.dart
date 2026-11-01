@@ -116,25 +116,31 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
 
         // Enforce strict mutual exclusivity across collection and wishlist
         if (targetIsCollected) {
-          await ref.read(wishlistRepositoryProvider).removeFromWishListByIssueId(_issueId);
+          await ref
+              .read(wishlistRepositoryProvider)
+              .removeFromWishListByIssueId(_issueId);
         } else if (targetIsWishlisted) {
           if (wasCollected) {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
-          await ref.read(wishlistRepositoryProvider).addToWishList(
-            issueId: _issueId,
-            seriesId: seriesId,
-            seriesName: _context?.seriesName,
-            issueNumber: _context?.issueNumber,
-            imageUrl: _context?.imageUrl,
-          );
+          await ref
+              .read(wishlistRepositoryProvider)
+              .addToWishList(
+                issueId: _issueId,
+                seriesId: seriesId,
+                seriesName: _context?.seriesName,
+                issueNumber: _context?.issueNumber,
+                imageUrl: _context?.imageUrl,
+              );
         }
 
         if (!targetIsCollected && !targetIsRead && !targetIsWishlisted) {
           if (existing != null) {
             await libraryRepository.deleteItemByIssueId(_issueId);
           }
-          await ref.read(wishlistRepositoryProvider).removeFromWishListByIssueId(_issueId);
+          await ref
+              .read(wishlistRepositoryProvider)
+              .removeFromWishListByIssueId(_issueId);
           await _recordActivityEvents(
             seriesId: seriesId,
             wasCollected: wasCollected,
@@ -157,6 +163,13 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           return;
         }
 
+        final effectiveRating = (rating != null && rating > 0)
+            ? rating
+            : (rating == null ? existing?.rating : null);
+        final sanitizedRating = (effectiveRating != null && effectiveRating > 0)
+            ? effectiveRating
+            : null;
+
         await libraryRepository.upsertItem(
           metronIssueId: _issueId,
           metronSeriesId: seriesId,
@@ -166,7 +179,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
                     ? LibraryOwnershipStatus.wishlist
                     : LibraryOwnershipStatus.notOwned),
           isRead: targetIsRead,
-          rating: targetIsRead ? (rating ?? existing?.rating) : null,
+          rating: targetIsRead ? sanitizedRating : null,
           firstReadAt: targetIsRead
               ? (existing?.firstReadAt ?? readAt)
               : (() {
@@ -191,7 +204,7 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
           await libraryRepository.addReadLog(
             metronIssueId: _issueId,
             readAt: readAt,
-            rating: rating,
+            rating: sanitizedRating,
           );
           AppLogger.info(
             "Scrobble: created read log for issue #$_issueId at $readAt",

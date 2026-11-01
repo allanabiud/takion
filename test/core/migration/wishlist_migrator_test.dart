@@ -47,9 +47,7 @@ void main() {
         ),
       );
 
-      when(
-        () => remoteDataSource.addToWishList(any()),
-      ).thenAnswer(
+      when(() => remoteDataSource.addToWishList(any())).thenAnswer(
         (_) async => const WishListItemDto(
           id: 5678,
           issueId: 1234,

@@ -3,6 +3,8 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "dart:io";
+import "package:flutter/painting.dart";
+import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:path_provider/path_provider.dart";
 import "package:takion/src/core/network/dio_client.dart";
 import "package:takion/src/presentation/features/library/providers/collection_items_provider.dart";
@@ -210,22 +212,59 @@ class SettingsNotifier extends _$SettingsNotifier {
     invalidateCacheBackedProviders((p) => ref.invalidate(p));
   }
 
-  Future<void> clearCache() async {
+  /// Rebuilds the metadata and image caches.
+  ///
+  /// This is a safe escape hatch: it clears `remote_cache_entries`,
+  /// HTTP validator metadata, and in-memory/disk image caches, then
+  /// invalidates cache-backed providers. It NEVER touches user data -
+  /// `library_items`, `wishlist_items`, `pull_list_entries`,
+  /// `series_subscriptions`, `activity_events`, `reading_lists`, or
+  /// pending `outbox_operations` are all preserved.
+  ///
+  /// When [keepPinned] is true (default), pinned remote cache entries
+  /// (owned/followed/downloaded content) survive the rebuild.
+  Future<void> clearCache({bool keepPinned = true}) async {
     if (state.isBusy) return;
 
     state = state.copyWith(
       isBusy: true,
-      statusMessage: "Clearing local cache and metadata...",
+      statusMessage: keepPinned
+          ? "Rebuilding metadata & image cache..."
+          : "Clearing all cached data...",
     );
 
     try {
       final db = ref.read(driftDatabaseProvider);
       final cacheHeaderStore = ref.read(cacheHeaderStoreProvider);
+
+      // 1. Evict remote metadata cache (pinned entries optionally kept).
+      await db.remoteCacheDao.clearAll(
+        "local-user",
+        includePinned: !keepPinned,
+      );
+
+      // 2. Clear HTTP validator metadata (ETag / Last-Modified).
       await cacheHeaderStore.clear(db);
+
+      // 3. Clear in-memory and on-disk cover image caches. Best-effort: a
+      // disk-cache failure must not roll back the metadata rebuild that
+      // already succeeded.
+      try {
+        PaintingBinding.instance.imageCache.clear();
+        PaintingBinding.instance.imageCache.clearLiveImages();
+        await DefaultCacheManager().emptyCache();
+      } catch (e) {
+        AppLogger.warning("Failed to clear image cache during rebuild: $e");
+      }
+
+      // 4. Invalidate cache-backed providers so they re-render from SQLite.
       _invalidateCacheBackedProviders();
+
       state = state.copyWith(
         isBusy: false,
-        statusMessage: "Cache and metadata cleared successfully",
+        statusMessage: keepPinned
+            ? "Cache rebuilt; library & pending sync preserved"
+            : "Cache and metadata cleared successfully",
       );
     } catch (e) {
       AppLogger.error("Failed to clear cache", error: e);
@@ -375,6 +414,25 @@ final cacheSizeProvider = FutureProvider<int>((ref) async {
   return _dbFileSize();
 });
 
+/// Total size in bytes of the on-disk cover image cache maintained by
+/// [DefaultCacheManager].
 final imageCacheSizeProvider = FutureProvider<int>((ref) async {
-  return _dbFileSize();
+  try {
+    final baseDir = await getTemporaryDirectory();
+    final cacheDir = Directory("${baseDir.path}/${DefaultCacheManager.key}");
+    if (!await cacheDir.exists()) return 0;
+    var total = 0;
+    await for (final entity in cacheDir.list(
+      recursive: true,
+      followLinks: false,
+    )) {
+      if (entity is File) {
+        total += await entity.length();
+      }
+    }
+    return total;
+  } catch (e) {
+    AppLogger.warning("Failed to measure image cache size: $e");
+    return 0;
+  }
 });

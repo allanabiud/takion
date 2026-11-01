@@ -4,22 +4,23 @@ Reference for the Metron API endpoints. All endpoints live under `https://metron
 
 ## Authentication
 
-All requests require authentication. Metron supports three authentication methods:
+All requests require authentication. Metron has transitioned to API token authentication as the primary method:
 
 | Method | Type | Header | Description |
 |--------|------|--------|-------------|
-| **Basic Auth** | HTTP Basic | `Authorization: Basic <base64>` | Username + password |
-| **API Token** | Bearer Token | `Authorization: Token <token>` | Knox API token (recommended) |
-| **Session Cookie** | Cookie | `Cookie: sessionid=<value>` | Browser session |
+| **API Token** | Bearer Token | `Authorization: Bearer <token>` | Knox API token (Primary / Standard method) |
+| **Session Cookie** | Cookie | `Cookie: sessionid=<value>` | Browser session (Web UI) |
 
-> **Tip:** API tokens (`knoxApiToken`) are the recommended method for programmatic access. They don't require sending your password with every request.
+> **Note:** Metron has deprecated HTTP Basic Authentication in favor of API tokens (`Bearer <token>`). Tokens provide scoped, secure programmatic access without transmitting account passwords.
 
 ## General Notes
 
 - Responses are paginated using the standard DRF format (`count`, `next`, `previous`, `results`).
 - Read endpoints (`GET`) are open to any authenticated user.
 - Write operations (create/update on imprints, publishers, series, collections) require the Editor or Admin role.
-- `next` and `previous` pagination URLs are ready to use — pass them straight to your HTTP client.
+- `next` and `previous` pagination URLs are ready to use - pass them straight to your HTTP client.
+- **Server Response Caching:** Metron uses a fail-open Redis cache with a 3-day safety-net TTL for detail endpoints, with automated m2m relation cascade invalidations. If Redis undergoes maintenance, the API fails open as cache misses rather than 500 errors.
+- **Client Synchronization & Scheduling:** App developers must NOT schedule recurring tasks at fixed wall-clock times (e.g. 00:00 UTC or top of the hour). Installs should persist a randomized per-install offset and add jitter to retries. Honor `Retry-After` on HTTP 429 and pace requests using `X-RateLimit-*` headers.
 
 
 ## Endpoint Overview
@@ -94,7 +95,7 @@ Returns a list of all the story arcs.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -117,7 +118,7 @@ Returns the information of an individual story arc.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this arc. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -145,7 +146,7 @@ Returns the list of issues in a story arc.
 | `id` | integer (path) | A unique integer value identifying this arc. |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -175,7 +176,7 @@ Returns a list of all the characters.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -198,7 +199,7 @@ Returns the information of an individual character.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this character. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -229,7 +230,7 @@ Returns a list of a character's appearances.
 | `id` | integer (path) | A unique integer value identifying this character. |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -262,7 +263,7 @@ Returns authenticated user's collection items.
 | `page` | integer | Page number |
 | `rating` | integer | User rating |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -297,7 +298,7 @@ Add an issue to the authenticated user's collection.
 }
 ```
 
-**Response — `201 Created`**
+**Response - `201 Created`**
 
 ```json
 {
@@ -328,7 +329,7 @@ Returns details of a specific collection item.
 |---|---|---|
 | `id` | integer (path) | Collection item ID |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -367,7 +368,7 @@ Update a collection item (full update).
 }
 ```
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -396,7 +397,7 @@ Update a collection item (partial update).
 }
 ```
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -417,7 +418,7 @@ Remove an item from the collection.
 |---|---|---|
 | `id` | integer (path) | Collection item ID |
 
-**Response — `204 No Content`**
+**Response - `204 No Content`**
 
 ---
 
@@ -432,7 +433,7 @@ Returns missing issues for a specific series.
 | `series_id` | integer (path) | Series ID |
 | `page` | integer | Page number |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -455,7 +456,7 @@ Returns series where the user has some issues but is missing others.
 |---|---|---|
 | `page` | integer | Page number |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -482,7 +483,7 @@ Mark an issue as read (scrobble). Auto-creates collection item if needed.
 }
 ```
 
-**Response — `201 Created`**
+**Response - `201 Created`**
 
 ```json
 {
@@ -499,7 +500,7 @@ Mark an issue as read (scrobble). Auto-creates collection item if needed.
 
 Returns statistics about the user's collection.
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -544,7 +545,7 @@ Returns a list of all the creators.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -567,7 +568,7 @@ Returns the information of an individual creator.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this creator. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -606,7 +607,7 @@ Returns a list of all imprints.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -629,7 +630,7 @@ Returns the information of an individual imprint.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this imprint. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -660,12 +661,17 @@ Returns a list of all the issues.
 |---|---|---|
 | `alt_number` | string | Alternate Number |
 | `character_id` | integer | Character Metron ID |
+| `cover_date_range_after` | string (date) | Cover date on or after this date (YYYY-MM-DD) |
+| `cover_date_range_before` | string (date) | Cover date on or before this date (YYYY-MM-DD) |
 | `cover_hash` | string | Cover Hash |
 | `cover_month` | number | Cover Month |
 | `cover_year` | number | Cover Year |
 | `creator_id` | integer | Creator Metron ID |
 | `cv_id` | integer | Comic Vine ID |
+| `desc_is_solicitation` | boolean | Description is the publisher's solicitation text |
 | `foc_date` | string (date) | Final order cutoff date |
+| `foc_date_range_after` | string (date) | FOC date on or after this date (YYYY-MM-DD) |
+| `foc_date_range_before` | string (date) | FOC date on or before this date (YYYY-MM-DD) |
 | `gcd_id` | integer | Grand Comics Database ID |
 | `imprint_id` | integer | Imprint Metron ID |
 | `imprint_name` | string | Imprint Name |
@@ -683,11 +689,13 @@ Returns a list of all the issues.
 | `series_year_began` | integer | Series Beginning Year |
 | `sku` | string | Distributor SKU |
 | `store_date` | string (date) | In-store date |
+| `store_date_range_after` | string (date) | Store date on or after this date (YYYY-MM-DD) |
+| `store_date_range_before` | string (date) | Store date on or before this date (YYYY-MM-DD) |
 | `team_id` | integer | Team Metron ID |
 | `universe_id` | integer | Universe Metron ID |
 | `upc` | string | UPC Code |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -710,7 +718,7 @@ Returns the information of an individual issue.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this issue. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -757,7 +765,7 @@ Returns a list of all publishers.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -780,7 +788,7 @@ Returns the information of an individual publisher.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this publisher. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -812,7 +820,7 @@ Returns a list of series for a publisher.
 | `id` | integer (path) | A unique integer value identifying this publisher. |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -838,7 +846,7 @@ Returns the authenticated user's pull lists.
 |---|---|---|
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -861,7 +869,7 @@ Returns details of a specific pull list.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this Pull List. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -884,7 +892,7 @@ Returns issues for series on the authenticated user's pull list.
 | `store_date_after` | string (date) | Return issues with a store date on or after this date (YYYY-MM-DD). |
 | `store_date_before` | string (date) | Return issues with a store date on or before this date (YYYY-MM-DD). |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -901,20 +909,35 @@ Returns issues for series on the authenticated user's pull list.
 
 Returns the authenticated user's pull list series.
 
+> **Note:** Responses use the `PullListSeriesInfo` serializer (pins response to `id`, `series`, `volume`, `year_began`, `year_end`, `modified`). Does not include `issue_count` (which was dropped from this serializer) or top-level `publisher`/`series_type`/`cv_id`/`gcd_id`.
+
 **Parameters**
 
 | Name | Type | Description |
 |---|---|---|
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
-  "count": 0,
-  "next": "https://example.com/image.jpg",
-  "previous": "https://example.com/image.jpg",
-  "results": []
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 101,
+      "series": {
+        "id": 3856,
+        "series": "Batman",
+        "volume": 3,
+        "year_began": 2016,
+        "year_end": null,
+        "modified": "2026-07-24T06:42:18Z"
+      },
+      "added_on": "2026-07-24T06:42:18.725Z"
+    }
+  ]
 }
 ```
 
@@ -930,7 +953,7 @@ Add a series to the authenticated user's pull list.
 |---|---|---|
 | `series_id` | integer | Series ID to add |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -951,7 +974,7 @@ Remove a series from the authenticated user's pull list.
 |---|---|---|
 | `series_pk` | integer (path) | Series ID to remove |
 
-**Response — `204 No Content`**
+**Response - `204 No Content`**
 
 ---
 
@@ -977,7 +1000,7 @@ Returns a list of reading lists based on user permissions.
 | `user` | integer | user |
 | `username` | string | username |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1000,7 +1023,7 @@ Returns the information of an individual reading list.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this reading list. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1028,7 +1051,7 @@ Returns a paginated list of items for this reading list.
 | `id` | integer (path) | A unique integer value identifying this reading list. |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1056,7 +1079,7 @@ Returns a list of all the creator roles.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1083,7 +1106,7 @@ OpenAPI 3 schema for this API.
 | `format` | string | Output format. One of json, yaml |
 | `lang` | string | Language code (e.g. en, fr, ja) |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 Returns the OpenAPI 3 schema in the requested format (JSON or YAML).
 
@@ -1122,14 +1145,35 @@ Returns a list of all the comic series.
 | `year_began` | integer | Beginning Year |
 | `year_end` | integer | Ending Year |
 
-**Response — `200 OK`**
+> **Note:** Series list items (`SeriesListSerializer`) include `publisher`, `series_type`, `cv_id`, and `gcd_id`.
+
+**Response - `200 OK`**
 
 ```json
 {
-  "count": 0,
-  "next": "https://example.com/image.jpg",
-  "previous": "https://example.com/image.jpg",
-  "results": []
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "series": "Batman",
+      "year_began": 2016,
+      "year_end": null,
+      "volume": 3,
+      "issue_count": 150,
+      "publisher": {
+        "id": 1,
+        "name": "DC Comics"
+      },
+      "series_type": {
+        "id": 1,
+        "name": "Ongoing"
+      },
+      "cv_id": 91819,
+      "gcd_id": 169363
+    }
+  ]
 }
 ```
 
@@ -1145,7 +1189,7 @@ Returns the information of an individual comic series.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this series. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1179,7 +1223,7 @@ Returns a list of a series' issues.
 | `id` | integer (path) | A unique integer value identifying this series. |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1207,7 +1251,7 @@ Returns a list of the series types available.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1237,7 +1281,7 @@ Returns a list of all the teams.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1260,7 +1304,7 @@ Returns the information of an individual team.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this team. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1288,7 +1332,7 @@ Returns a list of issues featuring the team.
 | `id` | integer (path) | A unique integer value identifying this team. |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1317,7 +1361,7 @@ Returns a list of all the universes.
 | `name` | string | name |
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1340,7 +1384,7 @@ Returns the information of an individual universe.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this universe. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1370,7 +1414,7 @@ Returns paginated wish lists for the authenticated user.
 |---|---|---|
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1393,7 +1437,7 @@ Returns details of a specific wish list.
 |---|---|---|
 | `id` | integer (path) | A unique integer value identifying this Wish List. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1414,7 +1458,7 @@ Returns paginated wish list items for the authenticated user.
 |---|---|---|
 | `page` | integer | A page number within the paginated result set. |
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {
@@ -1444,7 +1488,7 @@ Add an issue to the authenticated user's wish list.
 }
 ```
 
-**Response — `201 Created`**
+**Response - `201 Created`**
 
 ```json
 {
@@ -1480,7 +1524,7 @@ Mark a wish list item as acquired and create a collection item.
 }
 ```
 
-**Response — `200 OK`**
+**Response - `200 OK`**
 
 ```json
 {}
@@ -1498,6 +1542,6 @@ Remove an item from the authenticated user's wish list.
 |---|---|---|
 | `item_pk` | integer (path) | Wish list item ID |
 
-**Response — `204 No Content`**
+**Response - `204 No Content`**
 
 ---

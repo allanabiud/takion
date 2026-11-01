@@ -5,34 +5,69 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.0] - 2026-11-01
+
+### Added
+
+- Added a smooth cover slide transition when navigating between issues in the issue details screen.
+- Reading history dates can now expand independently without collapsing others, with new expand all and collapse all controls.
+- Added circular backgrounds behind header app bar buttons on detail screens for better contrast over covers and banners.
+- The app now remembers Metron rate-limit cooldowns across restarts. If the server rate-limits you, background sync pauses and picks up again automatically once the window passes, instead of retrying into it.
+- The Performance & Diagnostics sheet now shows live rate quota (burst and daily remaining), cache hit rate including 304 revalidations, pending changes in the sync queue with their age, and resolved sync conflicts.
+- Added a "Copy Diagnostics Report" button for bug reports. The copied summary is stripped of tokens, authorization headers, and passwords before it ever leaves the device.
+- Added a background sync schedule setting (Daily, Every 12 Hours, Every 6 Hours, Manual Only), with a random per-install offset so all installs don't contact the server at the same moment.
+- Added cover date range filters (before/after a date) and a "not a solicitation" filter when browsing issues.
+- Series lists now show publisher, series type, Comic Vine ID, and GCD ID where Metron provides them.
+- Cover cards now show a badge while a change is waiting to sync, or when a local change was kept after a conflict.
+
+### Changed
+
+- Reading activity calendar heatmap now stays consistent with your full reading history and scrobbles.
+- Refined entity card dimensions and image proportions across universes, creators, characters, teams, and story arcs.
+- "Clear All Cache" in Settings is now "Rebuild Cache": it clears network metadata and cover images while keeping your library, reading lists, downloaded/pinned content, and offline changes waiting to sync. It also no longer fails midway if cover images can't be cleared.
+- Background sync now runs at most 3 requests at a time with a slot kept free for foreground use, and full pagination scans run one at a time - browsing stays responsive while a sync is working.
+- Screens open instantly from local data and validate against Metron in the background; browsing, reading, and edits keep working offline and sync later.
+- Sync no longer restarts an interrupted scan from the first page, and a failed or partial sync never deletes local data.
+- Foreground and background sync now take turns through a single scheduler instead of running over each other.
+- Quick sequences like add-then-edit are combined into a single request to Metron instead of one per change.
+- Retries after server errors and rate limits now wait as long as the server asks, with randomized jitter, instead of retrying in synchronized bursts.
+- Background sync now uploads your offline changes before downloading new data.
+- Updating from an older version carries over any changes still waiting to sync - nothing queued is lost.
+
+### Fixed
+
+- Fixed rating 0 being rejected by Metron with an error; setting a rating back to 0 now saves and syncs correctly.
+- Fixed pull list sync deactivating series that are listed on other pages during a full sync - all pages are now collected before anything is removed.
+- Fixed "Unknown Series" appearing instead of the real series title for some pull list entries.
+- Fixed series and pull lists stopping after a single page when there is more data to load.
+- The image cache size shown in Settings now reports the actual on-disk image cache instead of the database size.
 
 ## [2.0.0] - 2026-09-25
 
 ### Added
 
-- **Metron-First Data & Sync Infrastructure**: Direct Metron API client layer with dedicated `CollectionSyncManager`, `WishlistSyncManager`, and `PullListSyncManager`.
-- **Offline Write Queue**: Persistent offline queue ensuring all local mutations (collected, read, wishlist, rating) save instantly to SQLite and synchronize to Metron in the background.
-- **Incremental Sync**: Optimized sync using `modified_gt` timestamps and 404-idempotent remote handling.
-- **Migration Manager**: Seamless one-time data migration pipeline with rate-limit-aware batching and progress tracking.
-- **Unified Series Screen**: Consolidated library series and series details into a master screen with multi-select triage, filter chips, and gap finder.
-- **Reading Lists & Favorites Tracking**: Local reading list creation, arc importing, and favorites support.
-- **SQL Aggregate Stats & Analytics**: Drift SQL aggregates for collection analytics, monthly/yearly spending trends, and offline fallback search.
-- **Backup Hardening**: Google Drive and local backup checksum validation, pre-restore preview, and rollback safety.
-- **Pull-to-Refresh on Releases**: Added pull-to-refresh to Weekly Releases, FOC Calendar, New #1s, and My Pulls.
-- **Unified Takion Alerts**: Integrated flash alert notifications for clipboard copy actions (SKU, UPC/ISBN) and library updates.
+- Syncs your collection, wishlist, and pull lists directly with Metron.
+- Collected, read, wishlist, and rating changes now save instantly and sync in the background - even when you're offline.
+- Sync now transfers only what changed since the last sync instead of re-downloading everything, and handles items deleted on the server without errors.
+- Existing data is migrated automatically on first launch after updating, with progress shown and safe pacing against Metron's rate limits.
+- Library and series details are now one unified screen with multi-select, filter chips, and a gap finder for missing issues.
+- Local reading lists, importing story arcs as reading lists, and favorites tracking.
+- Collection statistics with monthly and yearly spending trends, plus search that works offline.
+- Backups now verify their integrity, show a preview before restoring, and roll back automatically if a restore fails.
+- Pull-to-refresh on Weekly Releases, FOC Calendar, New #1s, and My Pulls.
+- Flash confirmation alerts when copying a SKU or UPC/ISBN and when updating your library.
 
 ### Changed
 
-- **Compact Week Picker**: Redesigned week navigation bar with left-aligned title and grouped compact controls.
-- **Opt-in Hero Transitions**: Made Hero animations opt-in on issue covers to prevent jarring cross-route flight artifacts and disappearing covers during navigation.
-- **Stream Debouncing**: Added 16ms status stream debouncing to prevent UI jitter during bulk background syncs and backup restores.
-- **Atomic Ownership Transitions**: Wrapped collection/wishlist status mutations in atomic Drift database transactions to guarantee mutual exclusivity.
-- Replaced discontinued `flutter_markdown` with `flutter_markdown_plus`.
+- Redesigned the week navigation bar with a compact layout and grouped controls.
+- Hero animations on issue covers are now off by default to prevent covers disappearing during navigation.
+- Reduced UI flicker during large background syncs and backup restores.
+- Collection and wishlist status changes now apply together atomically, so an issue can never end up both collected and wishlisted.
+- Updated the markdown renderer used in-app after the previous one was discontinued.
 
 ### Removed
 
-- Removed legacy SuperHero API integration and obsolete endpoints.
+- Removed the legacy SuperHero API integration and its obsolete endpoints.
 
 ## [1.3.5] - 2026-08-17
 
@@ -49,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed type cast crash when the Metron API returns a 304 Not Modified for series issue lists.
-- Added friendly fallback for unexpected type cast errors.
+- Unexpected type errors now show a friendly message instead of crashing.
 
 ## [1.3.0] - 2026-08-16
 
@@ -63,30 +98,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Refined transitions, series tile skeletons and tactile haptics.
-- Overhauled content layouts, grid/list density toggles and PinnedListHeader collapse behavior.
-- Throttled drive auto-sync and deferred full snapshot uploads.
-- Updated favorite indicators across cards and list tiles to use a rounded square container matching the detail-screen action button style.
+- Overhauled content layouts with grid/list density toggles and collapsing pinned section headers.
+- Google Drive auto-sync now runs less often and waits for a quiet moment before uploading full snapshots.
+- Favorite indicators on cards and list tiles now match the style used on the detail screen.
 
 ### Fixed
 
-- Resolved imprint publisher name from the local database.
-- Fixed series pagination, cover fallbacks and subscription card hydration.
+- Fixed imprint and publisher names not showing on series.
+- Fixed series pagination, cover fallbacks, and subscription cards not loading their data.
 
 ## [1.2.0] - 2026-08-15
 
 ### Added
 
-- Local catalog repository with paged cache and drive sync delta primitives.
-- Rate-limit priority queue and request scheduling.
+- Local caching for the catalog so screens load instantly, with smarter Google Drive sync.
+- Requests to Metron are now prioritized, so the screen you're looking at loads first.
 
 ### Changed
 
 - Performance improvements across library catalog screens.
-- Aligned Metron API usage with supporter tier rate limits.
+- Adjusted Metron API usage to stay within supporter-tier rate limits.
 
 ### Fixed
 
-- Cache cleanup and arc issue list 304 handling with subscription card cover fixes.
+- Fixed cache cleanup, arc issue lists not refreshing, and missing covers on subscription cards.
 
 ## [1.1.0] - 2026-08-06
 
@@ -98,29 +133,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- SuperHero API character powerstats.
+- Character power stats from the SuperHero API.
 - Import arcs as reading lists.
 
 ### Changed
 
-- Improved drive sync reliability with true-delta sync and sync UI polish.
+- Google Drive sync is more reliable, now sends only what changed, and the sync screen was polished.
 
 ## [0.9.5] - 2026-08-03
 
 ### Added
 
 - Barcode scanner with bulk actions.
-- Scrobble sheet.
+- Scrobble sheet for logging reads.
 - Google Drive sync, local backup/restore and weekly pull-list notifications.
 
 ### Changed
 
-- Migrated from Hive to Drift and from the Metron REST API to the Arc API.
-- Redesigned stats UI with activity log series-aware grouping.
+- Switched to a new database and API backend for reliability and speed.
+- Redesigned stats screen, with the activity log now grouped by series.
 
 ### Fixed
 
-- Fixed scrobble, subscribe and sync issues including subscription card hydration.
+- Fixed scrobbling, subscribing, and sync issues, including subscription cards failing to load their data.
 
 ## [0.9.0] - 2026-03-06
 

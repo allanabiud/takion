@@ -25,8 +25,8 @@ class WishlistSyncManager {
   WishlistSyncManager({
     required db.AppDatabase database,
     required MetronWishlistRepository wishlistRepository,
-  })  : _database = database,
-        _wishlistRepository = wishlistRepository;
+  }) : _database = database,
+       _wishlistRepository = wishlistRepository;
 
   static const String _syncMetaKey = "metron_last_wishlist_sync";
 
@@ -58,18 +58,19 @@ class WishlistSyncManager {
     _isSyncing = true;
     try {
       final allRemoteItems = <WishlistItem>[];
-      var page = 1;
       final now = DateTime.now().toUtc();
 
+      Uri? pageUrl;
       while (true) {
-        final pageItems = await _wishlistRepository.getWishListItems(
-          page: page,
+        final pageResult = await _wishlistRepository.getWishListPage(
+          pageUrl: pageUrl,
         );
+        final pageItems = pageResult.items;
         if (pageItems.isEmpty) break;
         allRemoteItems.addAll(pageItems);
         onProgress?.call(allRemoteItems.length);
-        if (pageItems.length < 20) break;
-        page++;
+        if (pageResult.next == null) break;
+        pageUrl = pageResult.next;
       }
 
       final updatedCount = await _reconcileWishlistItems(allRemoteItems);
@@ -101,10 +102,7 @@ class WishlistSyncManager {
           await _database.wishlistDao.batchDeleteByIssueIds(syncedIds);
         }
         final now = DateTime.now().toUtc();
-        await _database.syncMetaDao.set(
-          _syncMetaKey,
-          now.toIso8601String(),
-        );
+        await _database.syncMetaDao.set(_syncMetaKey, now.toIso8601String());
         return const WishlistSyncResult(
           itemsFetched: 0,
           itemsUpdated: 0,
@@ -176,7 +174,10 @@ class WishlistSyncManager {
 
     final localItems = await _database.wishlistDao.getAll();
     final toDeleteIssueIds = localItems
-        .where((i) => !remoteIssueIds.contains(i.issueId) && i.syncStatus == "synced")
+        .where(
+          (i) =>
+              !remoteIssueIds.contains(i.issueId) && i.syncStatus == "synced",
+        )
         .map((i) => i.issueId)
         .toList();
 

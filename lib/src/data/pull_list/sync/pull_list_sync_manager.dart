@@ -62,44 +62,50 @@ class PullListSyncManager {
       final isFullSync = lastSync == null;
 
       // 1. Sync Pull List Series (Subscriptions)
-      var seriesPage = 1;
       var totalSeriesFetched = 0;
       var totalIssuesFetched = 0;
+      final allSeriesItems = <PullListSeriesItem>[];
+      Uri? seriesPageUrl;
       while (true) {
-        final pageItems = await _pullListRepository.getPullListSeries(
-          page: seriesPage,
-          modifiedGt: lastSync,
+        final pageResult = await _pullListRepository.getPullListSeriesPage(
+          pageUrl: seriesPageUrl,
         );
+        final pageItems = pageResult.items;
         if (pageItems.isEmpty) break;
         totalSeriesFetched += pageItems.length;
-        onProgress?.call(totalSeriesFetched, totalIssuesFetched);
-        if (!isFullSync) {
-          await _ingestIncrementalSubscriptions(pageItems);
+        if (isFullSync) {
+          allSeriesItems.addAll(pageItems);
         } else {
-          await _reconcileSubscriptions(pageItems);
+          await _ingestIncrementalSubscriptions(pageItems);
         }
-        if (pageItems.length < 20) break;
-        seriesPage++;
+        onProgress?.call(totalSeriesFetched, totalIssuesFetched);
+        if (pageResult.next == null) break;
+        seriesPageUrl = pageResult.next;
+      }
+
+      if (isFullSync) {
+        await _reconcileSubscriptions(allSeriesItems);
       }
 
       // 2. Sync Pull List Issues
-      var issuePage = 1;
+      Uri? issuePageUrl;
       final now = DateTime.now().toUtc();
       final storeDateAfter = now.subtract(const Duration(days: 30));
       final storeDateBefore = now.add(const Duration(days: 60));
 
       while (true) {
-        final pageIssues = await _pullListRepository.getPullListIssues(
-          page: issuePage,
+        final pageResult = await _pullListRepository.getPullListIssuesPage(
+          pageUrl: issuePageUrl,
           storeDateAfter: storeDateAfter,
           storeDateBefore: storeDateBefore,
         );
+        final pageIssues = pageResult.items;
         if (pageIssues.isEmpty) break;
         totalIssuesFetched += pageIssues.length;
         onProgress?.call(totalSeriesFetched, totalIssuesFetched);
         await _ingestPullListIssues(pageIssues);
-        if (pageIssues.length < 20) break;
-        issuePage++;
+        if (pageResult.next == null) break;
+        issuePageUrl = pageResult.next;
       }
 
       await _database.syncMetaDao.set(_syncMetaKey, now.toIso8601String());

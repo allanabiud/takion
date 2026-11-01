@@ -270,8 +270,13 @@ Future<void> _applyBulkActions(
           }
 
           final targetRating = wantRate
-              ? actions[BulkAction.rate]!.rating
+              ? ((actions[BulkAction.rate]!.rating > 0)
+                    ? actions[BulkAction.rate]!.rating
+                    : null)
               : existing?.rating;
+          final sanitizedRating = (targetRating != null && targetRating > 0)
+              ? targetRating
+              : null;
 
           final wasRead = existing?.isRead ?? false;
 
@@ -280,7 +285,7 @@ Future<void> _applyBulkActions(
             metronSeriesId: seriesId,
             ownershipStatus: ownershipStatus,
             isRead: wantRead || wasRead,
-            rating: (wantRead || wantRate) ? targetRating : existing?.rating,
+            rating: (wantRead || wantRate) ? sanitizedRating : existing?.rating,
             firstReadAt: wantRead && !wasRead ? now : existing?.firstReadAt,
             format: existing?.format ?? LibraryItemFormat.print,
             acquiredOn: wantCollection

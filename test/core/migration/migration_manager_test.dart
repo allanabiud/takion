@@ -35,43 +35,51 @@ void main() {
       await database.close();
     });
 
-    test("isMigrationNeeded returns true when unmigrated items exist",
-        () async {
-      when(() => colMigrator.countUnmigrated()).thenAnswer((_) async => 5);
-      when(() => pullMigrator.countUnmigrated()).thenAnswer((_) async => 0);
+    test(
+      "isMigrationNeeded returns true when unmigrated items exist",
+      () async {
+        when(() => colMigrator.countUnmigrated()).thenAnswer((_) async => 5);
+        when(() => pullMigrator.countUnmigrated()).thenAnswer((_) async => 0);
 
-      final needed = await manager.isMigrationNeeded();
-      expect(needed, isTrue);
-    });
+        final needed = await manager.isMigrationNeeded();
+        expect(needed, isTrue);
+      },
+    );
 
-    test("runMigration coordinates all migrators and marks completed",
-        () async {
-      when(() => colMigrator.countUnmigrated()).thenAnswer((_) async => 2);
-      when(() => pullMigrator.countUnmigrated()).thenAnswer((_) async => 1);
+    test(
+      "runMigration coordinates all migrators and marks completed",
+      () async {
+        when(() => colMigrator.countUnmigrated()).thenAnswer((_) async => 2);
+        when(() => pullMigrator.countUnmigrated()).thenAnswer((_) async => 1);
 
-      when(
-        () => colMigrator.migrate(
-          onProgress: any(named: "onProgress"),
-          isCancelled: any(named: "isCancelled"),
-        ),
-      ).thenAnswer((_) async => const MigrationResult(migrated: 2, failed: 0));
-      when(
-        () => pullMigrator.migrate(
-          onProgress: any(named: "onProgress"),
-          isCancelled: any(named: "isCancelled"),
-        ),
-      ).thenAnswer((_) async => const MigrationResult(migrated: 1, failed: 0));
+        when(
+          () => colMigrator.migrate(
+            onProgress: any(named: "onProgress"),
+            isCancelled: any(named: "isCancelled"),
+          ),
+        ).thenAnswer(
+          (_) async => const MigrationResult(migrated: 2, failed: 0),
+        );
+        when(
+          () => pullMigrator.migrate(
+            onProgress: any(named: "onProgress"),
+            isCancelled: any(named: "isCancelled"),
+          ),
+        ).thenAnswer(
+          (_) async => const MigrationResult(migrated: 1, failed: 0),
+        );
 
-      final progress = await manager.runMigration();
+        final progress = await manager.runMigration();
 
-      expect(progress.status, MigrationStatus.completed);
-      expect(progress.migratedCollection, 2);
-      expect(progress.migratedSubscriptions, 1);
-      expect(progress.progressFraction, 1.0);
+        expect(progress.status, MigrationStatus.completed);
+        expect(progress.migratedCollection, 2);
+        expect(progress.migratedSubscriptions, 1);
+        expect(progress.progressFraction, 1.0);
 
-      final completed = await manager.isMigrationCompleted();
-      expect(completed, isTrue);
-    });
+        final completed = await manager.isMigrationCompleted();
+        expect(completed, isTrue);
+      },
+    );
 
     test("skipMigration marks completed in settings", () async {
       await manager.skipMigration();

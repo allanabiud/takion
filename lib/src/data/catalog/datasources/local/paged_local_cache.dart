@@ -50,16 +50,18 @@ class PagedLocalCache<T> {
   }) async {
     await _db.transaction(() async {
       await _codec.upsertEntities(_db, items);
-      await _db.into(_db.pagedQueryCaches).insertOnConflictUpdate(
-        PagedQueryCachesCompanion(
-          cacheKeyPrefix: Value(cacheKeyPrefix),
-          pageKey: Value(key),
-          count: Value(withMeta ? count : null),
-          next: Value(withMeta ? next : null),
-          previous: Value(withMeta ? previous : null),
-          cachedAt: Value(DateTime.now().toUtc().toIso8601String()),
-        ),
-      );
+      await _db
+          .into(_db.pagedQueryCaches)
+          .insertOnConflictUpdate(
+            PagedQueryCachesCompanion(
+              cacheKeyPrefix: Value(cacheKeyPrefix),
+              pageKey: Value(key),
+              count: Value(withMeta ? count : null),
+              next: Value(withMeta ? next : null),
+              previous: Value(withMeta ? previous : null),
+              cachedAt: Value(DateTime.now().toUtc().toIso8601String()),
+            ),
+          );
       final removePreviousItems = _db.delete(_db.pagedQueryItems)
         ..where(
           (table) =>
@@ -85,14 +87,15 @@ class PagedLocalCache<T> {
 
   Future<List<T>?> get(String key) async {
     if (await _cacheRow(key) == null) return null;
-    final itemRows = await (_db.select(_db.pagedQueryItems)
-          ..where(
-            (table) =>
-                table.cacheKeyPrefix.equals(cacheKeyPrefix) &
-                table.pageKey.equals(key),
-          )
-          ..orderBy([(table) => OrderingTerm.asc(table.position)]))
-        .get();
+    final itemRows =
+        await (_db.select(_db.pagedQueryItems)
+              ..where(
+                (table) =>
+                    table.cacheKeyPrefix.equals(cacheKeyPrefix) &
+                    table.pageKey.equals(key),
+              )
+              ..orderBy([(table) => OrderingTerm.asc(table.position)]))
+            .get();
     if (itemRows.isEmpty) return <T>[];
     return _codec.loadByIds(_db, [for (final row in itemRows) row.entityId]);
   }
@@ -112,12 +115,11 @@ class PagedLocalCache<T> {
   }
 
   Future<PagedQueryCache?> _cacheRow(String key) =>
-      (_db.select(_db.pagedQueryCaches)
-            ..where(
-              (table) =>
-                  table.cacheKeyPrefix.equals(cacheKeyPrefix) &
-                  table.pageKey.equals(key),
-            ))
+      (_db.select(_db.pagedQueryCaches)..where(
+            (table) =>
+                table.cacheKeyPrefix.equals(cacheKeyPrefix) &
+                table.pageKey.equals(key),
+          ))
           .getSingleOrNull();
 }
 
@@ -126,36 +128,99 @@ class DetailsLocalCache {
     required AppDatabase db,
     required this.cacheKeyPrefix,
     required this.entityType,
+    this.accountId = "local-user",
+    this.defaultTtl = const Duration(days: 3),
   }) : _db = db;
 
   final AppDatabase _db;
   final String cacheKeyPrefix;
   final String entityType;
+  final String accountId;
+  final Duration defaultTtl;
 
-  Future<void> cache(String id, Map<String, dynamic> json) async {
-    await _db.settingsDao.setString(
-      "details_cache:$cacheKeyPrefix:$id",
-      jsonEncode(json),
-    );
-    await _db.settingsDao.setString(
-      "details_cache_at:$cacheKeyPrefix:$id",
-      DateTime.now().toUtc().toIso8601String(),
+  String _cacheKey(String id) => "details:$cacheKeyPrefix:$id";
+
+  Future<void> cache(
+    String id,
+    Map<String, dynamic> json, {
+    Duration? ttl,
+    String? etag,
+    String? lastModified,
+    bool isPinned = false,
+  }) async {
+    final now = DateTime.now().toUtc();
+    final effectiveTtl = ttl ?? defaultTtl;
+    await _db.remoteCacheDao.upsertEntry(
+      accountId: accountId,
+      cacheKey: _cacheKey(id),
+      etag: etag,
+      lastModified: lastModified,
+      payloadJson: jsonEncode(json),
+      fetchedAt: now,
+      staleAt: now.add(effectiveTtl),
+      lastAccessedAt: now,
+      isPinned: isPinned,
     );
   }
 
   Future<Map<String, dynamic>?> get(String id) async {
-    final payload = await _db.settingsDao.getString(
+    final key = _cacheKey(id);
+    final entry = await _db.remoteCacheDao.getEntry(
+      accountId,
+      key,
+      touch: true,
+    );
+    if (entry != null && entry.payloadJson != null) {
+      try {
+        return jsonDecode(entry.payloadJson!) as Map<String, dynamic>;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    // Migrate from legacy settings table if present
+    final legacyPayload = await _db.settingsDao.getString(
       "details_cache:$cacheKeyPrefix:$id",
     );
-    if (payload == null) return null;
-    try {
-      return jsonDecode(payload) as Map<String, dynamic>;
-    } catch (_) {
-      return null;
+    if (legacyPayload != null) {
+      try {
+        final map = jsonDecode(legacyPayload) as Map<String, dynamic>;
+        final legacyAtRaw = await _db.settingsDao.getString(
+          "details_cache_at:$cacheKeyPrefix:$id",
+        );
+        final legacyAt = legacyAtRaw != null
+            ? DateTime.tryParse(legacyAtRaw)
+            : null;
+        final fetchedAt = legacyAt ?? DateTime.now().toUtc();
+
+        await _db.remoteCacheDao.upsertEntry(
+          accountId: accountId,
+          cacheKey: key,
+          payloadJson: legacyPayload,
+          fetchedAt: fetchedAt,
+          staleAt: fetchedAt.add(defaultTtl),
+          lastAccessedAt: DateTime.now().toUtc(),
+        );
+
+        // Clean up legacy settings keys
+        await _db.settingsDao.deleteByKey("details_cache:$cacheKeyPrefix:$id");
+        await _db.settingsDao.deleteByKey(
+          "details_cache_at:$cacheKeyPrefix:$id",
+        );
+
+        return map;
+      } catch (_) {
+        return null;
+      }
     }
+    return null;
   }
 
   Future<DateTime?> cachedAt(String id) async {
+    final entry = await _db.remoteCacheDao.getEntry(accountId, _cacheKey(id));
+    if (entry != null) {
+      return entry.fetchedAt;
+    }
     final raw = await _db.settingsDao.getString(
       "details_cache_at:$cacheKeyPrefix:$id",
     );

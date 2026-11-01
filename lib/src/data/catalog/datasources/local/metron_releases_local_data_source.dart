@@ -15,24 +15,25 @@ abstract class MetronReleasesLocalDataSource {
   Future<DateTime?> getFocReleasesCachedAt(DateTime weekStart);
 }
 
-class MetronReleasesLocalDataSourceImpl implements MetronReleasesLocalDataSource {
+class MetronReleasesLocalDataSourceImpl
+    implements MetronReleasesLocalDataSource {
   MetronReleasesLocalDataSourceImpl(AppDatabase db)
-      : _weeklyReleases = PagedLocalCache<IssueListDto>(
-          db: db,
-          cacheKeyPrefix: "weekly_releases",
-          entityType: "weekly_releases",
-          fromJson: IssueListDto.fromJson,
-          toJson: (i) => i.toJson(),
-          withMeta: false,
-        ),
-        _focReleases = PagedLocalCache<IssueListDto>(
-          db: db,
-          cacheKeyPrefix: "foc_releases",
-          entityType: "foc_releases",
-          fromJson: IssueListDto.fromJson,
-          toJson: (i) => i.toJson(),
-          withMeta: false,
-        );
+    : _weeklyReleases = PagedLocalCache<IssueListDto>(
+        db: db,
+        cacheKeyPrefix: "weekly_releases",
+        entityType: "weekly_releases",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+        withMeta: false,
+      ),
+      _focReleases = PagedLocalCache<IssueListDto>(
+        db: db,
+        cacheKeyPrefix: "foc_releases",
+        entityType: "foc_releases",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+        withMeta: false,
+      );
 
   final PagedLocalCache<IssueListDto> _weeklyReleases;
   final PagedLocalCache<IssueListDto> _focReleases;

@@ -8,6 +8,9 @@ class SeriesList {
     this.issueCount,
     this.modified,
     this.seriesType,
+    this.publisherName,
+    this.cvId,
+    this.gcdId,
   });
 
   final int id;
@@ -18,4 +21,7 @@ class SeriesList {
   final int? issueCount;
   final DateTime? modified;
   final String? seriesType;
+  final String? publisherName;
+  final int? cvId;
+  final int? gcdId;
 }

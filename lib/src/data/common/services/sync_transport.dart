@@ -48,7 +48,8 @@ class DriveSyncTransport implements SyncTransport {
       _client.getFileModificationTime(fileId);
 
   @override
-  Future<Uint8List?> downloadFile(String fileId) => _client.downloadFile(fileId);
+  Future<Uint8List?> downloadFile(String fileId) =>
+      _client.downloadFile(fileId);
 
   @override
   Future<void> uploadFile(String fileName, Uint8List content) =>

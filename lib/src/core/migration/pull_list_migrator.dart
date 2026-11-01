@@ -9,9 +9,9 @@ class PullListMigrator {
     required db.AppDatabase database,
     required MetronPullListRemoteDataSource remoteDataSource,
     Duration Function()? rateLimitDelay,
-  })  : _database = database,
-        _remoteDataSource = remoteDataSource,
-        _rateLimitDelay = rateLimitDelay;
+  }) : _database = database,
+       _remoteDataSource = remoteDataSource,
+       _rateLimitDelay = rateLimitDelay;
 
   final db.AppDatabase _database;
   final MetronPullListRemoteDataSource _remoteDataSource;
@@ -43,7 +43,9 @@ class PullListMigrator {
     bool Function()? isCancelled,
   }) async {
     final unmigrated = await getUnmigratedSubscriptions();
-    if (unmigrated.isEmpty) return const MigrationResult(migrated: 0, failed: 0);
+    if (unmigrated.isEmpty) {
+      return const MigrationResult(migrated: 0, failed: 0);
+    }
 
     var migratedCount = 0;
     var failedCount = 0;
@@ -62,9 +64,9 @@ class PullListMigrator {
           sub.metronSeriesId,
         );
 
-        await (_database.update(_database.seriesSubscriptions)
-              ..where((t) => t.id.equals(sub.id)))
-            .write(
+        await (_database.update(
+          _database.seriesSubscriptions,
+        )..where((t) => t.id.equals(sub.id))).write(
           db.SeriesSubscriptionsCompanion(
             metronPullListId: Value(dto.id),
             syncStatus: const Value("synced"),

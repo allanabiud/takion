@@ -48,7 +48,11 @@ void main() {
         const IssueListDto(
           id: 42,
           number: "50",
-          series: IssueListSeriesDto(name: "Batman", volume: 3, yearBegan: 2016),
+          series: IssueListSeriesDto(
+            name: "Batman",
+            volume: 3,
+            yearBegan: 2016,
+          ),
           image: null,
           issueName: "Batman #50",
         ),
@@ -81,57 +85,64 @@ void main() {
       expect(meta.next, "https://metron.cloud/api/issue/?page=2");
     });
 
-    test("caches and retrieves series search and list results with metadata", () async {
-      final List<SeriesListDto> seriesList = [
-        const SeriesListDto(
-          id: 10,
-          series: "Batman",
-          volume: 3,
-          yearBegan: 2016,
-        ),
-      ];
+    test(
+      "caches and retrieves series search and list results with metadata",
+      () async {
+        final List<SeriesListDto> seriesList = [
+          const SeriesListDto(
+            id: 10,
+            series: "Batman",
+            volume: 3,
+            yearBegan: 2016,
+          ),
+        ];
 
-      await dataSource.cacheSeriesSearchResults(
-        "batman",
-        seriesList,
-        page: 1,
-        limit: 20,
-        count: 50,
-        next: "https://metron.cloud/api/series/?page=2",
-      );
+        await dataSource.cacheSeriesSearchResults(
+          "batman",
+          seriesList,
+          page: 1,
+          limit: 20,
+          count: 50,
+          next: "https://metron.cloud/api/series/?page=2",
+        );
 
-      final searchRetrieved = await dataSource.getSeriesSearchResults(
-        "batman",
-        page: 1,
-        limit: 20,
-      );
-      expect(searchRetrieved?.first.id, 10);
-      final searchMeta = await dataSource.getSeriesSearchResultsMeta(
-        "batman",
-        page: 1,
-        limit: 20,
-      );
-      expect(searchMeta?.count, 50);
+        final searchRetrieved = await dataSource.getSeriesSearchResults(
+          "batman",
+          page: 1,
+          limit: 20,
+        );
+        expect(searchRetrieved?.first.id, 10);
+        final searchMeta = await dataSource.getSeriesSearchResultsMeta(
+          "batman",
+          page: 1,
+          limit: 20,
+        );
+        expect(searchMeta?.count, 50);
 
-      await dataSource.cacheSeriesListResults(
-        seriesList,
-        page: 1,
-        limit: 20,
-        count: 50,
-      );
-      final listRetrieved = await dataSource.getSeriesListResults(
-        page: 1,
-        limit: 20,
-      );
-      expect(listRetrieved?.first.series, "Batman");
-    });
+        await dataSource.cacheSeriesListResults(
+          seriesList,
+          page: 1,
+          limit: 20,
+          count: 50,
+        );
+        final listRetrieved = await dataSource.getSeriesListResults(
+          page: 1,
+          limit: 20,
+        );
+        expect(listRetrieved?.first.series, "Batman");
+      },
+    );
 
     test("caches and retrieves series issue list results", () async {
       final issues = [
         const IssueListDto(
           id: 101,
           number: "1",
-          series: IssueListSeriesDto(name: "Batman", volume: 3, yearBegan: 2016),
+          series: IssueListSeriesDto(
+            name: "Batman",
+            volume: 3,
+            yearBegan: 2016,
+          ),
           image: null,
           issueName: "Batman #1",
         ),
@@ -177,37 +188,60 @@ void main() {
       expect(cachedAt, isNotNull);
 
       // Issue detail
-      await dataSource.cacheIssueDetailsResponse(5, {"id": 5, "name": "Action Comics"});
+      await dataSource.cacheIssueDetailsResponse(5, {
+        "id": 5,
+        "name": "Action Comics",
+      });
       expect(await dataSource.getCachedIssueDetailsResponse(5), isNotNull);
 
       // Series detail
-      await dataSource.cacheSeriesDetailsResponse(10, {"id": 10, "name": "Batman"});
+      await dataSource.cacheSeriesDetailsResponse(10, {
+        "id": 10,
+        "name": "Batman",
+      });
       expect(await dataSource.getCachedSeriesDetailsResponse(10), isNotNull);
 
       // Creator detail
-      await dataSource.cacheCreatorDetailsResponse(20, {"id": 20, "name": "Alan Moore"});
+      await dataSource.cacheCreatorDetailsResponse(20, {
+        "id": 20,
+        "name": "Alan Moore",
+      });
       expect(await dataSource.getCachedCreatorDetailsResponse(20), isNotNull);
 
       // Team detail
-      await dataSource.cacheTeamDetailsResponse(30, {"id": 30, "name": "Justice League"});
+      await dataSource.cacheTeamDetailsResponse(30, {
+        "id": 30,
+        "name": "Justice League",
+      });
       expect(await dataSource.getCachedTeamDetailsResponse(30), isNotNull);
 
       // Universe detail
-      await dataSource.cacheUniverseDetailsResponse(40, {"id": 40, "name": "Prime Earth"});
+      await dataSource.cacheUniverseDetailsResponse(40, {
+        "id": 40,
+        "name": "Prime Earth",
+      });
       expect(await dataSource.getCachedUniverseDetailsResponse(40), isNotNull);
 
       // Imprint detail
-      await dataSource.cacheImprintDetailsResponse(50, {"id": 50, "name": "Vertigo"});
+      await dataSource.cacheImprintDetailsResponse(50, {
+        "id": 50,
+        "name": "Vertigo",
+      });
       expect(await dataSource.getCachedImprintDetailsResponse(50), isNotNull);
 
       // Publisher detail
-      await dataSource.cachePublisherDetailsResponse(60, {"id": 60, "name": "DC Comics"});
+      await dataSource.cachePublisherDetailsResponse(60, {
+        "id": 60,
+        "name": "DC Comics",
+      });
       expect(await dataSource.getCachedPublisherDetailsResponse(60), isNotNull);
 
       // Arc detail
-      await dataSource.cacheArcDetailsResponse(70, {"id": 70, "name": "Crisis on Infinite Earths"});
+      await dataSource.cacheArcDetailsResponse(70, {
+        "id": 70,
+        "name": "Crisis on Infinite Earths",
+      });
       expect(await dataSource.getCachedArcDetailsResponse(70), isNotNull);
     });
   });
 }
-

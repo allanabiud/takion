@@ -29,6 +29,9 @@ void main() {
         final interceptor = RateLimitInterceptor(
           maxRequestsPerMinute: 3,
           reservedForeground: 1,
+          // This test isolates the per-minute burst reservation; the
+          // concurrency cap is covered by concurrency_reservation_test.
+          maxConcurrent: 8,
         );
 
         final bg1 = run(interceptor, background: true);
@@ -148,31 +151,33 @@ void main() {
       },
     );
 
-    test("burst limit defaults to maxRequestsPerMinute and updates from header",
-        () {
-      fakeAsync((async) {
-        final interceptor = RateLimitInterceptor(maxRequestsPerMinute: 20);
-        expect(interceptor.state.burstLimit, 20);
+    test(
+      "burst limit defaults to maxRequestsPerMinute and updates from header",
+      () {
+        fakeAsync((async) {
+          final interceptor = RateLimitInterceptor(maxRequestsPerMinute: 20);
+          expect(interceptor.state.burstLimit, 20);
 
-        final options = RequestOptions(path: "/series/");
-        final handler = RequestInterceptorHandler();
-        interceptor.onRequest(options, handler);
-        async.flushMicrotasks();
+          final options = RequestOptions(path: "/series/");
+          final handler = RequestInterceptorHandler();
+          interceptor.onRequest(options, handler);
+          async.flushMicrotasks();
 
-        interceptor.onResponse(
-          Response(
-            requestOptions: options,
-            headers: Headers.fromMap({
-              "x-ratelimit-burst-limit": ["45"],
-              "x-ratelimit-burst-remaining": ["44"],
-            }),
-          ),
-          ResponseInterceptorHandler(),
-        );
+          interceptor.onResponse(
+            Response(
+              requestOptions: options,
+              headers: Headers.fromMap({
+                "x-ratelimit-burst-limit": ["45"],
+                "x-ratelimit-burst-remaining": ["44"],
+              }),
+            ),
+            ResponseInterceptorHandler(),
+          );
 
-        expect(interceptor.state.burstLimit, 45);
-        expect(interceptor.state.burstRemaining, 44);
-      });
-    });
+          expect(interceptor.state.burstLimit, 45);
+          expect(interceptor.state.burstRemaining, 44);
+        });
+      },
+    );
   });
 }

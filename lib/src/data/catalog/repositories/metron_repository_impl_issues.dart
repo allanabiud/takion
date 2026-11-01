@@ -219,6 +219,9 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
     bool forceRefresh = false,
     String? ordering,
     DateTime? modifiedGt,
+    DateTime? coverDateRangeAfter,
+    DateTime? coverDateRangeBefore,
+    bool? descIsSolicitation,
     int? limit,
     CancelToken? cancelToken,
   }) async {
@@ -259,6 +262,9 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
               page: page,
               ordering: ordering,
               modifiedGt: modifiedGt,
+              coverDateRangeAfter: coverDateRangeAfter,
+              coverDateRangeBefore: coverDateRangeBefore,
+              descIsSolicitation: descIsSolicitation,
               cancelToken: cancelToken,
             );
             await _localDataSource.cacheIssueListResults(
@@ -300,6 +306,9 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
           page: page,
           ordering: ordering,
           modifiedGt: modifiedGt,
+          coverDateRangeAfter: coverDateRangeAfter,
+          coverDateRangeBefore: coverDateRangeBefore,
+          descIsSolicitation: descIsSolicitation,
           cancelToken: cancelToken,
         );
         await _localDataSource.cacheIssueListResults(
@@ -771,6 +780,7 @@ mixin _IssuesRepositoryMixin on _RepositoryState {
         );
       }
     });
+    _autoAddPullListEntryForIssue(dto);
   }
 
   Future<IssueDetails> _issueRowToEntity(MetronIssue row) async {

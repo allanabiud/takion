@@ -47,7 +47,7 @@ void main() {
                     "year_began": 2016,
                   },
                 },
-              }
+              },
             ],
           },
         ),
@@ -106,11 +106,7 @@ void main() {
       ).thenAnswer(
         (_) async => Response(
           requestOptions: RequestOptions(path: "collection/scrobble/"),
-          data: {
-            "id": 303,
-            "is_read": true,
-            "date_read": "2026-09-03",
-          },
+          data: {"id": 303, "is_read": true, "date_read": "2026-09-03"},
         ),
       );
 

@@ -40,7 +40,7 @@ void main() {
                   "number": "1",
                   "series": {"id": 12, "name": "Saga"},
                 },
-              }
+              },
             ],
           },
         ),

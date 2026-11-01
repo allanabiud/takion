@@ -1,11 +1,7 @@
 import "package:takion/src/domain/collection/entities/scrobble_result.dart";
 
 class ScrobbleRequestDto {
-  const ScrobbleRequestDto({
-    required this.issueId,
-    this.dateRead,
-    this.rating,
-  });
+  const ScrobbleRequestDto({required this.issueId, this.dateRead, this.rating});
 
   final int issueId;
   final String? dateRead;
@@ -14,7 +10,7 @@ class ScrobbleRequestDto {
   Map<String, dynamic> toJson() => {
     "issue_id": issueId,
     if (dateRead != null) "date_read": dateRead,
-    if (rating != null) "rating": rating,
+    if (rating != null && rating! > 0) "rating": rating,
   };
 }
 

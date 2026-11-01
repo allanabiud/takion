@@ -47,6 +47,9 @@ abstract class IssueRepository {
     bool forceRefresh = false,
     String? ordering,
     DateTime? modifiedGt,
+    DateTime? coverDateRangeAfter,
+    DateTime? coverDateRangeBefore,
+    bool? descIsSolicitation,
     int? limit,
     CancelToken? cancelToken,
   });

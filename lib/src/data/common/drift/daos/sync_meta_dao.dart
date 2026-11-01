@@ -41,4 +41,3 @@ class SyncMetaDao extends DatabaseAccessor<AppDatabase> {
     )..where((t) => t.key.like("$prefix%"))).go();
   }
 }
-

@@ -114,7 +114,9 @@ class _MigrationContentState extends ConsumerState<_MigrationContent> {
                 const SizedBox(height: 12),
                 Center(
                   child: Text(
-                    progress.hasFailed ? "Migration Failed" : "Migration Cancelled",
+                    progress.hasFailed
+                        ? "Migration Failed"
+                        : "Migration Cancelled",
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

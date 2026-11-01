@@ -1,5 +1,6 @@
 import "dart:async";
 import "package:dio/dio.dart";
+import "package:takion/src/core/cache/cache_mode.dart";
 import "package:takion/src/core/cache/cache_policy.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/performance/performance_metrics.dart";
@@ -39,9 +40,16 @@ class EntityDetailRepository<TDto, TEntity> {
   Future<TEntity> getDetails(
     int id, {
     bool forceRefresh = false,
+    CacheMode? cacheMode,
   }) async {
-    // 1. Check local normalized entity if available
-    if (!forceRefresh && getLocalEntity != null) {
+    final effectiveMode =
+        cacheMode ??
+        (forceRefresh ? CacheMode.validate : CacheMode.staleWhileRevalidate);
+
+    // 1. If offlineOnly or cacheFirst or staleWhileRevalidate, check local normalized entity first
+    if (effectiveMode != CacheMode.networkOnly &&
+        effectiveMode != CacheMode.validate &&
+        getLocalEntity != null) {
       final local = await getLocalEntity!(id);
       if (local != null) {
         AppPerformanceMetrics.instance.recordCacheHit(resourceName);
@@ -50,12 +58,17 @@ class EntityDetailRepository<TDto, TEntity> {
     }
 
     // 2. Check local JSON cache with TTL
-    if (!forceRefresh) {
+    if (effectiveMode != CacheMode.networkOnly &&
+        effectiveMode != CacheMode.validate) {
       final cachedJson = await getLocalCachedJson(id);
       if (cachedJson != null) {
         final cachedAt = await getCachedAt(id);
-        if (cachedAt != null && cachePolicy.isFresh(cachedAt, now())) {
-          AppPerformanceMetrics.instance.recordCacheHit("${resourceName}_response");
+        if (effectiveMode == CacheMode.offlineOnly ||
+            effectiveMode == CacheMode.cacheFirst ||
+            (cachedAt != null && cachePolicy.isFresh(cachedAt, now()))) {
+          AppPerformanceMetrics.instance.recordCacheHit(
+            "${resourceName}_response",
+          );
           final dto = dtoFromJson(cachedJson);
           if (onPersist != null) await onPersist!(dto);
           return dtoToEntity(dto);
@@ -63,14 +76,22 @@ class EntityDetailRepository<TDto, TEntity> {
       }
     }
 
+    if (effectiveMode == CacheMode.offlineOnly) {
+      if (getLocalEntity != null) {
+        final local = await getLocalEntity!(id);
+        if (local != null) return local;
+      }
+      throw StateError("Offline only and no cached data for $resourceName $id");
+    }
+
     AppPerformanceMetrics.instance.recordCacheMiss(resourceName);
 
-    final key = "$id|$forceRefresh";
+    final key = "$id|$effectiveMode";
     if (_inFlight.containsKey(key)) {
       return _inFlight[key]!;
     }
 
-    final future = _fetchAndCache(id, forceRefresh: forceRefresh);
+    final future = _fetchAndCache(id, mode: effectiveMode);
     _inFlight[key] = future;
 
     try {
@@ -80,9 +101,25 @@ class EntityDetailRepository<TDto, TEntity> {
     }
   }
 
-  Future<TEntity> _fetchAndCache(int id, {required bool forceRefresh}) async {
+  Future<TEntity> _fetchAndCache(int id, {required CacheMode mode}) async {
     try {
       final response = await getRemote(id);
+
+      // On 304, the central ConditionalRequestInterceptor restores response.data
+      // from the cached body. If response.data is available, use it directly.
+      if (response.data != null &&
+          (response.data is Map || response.data is String)) {
+        final data = response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : (response.data is Map
+                  ? Map<String, dynamic>.from(response.data as Map)
+                  : jsonToMap(response.data));
+        final dto = dtoFromJson(data);
+        await cacheLocalJson(id, data);
+        if (onPersist != null) await onPersist!(dto);
+        return dtoToEntity(dto);
+      }
+
       if (response.statusCode == 304) {
         final cachedJson = await getLocalCachedJson(id);
         if (cachedJson != null) {
@@ -120,5 +157,11 @@ class EntityDetailRepository<TDto, TEntity> {
       }
       rethrow;
     }
+  }
+
+  Map<String, dynamic> jsonToMap(dynamic raw) {
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return const {};
   }
 }

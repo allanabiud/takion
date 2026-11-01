@@ -33,7 +33,9 @@ void main() {
 
       expect(find.text("No Connection"), findsOneWidget);
       expect(
-        find.text("Network connection issue. Please check your internet connection."),
+        find.text(
+          "Network connection issue. Please check your internet connection.",
+        ),
         findsOneWidget,
       );
       expect(find.byIcon(Icons.wifi_off_outlined), findsOneWidget);
@@ -73,7 +75,10 @@ void main() {
       );
 
       expect(find.text("Server Error (503)"), findsOneWidget);
-      expect(find.text("Server error (503). Please try again later."), findsOneWidget);
+      expect(
+        find.text("Server error (503). Please try again later."),
+        findsOneWidget,
+      );
     });
 
     testWidgets("renders inline loading correctly", (tester) async {
@@ -94,15 +99,16 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AsyncStatePanel.staleOffline(
-              onRetry: () => refreshed = true,
-            ),
+            body: AsyncStatePanel.staleOffline(onRetry: () => refreshed = true),
           ),
         ),
       );
 
       expect(find.text("Offline Mode"), findsOneWidget);
-      expect(find.text("Viewing cached content while offline."), findsOneWidget);
+      expect(
+        find.text("Viewing cached content while offline."),
+        findsOneWidget,
+      );
       expect(find.text("Refresh"), findsOneWidget);
       await tester.tap(find.text("Refresh"));
       expect(refreshed, isTrue);
@@ -111,14 +117,15 @@ void main() {
     testWidgets("renders rateLimitWait state correctly", (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: AsyncStatePanel.rateLimitWait(waitSeconds: 45),
-          ),
+          home: Scaffold(body: AsyncStatePanel.rateLimitWait(waitSeconds: 45)),
         ),
       );
 
       expect(find.text("Rate Limit Reached"), findsOneWidget);
-      expect(find.text("Please wait 45 seconds before retrying."), findsOneWidget);
+      expect(
+        find.text("Please wait 45 seconds before retrying."),
+        findsOneWidget,
+      );
     });
 
     testWidgets("renders empty state correctly", (tester) async {

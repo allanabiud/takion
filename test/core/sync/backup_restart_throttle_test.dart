@@ -15,7 +15,10 @@ void main() {
 
     test("is due once the last backup is 7 days old or older", () {
       expect(
-        isRestartBackupDue(lastBackup: now.subtract(const Duration(days: 7)), now: now),
+        isRestartBackupDue(
+          lastBackup: now.subtract(const Duration(days: 7)),
+          now: now,
+        ),
         isTrue,
       );
       expect(
@@ -29,11 +32,17 @@ void main() {
 
     test("is not due within the 7-day window", () {
       expect(
-        isRestartBackupDue(lastBackup: now.subtract(const Duration(days: 6, hours: 23)), now: now),
+        isRestartBackupDue(
+          lastBackup: now.subtract(const Duration(days: 6, hours: 23)),
+          now: now,
+        ),
         isFalse,
       );
       expect(
-        isRestartBackupDue(lastBackup: now.subtract(const Duration(days: 2)), now: now),
+        isRestartBackupDue(
+          lastBackup: now.subtract(const Duration(days: 2)),
+          now: now,
+        ),
         isFalse,
       );
       expect(
@@ -107,29 +116,31 @@ void main() {
       expect(await journal.getLastBackupTime(), backupTime);
     });
 
-    test("uses a key distinct from the Drive watermark and Metron sync keys",
-        () async {
-      expect(
-        SyncJournal.driveLastBackupTimestampKey,
-        isNot("last_sync_timestamp"),
-      );
-      expect(
-        SyncJournal.driveLastBackupTimestampKey,
-        isNot("metron_last_collection_sync"),
-      );
-      expect(
-        SyncJournal.driveLastBackupTimestampKey,
-        isNot("metron_last_pull_list_sync"),
-      );
-      expect(
-        SyncJournal.driveLastBackupTimestampKey,
-        isNot("metron_last_wishlist_sync"),
-      );
+    test(
+      "uses a key distinct from the Drive watermark and Metron sync keys",
+      () async {
+        expect(
+          SyncJournal.driveLastBackupTimestampKey,
+          isNot("last_sync_timestamp"),
+        );
+        expect(
+          SyncJournal.driveLastBackupTimestampKey,
+          isNot("metron_last_collection_sync"),
+        );
+        expect(
+          SyncJournal.driveLastBackupTimestampKey,
+          isNot("metron_last_pull_list_sync"),
+        );
+        expect(
+          SyncJournal.driveLastBackupTimestampKey,
+          isNot("metron_last_wishlist_sync"),
+        );
 
-      // Writing the backup timestamp must not disturb the watermark.
-      await journal.setSyncTimestamps("2026-01-01T00:00:00Z");
-      await journal.setLastBackupTime(DateTime.utc(2026, 9, 23));
-      expect(await journal.getLastSyncTime(), DateTime.utc(2026, 1, 1));
-    });
+        // Writing the backup timestamp must not disturb the watermark.
+        await journal.setSyncTimestamps("2026-01-01T00:00:00Z");
+        await journal.setLastBackupTime(DateTime.utc(2026, 9, 23));
+        expect(await journal.getLastSyncTime(), DateTime.utc(2026, 1, 1));
+      },
+    );
   });
 }

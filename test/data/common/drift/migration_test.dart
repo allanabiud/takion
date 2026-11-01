@@ -18,7 +18,7 @@ void main() {
     });
 
     test("Initializes full schema at current version idempotently", () async {
-      expect(db.schemaVersion, equals(19));
+      expect(db.schemaVersion, equals(20));
 
       // Verify essential DAOs and tables are accessible
       final seriesNames = await db.seriesNameDao.getAll();
@@ -71,5 +71,56 @@ void main() {
         expect(pending.first.operation, equals("create"));
       },
     );
+
+    test("durable sync primitives persist typed state", () async {
+      final now = DateTime.utc(2026, 10, 25);
+
+      await db.outboxDao.upsert(
+        OutboxOperationsCompanion.insert(
+          id: "op-1",
+          accountId: "local-user",
+          entityType: "collection",
+          entityLocalId: "lib-42",
+          operation: "create",
+          payloadJson: '{"issue_id":42}',
+          coalesceKey: "collection:lib-42",
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      expect(
+        (await db.outboxDao.getReady(
+          accountId: "local-user",
+          now: now,
+        )).single.id,
+        "op-1",
+      );
+
+      await db.syncCursorDao.upsert(
+        accountId: "local-user",
+        resource: "collection",
+        cursorJson: '{"next":null}',
+        isComplete: true,
+        updatedAt: now,
+      );
+      expect(
+        (await db.syncCursorDao.get("local-user", "collection"))!.isComplete,
+        isTrue,
+      );
+
+      await db.remoteCacheDao.upsert(
+        RemoteCacheEntriesCompanion.insert(
+          accountId: "local-user",
+          cacheKey: "GET:/issue/42/",
+          fetchedAt: now,
+          staleAt: now.add(const Duration(days: 1)),
+          lastAccessedAt: now,
+        ),
+      );
+      expect(
+        await db.remoteCacheDao.get("local-user", "GET:/issue/42/"),
+        isNotNull,
+      );
+    });
   });
 }

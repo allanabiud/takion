@@ -23,10 +23,21 @@ class IssueSeriesNavArgs {
 }
 
 class IssueSeriesNavResult {
-  const IssueSeriesNavResult({this.previousIssueId, this.nextIssueId});
+  const IssueSeriesNavResult({
+    this.previousIssueId,
+    this.nextIssueId,
+    this.previousImageUrl,
+    this.nextImageUrl,
+    this.previousNumber,
+    this.nextNumber,
+  });
 
   final int? previousIssueId;
   final int? nextIssueId;
+  final String? previousImageUrl;
+  final String? nextImageUrl;
+  final String? previousNumber;
+  final String? nextNumber;
 }
 
 final issueSeriesNavigationProvider = FutureProvider.autoDispose
@@ -50,13 +61,24 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
         int totalCount,
         int effectivePageSize,
       ) async {
-        int? prevId = idx > 0 ? issues[idx - 1].id : null;
-        int? nextId = idx < issues.length - 1 ? issues[idx + 1].id : null;
+        final prevIssue = idx > 0 ? issues[idx - 1] : null;
+        final nextIssue = idx < issues.length - 1 ? issues[idx + 1] : null;
+
+        int? prevId = prevIssue?.id;
+        String? prevImage = prevIssue?.image;
+        String? prevNum = prevIssue?.number;
+
+        int? nextId = nextIssue?.id;
+        String? nextImage = nextIssue?.image;
+        String? nextNum = nextIssue?.number;
 
         if (prevId == null && page > 1) {
           final prev = await fetchPage(page - 1);
           if (prev.results.isNotEmpty) {
-            prevId = prev.results.last.id;
+            final last = prev.results.last;
+            prevId = last.id;
+            prevImage = last.image;
+            prevNum = last.number;
           }
         }
 
@@ -65,7 +87,10 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
           if (page < totalPages) {
             final next = await fetchPage(page + 1);
             if (next.results.isNotEmpty) {
-              nextId = next.results.first.id;
+              final first = next.results.first;
+              nextId = first.id;
+              nextImage = first.image;
+              nextNum = first.number;
             }
           }
         }
@@ -73,6 +98,10 @@ final issueSeriesNavigationProvider = FutureProvider.autoDispose
         return IssueSeriesNavResult(
           previousIssueId: prevId,
           nextIssueId: nextId,
+          previousImageUrl: prevImage,
+          nextImageUrl: nextImage,
+          previousNumber: prevNum,
+          nextNumber: nextNum,
         );
       }
 

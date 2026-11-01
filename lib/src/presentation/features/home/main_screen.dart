@@ -271,9 +271,9 @@ class MainScreenState extends ConsumerState<MainScreen>
                                 child: Text(
                                   isMetronSyncing
                                       ? (rateLimitState.burstRemaining <= 0
-                                          ? "Metron sync paused (rate limit) · Resuming shortly"
-                                          : (metronSyncState.currentPhase ??
-                                              "Syncing with Metron..."))
+                                            ? "Metron sync paused (rate limit) · Resuming shortly"
+                                            : (metronSyncState.currentPhase ??
+                                                  "Syncing with Metron..."))
                                       : "Backing up to Google Drive",
                                   style: Theme.of(context).textTheme.labelSmall,
                                 ),

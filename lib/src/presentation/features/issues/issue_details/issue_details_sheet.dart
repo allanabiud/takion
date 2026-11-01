@@ -88,6 +88,7 @@ class IssueDetailsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ratingValue = (collectionStatus?.rating ?? 0).clamp(0, 5);
+    final effectivePull = isInPullList || (isSubscribed ?? false);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -131,11 +132,11 @@ class IssueDetailsSheet extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          isInPullList
+                          effectivePull
                               ? Icons.shopping_bag
                               : Icons.shopping_bag_outlined,
                           size: 22,
-                          color: isInPullList
+                          color: effectivePull
                               ? theme.colorScheme.secondary
                               : theme.colorScheme.onSurfaceVariant,
                         ),
@@ -202,11 +203,9 @@ class IssueDetailsSheet extends StatelessWidget {
                       Expanded(
                         flex: 2,
                         child: _SpringMorphingStateButton(
-                          isCollected:
-                              collectionStatus?.isCollected ?? false,
-                          isWishlisted:
-                              collectionStatus?.isWishlisted ?? false,
-                          isInPullList: isInPullList,
+                          isCollected: collectionStatus?.isCollected ?? false,
+                          isWishlisted: collectionStatus?.isWishlisted ?? false,
+                          isInPullList: effectivePull,
                           onPressed: onShowScrobbleSheet,
                         ),
                       ),
@@ -218,15 +217,14 @@ class IssueDetailsSheet extends StatelessWidget {
                                 style: FilledButton.styleFrom(
                                   backgroundColor:
                                       theme.colorScheme.primaryContainer,
-                                  foregroundColor: theme
-                                      .colorScheme.onPrimaryContainer,
+                                  foregroundColor:
+                                      theme.colorScheme.onPrimaryContainer,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 14,
                                   ),
                                   iconSize: 28,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 onPressed: onToggleFavorite,
@@ -239,8 +237,7 @@ class IssueDetailsSheet extends StatelessWidget {
                                   ),
                                   iconSize: 28,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 onPressed: onToggleFavorite,
@@ -254,13 +251,11 @@ class IssueDetailsSheet extends StatelessWidget {
                           message: "Go to series",
                           child: FilledButton.tonal(
                             style: FilledButton.styleFrom(
-                              backgroundColor: theme
-                                  .colorScheme.surfaceContainerHigh,
+                              backgroundColor:
+                                  theme.colorScheme.surfaceContainerHigh,
                               foregroundColor:
                                   theme.colorScheme.onSurfaceVariant,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               iconSize: 28,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -269,9 +264,7 @@ class IssueDetailsSheet extends StatelessWidget {
                             onPressed: seriesId != null
                                 ? onNavigateToSeries
                                 : null,
-                            child: const Icon(
-                              Icons.view_agenda_outlined,
-                            ),
+                            child: const Icon(Icons.view_agenda_outlined),
                           ),
                         ),
                       ),
@@ -337,12 +330,7 @@ class _SpringMorphingStateButton extends StatelessWidget {
             theme.colorScheme.secondaryContainer,
             theme.colorScheme.onSecondaryContainer,
           )
-        : (
-            "Add",
-            Icons.add,
-            null,
-            null,
-          );
+        : ("Add", Icons.add, null, null);
 
     return TweenAnimationBuilder<Color?>(
       tween: ColorTween(
@@ -364,8 +352,10 @@ class _SpringMorphingStateButton extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: animatedBg,
                 foregroundColor: animatedFg,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 14,
+                ),
                 minimumSize: const Size(0, 56),
                 textStyle: theme.textTheme.titleMedium,
                 shape: RoundedRectangleBorder(
@@ -383,10 +373,7 @@ class _SpringMorphingStateButton extends StatelessWidget {
                 transitionBuilder: (child, animation) {
                   return ScaleTransition(
                     scale: animation,
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
+                    child: FadeTransition(opacity: animation, child: child),
                   );
                 },
                 child: Row(

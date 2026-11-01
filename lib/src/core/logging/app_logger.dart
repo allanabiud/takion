@@ -7,7 +7,9 @@ class LogSanitizer {
     caseSensitive: false,
   );
   static final RegExp _authHeaderRegex = RegExp(
-    r"Authorization:\s*([^,\n\r]+)",
+    // Exclude double quotes so redaction inside JSON-encoded diagnostics
+    // reports never consumes the closing quote and corrupts the envelope.
+    "Authorization:\\s*([^,\\n\\r\"]+)",
     caseSensitive: false,
   );
   static final RegExp _passwordRegex = RegExp(

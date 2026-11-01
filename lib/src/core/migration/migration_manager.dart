@@ -12,10 +12,10 @@ class MigrationManager {
     required CollectionMigrator collectionMigrator,
     required PullListMigrator pullListMigrator,
     WishlistMigrator? wishlistMigrator,
-  })  : _database = database,
-        _collectionMigrator = collectionMigrator,
-        _pullListMigrator = pullListMigrator,
-        _wishlistMigrator = wishlistMigrator;
+  }) : _database = database,
+       _collectionMigrator = collectionMigrator,
+       _pullListMigrator = pullListMigrator,
+       _wishlistMigrator = wishlistMigrator;
 
   static const String _migrationCompletedKey = "metron_migration_completed";
 
@@ -155,7 +155,10 @@ class MigrationManager {
       }
 
       // 3. Migrate wishlist
-      MigrationResult wishResult = const MigrationResult(migrated: 0, failed: 0);
+      MigrationResult wishResult = const MigrationResult(
+        migrated: 0,
+        failed: 0,
+      );
       if (!_cancelled && _wishlistMigrator != null && totalWish > 0) {
         _emit(
           _currentProgress.copyWith(

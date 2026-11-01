@@ -55,6 +55,21 @@ class PersonListTile extends ConsumerWidget {
                   context.pushRoute(CreatorDetailsRoute(creatorId: creatorId!))
             : null);
 
+    var effectiveImageUrl = imageUrl;
+    if ((effectiveImageUrl == null || effectiveImageUrl.trim().isEmpty)) {
+      if (hasCharacterId && characterId! > 0) {
+        effectiveImageUrl = ref
+            .watch(characterImageStreamProvider(characterId!))
+            .asData
+            ?.value;
+      } else if (hasCreatorId && creatorId! > 0) {
+        effectiveImageUrl = ref
+            .watch(creatorImageStreamProvider(creatorId!))
+            .asData
+            ?.value;
+      }
+    }
+
     return Padding(
       padding: EdgeInsets.only(
         left: horizontalPadding,
@@ -80,7 +95,7 @@ class PersonListTile extends ConsumerWidget {
                             width: 60,
                             height: 60,
                             child: EntityCover(
-                              imageUrl: imageUrl,
+                              imageUrl: effectiveImageUrl,
                               placeholderLabel: initials(name),
                               width: 60,
                               height: 60,

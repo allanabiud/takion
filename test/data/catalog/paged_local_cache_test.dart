@@ -69,76 +69,78 @@ void main() {
   });
 
   group("PagedLocalCache normalized storage", () {
-    test("round-trips an issue page without JSON in the settings store",
-        () async {
-      final cache = issueCache();
-      const issues = [
-        IssueListDto(
-          id: 1,
-          number: "1",
-          series: IssueListSeriesDto(
-            name: "Saga",
-            volume: 1,
-            yearBegan: 2012,
-            id: 77,
+    test(
+      "round-trips an issue page without JSON in the settings store",
+      () async {
+        final cache = issueCache();
+        const issues = [
+          IssueListDto(
+            id: 1,
+            number: "1",
+            series: IssueListSeriesDto(
+              name: "Saga",
+              volume: 1,
+              yearBegan: 2012,
+              id: 77,
+            ),
+            coverDate: "2026-09-01",
+            storeDate: "2026-09-03",
+            image: "https://example.com/1.jpg",
+            issueName: "Chapter One",
+            modified: "2026-09-01T00:00:00Z",
+            coverHash: "abc123",
           ),
-          coverDate: "2026-09-01",
-          storeDate: "2026-09-03",
-          image: "https://example.com/1.jpg",
-          issueName: "Chapter One",
-          modified: "2026-09-01T00:00:00Z",
-          coverHash: "abc123",
-        ),
-        IssueListDto(
-          id: 2,
-          number: "2",
-          series: null,
-          image: null,
-          issueName: null,
-        ),
-      ];
+          IssueListDto(
+            id: 2,
+            number: "2",
+            series: null,
+            image: null,
+            issueName: null,
+          ),
+        ];
 
-      await cache.cache(
-        "issue_list:p1",
-        issues,
-        count: 42,
-        next: "https://metron.cloud/api/issue/?page=2",
-        previous: null,
-      );
+        await cache.cache(
+          "issue_list:p1",
+          issues,
+          count: 42,
+          next: "https://metron.cloud/api/issue/?page=2",
+          previous: null,
+        );
 
-      final retrieved = await cache.get("issue_list:p1");
-      expect(retrieved, isNotNull);
-      expect(retrieved, hasLength(2));
-      expect(retrieved!.first.id, 1);
-      expect(retrieved.first.number, "1");
-      expect(retrieved.first.issueName, "Chapter One");
-      expect(retrieved.first.coverDate, "2026-09-01");
-      expect(retrieved.first.storeDate, "2026-09-03");
-      expect(retrieved.first.image, "https://example.com/1.jpg");
-      expect(retrieved.first.coverHash, "abc123");
-      expect(retrieved.first.modified, "2026-09-01T00:00:00Z");
-      expect(retrieved.first.series?.name, "Saga");
-      expect(retrieved.first.series?.id, 77);
-      expect(retrieved.first.series?.volume, 1);
-      expect(retrieved.first.series?.yearBegan, 2012);
-      expect(retrieved.last.id, 2);
-      expect(retrieved.last.series, isNull);
+        final retrieved = await cache.get("issue_list:p1");
+        expect(retrieved, isNotNull);
+        expect(retrieved, hasLength(2));
+        expect(retrieved!.first.id, 1);
+        expect(retrieved.first.number, "1");
+        expect(retrieved.first.issueName, "Chapter One");
+        expect(retrieved.first.coverDate, "2026-09-01");
+        expect(retrieved.first.storeDate, "2026-09-03");
+        expect(retrieved.first.image, "https://example.com/1.jpg");
+        expect(retrieved.first.coverHash, "abc123");
+        expect(retrieved.first.modified, "2026-09-01T00:00:00Z");
+        expect(retrieved.first.series?.name, "Saga");
+        expect(retrieved.first.series?.id, 77);
+        expect(retrieved.first.series?.volume, 1);
+        expect(retrieved.first.series?.yearBegan, 2012);
+        expect(retrieved.last.id, 2);
+        expect(retrieved.last.series, isNull);
 
-      final meta = await cache.meta("issue_list:p1");
-      expect(meta?.count, 42);
-      expect(meta?.next, "https://metron.cloud/api/issue/?page=2");
-      expect(meta?.previous, isNull);
-      expect(await cache.cachedAt("issue_list:p1"), isNotNull);
+        final meta = await cache.meta("issue_list:p1");
+        expect(meta?.count, 42);
+        expect(meta?.next, "https://metron.cloud/api/issue/?page=2");
+        expect(meta?.previous, isNull);
+        expect(await cache.cachedAt("issue_list:p1"), isNotNull);
 
-      // No JSON page payloads remain in the settings key-value store.
-      final legacyKeys = await db
-          .customSelect(
-            "SELECT key FROM app_settings "
-            "WHERE key LIKE 'paged\\_cache%' ESCAPE '\\'",
-          )
-          .get();
-      expect(legacyKeys, isEmpty);
-    });
+        // No JSON page payloads remain in the settings key-value store.
+        final legacyKeys = await db
+            .customSelect(
+              "SELECT key FROM app_settings "
+              "WHERE key LIKE 'paged\\_cache%' ESCAPE '\\'",
+            )
+            .get();
+        expect(legacyKeys, isEmpty);
+      },
+    );
 
     test("misses return null and cached empty pages round-trip", () async {
       final cache = issueCache();
@@ -155,15 +157,11 @@ void main() {
 
     test("page order and duplicates follow the cached id order", () async {
       final cache = issueCache();
-      await cache.cache(
-        "issue_list:order",
-        const [
-          IssueListDto(id: 3, number: "3", series: null, image: null),
-          IssueListDto(id: 1, number: "1", series: null, image: null),
-          IssueListDto(id: 3, number: "3", series: null, image: null),
-        ],
-        count: 3,
-      );
+      await cache.cache("issue_list:order", const [
+        IssueListDto(id: 3, number: "3", series: null, image: null),
+        IssueListDto(id: 1, number: "1", series: null, image: null),
+        IssueListDto(id: 3, number: "3", series: null, image: null),
+      ], count: 3);
 
       final retrieved = await cache.get("issue_list:order");
       expect(retrieved?.map((issue) => issue.id), [3, 1, 3]);
@@ -171,14 +169,10 @@ void main() {
 
     test("a deleted entity turns the page into a cache miss", () async {
       final cache = issueCache();
-      await cache.cache(
-        "issue_list:partial",
-        const [
-          IssueListDto(id: 1, number: "1", series: null, image: null),
-          IssueListDto(id: 2, number: "2", series: null, image: null),
-        ],
-        count: 2,
-      );
+      await cache.cache("issue_list:partial", const [
+        IssueListDto(id: 1, number: "1", series: null, image: null),
+        IssueListDto(id: 2, number: "2", series: null, image: null),
+      ], count: 2);
 
       await (db.delete(db.metronIssues)..where((t) => t.id.equals(1))).go();
       expect(await cache.get("issue_list:partial"), isNull);
@@ -186,61 +180,59 @@ void main() {
 
     test("write-through preserves hydrated and unprovided columns", () async {
       // A fully hydrated issue row with detail-only columns filled in.
-      await db.into(db.metronIssues).insert(
-        const MetronIssuesCompanion(
-          id: Value(5),
-          number: Value("5"),
-          description: Value("Hydrated description"),
-          pageCount: Value(32),
-          isFullyHydrated: Value(true),
-        ),
-      );
+      await db
+          .into(db.metronIssues)
+          .insert(
+            const MetronIssuesCompanion(
+              id: Value(5),
+              number: Value("5"),
+              description: Value("Hydrated description"),
+              pageCount: Value(32),
+              isFullyHydrated: Value(true),
+            ),
+          );
 
       final cache = issueCache();
       // The list payload only provides id/number; its null optional fields
       // stay absent so they cannot clobber the hydrated row.
-      await cache.cache(
-        "issue_list:hydrate",
-        const [
-          IssueListDto(id: 5, number: "5", series: null, image: null),
-        ],
-        count: 1,
-      );
+      await cache.cache("issue_list:hydrate", const [
+        IssueListDto(id: 5, number: "5", series: null, image: null),
+      ], count: 1);
 
-      final row = await (db.select(db.metronIssues)
-            ..where((t) => t.id.equals(5)))
-          .getSingle();
+      final row = await (db.select(
+        db.metronIssues,
+      )..where((t) => t.id.equals(5))).getSingle();
       expect(row.number, "5");
       expect(row.description, "Hydrated description");
       expect(row.pageCount, 32);
       expect(row.isFullyHydrated, isTrue);
     });
 
-    test("re-caching a page replaces ids and clears stale pagination",
-        () async {
-      final cache = issueCache();
-      await cache.cache(
-        "issue_list:refresh",
-        const [
-          IssueListDto(id: 1, number: "1", series: null, image: null),
-          IssueListDto(id: 2, number: "2", series: null, image: null),
-        ],
-        count: 2,
-        next: "https://metron.cloud/api/issue/?page=2",
-      );
+    test(
+      "re-caching a page replaces ids and clears stale pagination",
+      () async {
+        final cache = issueCache();
+        await cache.cache(
+          "issue_list:refresh",
+          const [
+            IssueListDto(id: 1, number: "1", series: null, image: null),
+            IssueListDto(id: 2, number: "2", series: null, image: null),
+          ],
+          count: 2,
+          next: "https://metron.cloud/api/issue/?page=2",
+        );
 
-      await cache.cache(
-        "issue_list:refresh",
-        const [IssueListDto(id: 3, number: "3", series: null, image: null)],
-        count: 1,
-      );
+        await cache.cache("issue_list:refresh", const [
+          IssueListDto(id: 3, number: "3", series: null, image: null),
+        ], count: 1);
 
-      final retrieved = await cache.get("issue_list:refresh");
-      expect(retrieved?.map((issue) => issue.id), [3]);
-      final meta = await cache.meta("issue_list:refresh");
-      expect(meta?.count, 1);
-      expect(meta?.next, isNull);
-    });
+        final retrieved = await cache.get("issue_list:refresh");
+        expect(retrieved?.map((issue) => issue.id), [3]);
+        final meta = await cache.meta("issue_list:refresh");
+        expect(meta?.count, 1);
+        expect(meta?.next, isNull);
+      },
+    );
   });
 
   group("entity codecs", () {
@@ -252,20 +244,16 @@ void main() {
         fromJson: SeriesListDto.fromJson,
         toJson: (series) => series.toJson(),
       );
-      await cache.cache(
-        "series_list:p1",
-        const [
-          SeriesListDto(
-            id: 10,
-            series: "Batman",
-            yearBegan: 2016,
-            volume: 3,
-            issueCount: 100,
-            modified: "2026-02-02T00:00:00Z",
-          ),
-        ],
-        count: 50,
-      );
+      await cache.cache("series_list:p1", const [
+        SeriesListDto(
+          id: 10,
+          series: "Batman",
+          yearBegan: 2016,
+          volume: 3,
+          issueCount: 100,
+          modified: "2026-02-02T00:00:00Z",
+        ),
+      ], count: 50);
 
       final retrieved = await cache.get("series_list:p1");
       expect(retrieved?.first.id, 10);
@@ -284,18 +272,14 @@ void main() {
         fromJson: CharacterListDto.fromJson,
         toJson: (character) => character.toJson(),
       );
-      await cache.cache(
-        "character_list:p1",
-        const [
-          CharacterListDto(
-            id: 7,
-            name: "Bruce Wayne",
-            slug: "bruce-wayne",
-            modified: "2026-01-01T00:00:00Z",
-          ),
-        ],
-        count: 1,
-      );
+      await cache.cache("character_list:p1", const [
+        CharacterListDto(
+          id: 7,
+          name: "Bruce Wayne",
+          slug: "bruce-wayne",
+          modified: "2026-01-01T00:00:00Z",
+        ),
+      ], count: 1);
 
       final retrieved = await cache.get("character_list:p1");
       expect(retrieved?.first.id, 7);
@@ -346,10 +330,9 @@ void main() {
         toJson: (issue) => issue.toJson(),
         withMeta: false,
       );
-      await cache.cache(
-        "2026-8-23",
-        const [IssueListDto(id: 1, number: "1", series: null, image: null)],
-      );
+      await cache.cache("2026-8-23", const [
+        IssueListDto(id: 1, number: "1", series: null, image: null),
+      ]);
 
       expect(await cache.get("2026-8-23"), hasLength(1));
       expect(await cache.meta("2026-8-23"), isNull);

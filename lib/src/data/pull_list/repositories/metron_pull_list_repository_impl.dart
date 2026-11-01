@@ -1,3 +1,4 @@
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/data/pull_list/datasources/remote/metron_pull_list_remote_data_source.dart";
 import "package:takion/src/domain/pull_list/entities/pull_list_item.dart";
 import "package:takion/src/domain/pull_list/repositories/pull_list_repository.dart";
@@ -6,6 +7,42 @@ class MetronPullListRepositoryImpl implements MetronPullListRepository {
   MetronPullListRepositoryImpl(this._remoteDataSource);
 
   final MetronPullListRemoteDataSource _remoteDataSource;
+
+  @override
+  Future<RemotePage<PullListSeriesItem>> getPullListSeriesPage({
+    Uri? pageUrl,
+  }) async {
+    final remotePage = await _remoteDataSource.getPullListSeriesPage(
+      pageUrl: pageUrl,
+    );
+    return RemotePage<PullListSeriesItem>(
+      items: remotePage.items.map((dto) => dto.toEntity()).toList(),
+      count: remotePage.count,
+      next: remotePage.next,
+      previous: remotePage.previous,
+      fetchedAt: remotePage.fetchedAt,
+    );
+  }
+
+  @override
+  Future<RemotePage<PullListIssueItem>> getPullListIssuesPage({
+    Uri? pageUrl,
+    DateTime? storeDateAfter,
+    DateTime? storeDateBefore,
+  }) async {
+    final remotePage = await _remoteDataSource.getPullListIssuesPage(
+      pageUrl: pageUrl,
+      storeDateAfter: storeDateAfter,
+      storeDateBefore: storeDateBefore,
+    );
+    return RemotePage<PullListIssueItem>(
+      items: remotePage.items.map((dto) => dto.toEntity()).toList(),
+      count: remotePage.count,
+      next: remotePage.next,
+      previous: remotePage.previous,
+      fetchedAt: remotePage.fetchedAt,
+    );
+  }
 
   @override
   Future<List<PullListSeriesItem>> getPullListSeries({

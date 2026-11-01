@@ -62,6 +62,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
 
     return DetailScreenShell<TeamDetails>(
       asyncValue: detailsAsync,
+      entityId: widget.teamId,
       entityType: "team",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,
@@ -120,7 +121,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 136,
+              height: 164,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -131,7 +132,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
                   return PersonCard(
                     creatorId: creator.id,
                     name: creator.name,
-                    width: 100,
+                    width: 105,
                   );
                 },
               ),
@@ -152,7 +153,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 136,
+              height: 168,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -164,8 +165,8 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
                     entityType: "universe",
                     entityId: universe.id,
                     name: universe.name,
-                    width: 140,
-                    imageHeight: 80,
+                    width: 115,
+                    imageHeight: 105,
                     onTap: () => context.pushRoute(
                       UniverseDetailsRoute(universeId: universe.id),
                     ),

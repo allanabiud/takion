@@ -10,21 +10,37 @@ void main() {
     });
 
     test("redacts Authorization headers", () {
-      final input = "Headers: Authorization: Basic dXNlcjpwYXNz, Content-Type: json";
+      final input =
+          "Headers: Authorization: Basic dXNlcjpwYXNz, Content-Type: json";
       final result = LogSanitizer.sanitize(input);
-      expect(result, equals("Headers: Authorization: [REDACTED], Content-Type: json"));
+      expect(
+        result,
+        equals("Headers: Authorization: [REDACTED], Content-Type: json"),
+      );
     });
 
     test("redacts password fields in json payloads", () {
-      final input = 'User payload: {"email": "user@test.com", "password": "supersecretpassword123"}';
+      final input =
+          'User payload: {"email": "user@test.com", "password": "supersecretpassword123"}';
       final result = LogSanitizer.sanitize(input);
-      expect(result, equals('User payload: {"email": "user@test.com", "password":"[REDACTED]"}'));
+      expect(
+        result,
+        equals(
+          'User payload: {"email": "user@test.com", "password":"[REDACTED]"}',
+        ),
+      );
     });
 
     test("redacts token query parameters", () {
-      final input = "GET https://api.metron.cloud/endpoint?token=my_secret_token&limit=20";
+      final input =
+          "GET https://api.metron.cloud/endpoint?token=my_secret_token&limit=20";
       final result = LogSanitizer.sanitize(input);
-      expect(result, equals("GET https://api.metron.cloud/endpoint?token=[REDACTED]&limit=20"));
+      expect(
+        result,
+        equals(
+          "GET https://api.metron.cloud/endpoint?token=[REDACTED]&limit=20",
+        ),
+      );
     });
   });
 }

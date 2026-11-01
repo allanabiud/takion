@@ -5,7 +5,9 @@ import "package:takion/src/presentation/shared/widgets/entity_cover.dart";
 
 void main() {
   group("EntityCover", () {
-    testWidgets("renders favorite icon when isFavorite is true", (tester) async {
+    testWidgets("renders favorite icon when isFavorite is true", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -21,7 +23,9 @@ void main() {
       expect(find.byIcon(Icons.favorite), findsOneWidget);
     });
 
-    testWidgets("renders cloud_upload icon when syncStatus is pending", (tester) async {
+    testWidgets("renders cloud_upload icon when syncStatus is pending", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -38,7 +42,9 @@ void main() {
       expect(find.byIcon(Icons.sync_problem_outlined), findsNothing);
     });
 
-    testWidgets("renders sync_problem icon when syncStatus is failed", (tester) async {
+    testWidgets("renders sync_problem icon when syncStatus is failed", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -55,22 +61,25 @@ void main() {
       expect(find.byIcon(Icons.cloud_upload_outlined), findsNothing);
     });
 
-    testWidgets("renders both role badge and syncStatus when both are present", (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: EntityCover(
-              imageUrl: null,
-              placeholderLabel: "SM",
-              role: ItemRole.prologue,
-              syncStatus: "pending",
+    testWidgets(
+      "renders both role badge and syncStatus when both are present",
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: EntityCover(
+                imageUrl: null,
+                placeholderLabel: "SM",
+                role: ItemRole.prologue,
+                syncStatus: "pending",
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text("PROLOGUE"), findsOneWidget);
-      expect(find.byIcon(Icons.cloud_upload_outlined), findsOneWidget);
-    });
+        expect(find.text("PROLOGUE"), findsOneWidget);
+        expect(find.byIcon(Icons.cloud_upload_outlined), findsOneWidget);
+      },
+    );
   });
 }

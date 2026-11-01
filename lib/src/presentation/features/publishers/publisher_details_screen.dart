@@ -63,6 +63,7 @@ class _PublisherDetailsScreenState extends ConsumerState<PublisherDetailsScreen>
 
     return DetailScreenShell<PublisherDetails>(
       asyncValue: detailsAsync,
+      entityId: widget.publisherId,
       entityType: "publisher",
       loadingImageUrl: widget.initialImageUrl,
       toImageUrl: (d) => d.image,

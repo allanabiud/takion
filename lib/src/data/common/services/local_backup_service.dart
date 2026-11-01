@@ -48,7 +48,7 @@ class LocalBackupService {
     }
 
     if (!SyncDeltaApplier.validateChecksum(payload)) {
-      AppLogger.warning("Backup checksum mismatch — file may be corrupted");
+      AppLogger.warning("Backup checksum mismatch - file may be corrupted");
       throw StateError(
         "Backup file integrity check failed. The file may be corrupted.",
       );

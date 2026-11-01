@@ -392,7 +392,9 @@ mixin _ArcsRepositoryMixin on _RepositoryState {
                 page: page,
                 cancelToken: cancelToken,
               );
-        if (remotePage.results.isEmpty && cachedDtos != null && cachedDtos.isNotEmpty) {
+        if (remotePage.results.isEmpty &&
+            cachedDtos != null &&
+            cachedDtos.isNotEmpty) {
           return ArcIssueListPage(
             count: cachedMeta?.count ?? cachedDtos.length,
             next: cachedMeta?.next,

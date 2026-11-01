@@ -1,144 +1,116 @@
 import "package:drift/native.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:mocktail/mocktail.dart";
-import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
-import "package:takion/src/data/common/drift/database.dart"
-    hide OfflineWriteQueue, WishlistItem;
+import "package:takion/src/core/commands/outbox_constants.dart";
+import "package:takion/src/data/common/drift/database.dart" hide WishlistItem;
 import "package:takion/src/data/wishlist/repositories/local_wishlist_repository.dart";
-
-class MockOfflineWriteQueue extends Mock implements OfflineWriteQueue {}
 
 void main() {
   group("LocalWishlistRepository", () {
     late AppDatabase database;
-    late MockOfflineWriteQueue offlineQueue;
     late LocalWishlistRepository repository;
 
     setUp(() {
       database = AppDatabase.forTesting(NativeDatabase.memory());
-      offlineQueue = MockOfflineWriteQueue();
-      when(
-        () => offlineQueue.enqueueWishlistAdd(
-          issueId: any(named: "issueId"),
-          priority: any(named: "priority"),
-          desiredGrade: any(named: "desiredGrade"),
-          maxPrice: any(named: "maxPrice"),
-          maxPriceCurrency: any(named: "maxPriceCurrency"),
-          notes: any(named: "notes"),
-        ),
-      ).thenAnswer((_) async => 1);
-
-      when(
-        () => offlineQueue.enqueueWishlistAcquire(
-          itemId: any(named: "itemId"),
-          purchaseDate: any(named: "purchaseDate"),
-          purchasePrice: any(named: "purchasePrice"),
-          purchasePriceCurrency: any(named: "purchasePriceCurrency"),
-          purchaseStore: any(named: "purchaseStore"),
-          notes: any(named: "notes"),
-        ),
-      ).thenAnswer((_) async => 1);
-
-      when(
-        () => offlineQueue.enqueueWishlistRemove(
-          itemId: any(named: "itemId"),
-        ),
-      ).thenAnswer((_) async => 1);
-
-      repository = LocalWishlistRepository(
-        database,
-        offlineQueue: offlineQueue,
-      );
+      repository = LocalWishlistRepository(database);
     });
 
     tearDown(() async {
       await database.close();
     });
 
-    test("addToWishList inserts into database and enqueues offline write",
-        () async {
-      final item = await repository.addToWishList(
-        issueId: 101,
-        seriesId: 20,
-        seriesName: "Batman",
-        issueNumber: "1",
-        priority: 4,
-        maxPrice: 30.0,
-      );
-
-      expect(item.issueId, 101);
-      expect(item.seriesName, "Batman");
-      expect(item.syncStatus, "pending");
-
-      final inDb = await repository.getItemByIssueId(101);
-      expect(inDb, isNotNull);
-      expect(inDb!.seriesId, 20);
-      expect(inDb.priority, 4);
-
-      verify(
-        () => offlineQueue.enqueueWishlistAdd(
+    test(
+      "addToWishList inserts into database and records a durable outbox intent",
+      () async {
+        final item = await repository.addToWishList(
           issueId: 101,
+          seriesId: 20,
+          seriesName: "Batman",
+          issueNumber: "1",
           priority: 4,
-          desiredGrade: null,
           maxPrice: 30.0,
-          maxPriceCurrency: "USD",
-          notes: null,
-        ),
-      ).called(1);
-    });
+        );
 
-    test("acquireWishListItem deletes from database and enqueues offline acquire",
-        () async {
-      await repository.addToWishList(
-        issueId: 101,
-        seriesId: 20,
-        seriesName: "Batman",
-        issueNumber: "1",
-      );
+        expect(item.issueId, 101);
+        expect(item.seriesName, "Batman");
+        expect(item.syncStatus, "pending");
 
-      await repository.acquireWishListItem(
-        itemId: 101,
-        purchasePrice: 15.0,
-        purchaseStore: "Midtown Comics",
-      );
+        final inDb = await repository.getItemByIssueId(101);
+        expect(inDb, isNotNull);
+        expect(inDb!.seriesId, 20);
+        expect(inDb.priority, 4);
 
-      final inDb = await repository.getItemByIssueId(101);
-      expect(inDb, isNull);
+        // Local projection and outbox intent change in one transaction.
+        final pending = await database.outboxDao.getPendingEntries();
+        expect(pending.length, 1);
+        final op = pending.first;
+        expect(op.operation, OutboxOperationType.create);
+        expect(op.entityType, OutboxEntityType.wishlist);
+        expect(op.coalesceKey, "wishlist:101");
+        expect(op.payloadJson, contains('"issue":101'));
+      },
+    );
 
-      final libItem = await database.libraryItemDao.getByIssueId(101);
-      expect(libItem, isNotNull);
-      expect(libItem!.ownershipStatus, "owned");
-      expect(libItem.metronIssueId, 101);
-      expect(libItem.metronSeriesId, 20);
+    test(
+      "acquireWishListItem deletes from database and queues a collection create",
+      () async {
+        await repository.addToWishList(
+          issueId: 101,
+          seriesId: 20,
+          seriesName: "Batman",
+          issueNumber: "1",
+        );
 
-      verify(
-        () => offlineQueue.enqueueWishlistAcquire(
+        await repository.acquireWishListItem(
           itemId: 101,
-          purchaseDate: null,
           purchasePrice: 15.0,
-          purchasePriceCurrency: "USD",
           purchaseStore: "Midtown Comics",
-          notes: null,
-        ),
-      ).called(1);
-    });
+        );
 
-    test("removeFromWishList deletes from database and enqueues offline remove",
-        () async {
-      await repository.addToWishList(
-        issueId: 101,
-        seriesId: 20,
-        seriesName: "Batman",
-        issueNumber: "1",
-      );
+        final inDb = await repository.getItemByIssueId(101);
+        expect(inDb, isNull);
 
-      await repository.removeFromWishList(101);
+        final libItem = await database.libraryItemDao.getByIssueId(101);
+        expect(libItem, isNotNull);
+        expect(libItem!.ownershipStatus, "owned");
+        expect(libItem.metronIssueId, 101);
+        expect(libItem.metronSeriesId, 20);
 
-      final inDb = await repository.getItemByIssueId(101);
-      expect(inDb, isNull);
+        // Never-synced wishlist item converts directly to a collection create;
+        // the cancelled wishlist create leaves no dangling outbox rows.
+        final pending = await database.outboxDao.getPendingEntries();
+        expect(pending.length, 1);
+        final op = pending.first;
+        expect(op.operation, OutboxOperationType.create);
+        expect(op.entityType, OutboxEntityType.collection);
+        expect(op.payloadJson, contains('"issue":101'));
+        expect(
+          pending.any((o) => o.entityType == OutboxEntityType.wishlist),
+          isFalse,
+        );
+      },
+    );
 
-      verify(() => offlineQueue.enqueueWishlistRemove(itemId: 101)).called(1);
-    });
+    test(
+      "removeFromWishList deletes from database and cancels the pending outbox intent",
+      () async {
+        await repository.addToWishList(
+          issueId: 101,
+          seriesId: 20,
+          seriesName: "Batman",
+          issueNumber: "1",
+        );
+
+        await repository.removeFromWishList(101);
+
+        final inDb = await repository.getItemByIssueId(101);
+        expect(inDb, isNull);
+
+        // Add then remove of a never-synced item cancels both sides: no
+        // remote work is left queued.
+        final pending = await database.outboxDao.getPendingEntries();
+        expect(pending, isEmpty);
+      },
+    );
 
     test("watchWishListItems emits list of wishlist items", () async {
       await repository.addToWishList(

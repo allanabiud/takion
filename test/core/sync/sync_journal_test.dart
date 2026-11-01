@@ -51,18 +51,11 @@ void main() {
       await journal.setLastSyncAttempt(DateTime.now());
       expect(await journal.isThrottled(), isTrue);
 
-      expect(
-        await journal.isThrottled(minInterval: Duration.zero),
-        isFalse,
-      );
+      expect(await journal.isThrottled(minInterval: Duration.zero), isFalse);
     });
 
     test("records sync attempts without failure", () async {
-      await journal.record(
-        phase: "upload",
-        success: true,
-        elapsedMs: 120,
-      );
+      await journal.record(phase: "upload", success: true, elapsedMs: 120);
 
       final lastSuccess = await db.syncMetaDao.get("last_sync_success_time");
       expect(lastSuccess, isNotNull);

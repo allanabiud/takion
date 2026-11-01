@@ -16,16 +16,10 @@ class CollectionStatsByFormatDto {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    "book_format": bookFormat,
-    "count": count,
-  };
+  Map<String, dynamic> toJson() => {"book_format": bookFormat, "count": count};
 
   CollectionStatsByFormat toEntity() {
-    return CollectionStatsByFormat(
-      bookFormat: bookFormat,
-      count: count,
-    );
+    return CollectionStatsByFormat(bookFormat: bookFormat, count: count);
   }
 }
 

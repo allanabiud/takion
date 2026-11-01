@@ -101,7 +101,9 @@ class RatingPicker extends StatelessWidget {
                   duration: const Duration(milliseconds: 150),
                   curve: Curves.easeOutBack,
                   child: Icon(
-                    starValue <= selectedRating ? Icons.star : Icons.star_border,
+                    starValue <= selectedRating
+                        ? Icons.star
+                        : Icons.star_border,
                     color: starValue <= selectedRating
                         ? theme.colorScheme.primary
                         : theme.colorScheme.outline,

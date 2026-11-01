@@ -1,8 +1,9 @@
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
-class EntityListTile extends StatelessWidget {
+class EntityListTile extends ConsumerWidget {
   final String entityType;
   final int entityId;
   final String name;
@@ -29,18 +30,26 @@ class EntityListTile extends StatelessWidget {
     this.isFirst = false,
     this.isLast = false,
     this.horizontalPadding = 12,
-    this.imageWidth = 80,
-    this.imageHeight = 56,
-    this.imageBorderRadius = 8,
+    this.imageWidth = 64,
+    this.imageHeight = 64,
+    this.imageBorderRadius = 10,
     this.cacheWidth,
     this.cacheHeight,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final effectiveCacheWidth = cacheWidth ?? (imageWidth.isFinite ? (imageWidth * 2).round() : 120);
-    final effectiveCacheHeight = cacheHeight ?? (imageHeight.isFinite ? (imageHeight * 2).round() : 180);
+    final effectiveCacheWidth =
+        cacheWidth ?? (imageWidth.isFinite ? (imageWidth * 2).round() : 120);
+    final effectiveCacheHeight =
+        cacheHeight ?? (imageHeight.isFinite ? (imageHeight * 2).round() : 180);
+
+    var effectiveImageUrl = imageUrl;
+    if ((effectiveImageUrl == null || effectiveImageUrl.trim().isEmpty) &&
+        entityId > 0) {
+      effectiveImageUrl = watchEntityImageUrl(ref, entityType, entityId);
+    }
 
     return Padding(
       padding: EdgeInsets.only(
@@ -69,7 +78,7 @@ class EntityListTile extends StatelessWidget {
                       ),
                     ),
                     child: EntityCover(
-                      imageUrl: imageUrl,
+                      imageUrl: effectiveImageUrl,
                       placeholderLabel: initials(name),
                       width: imageWidth,
                       height: imageHeight,

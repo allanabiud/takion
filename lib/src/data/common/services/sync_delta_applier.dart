@@ -16,8 +16,7 @@ class SyncDeltaApplier {
   static bool validateChecksum(Map<String, dynamic> payload) {
     final storedChecksum = payload["checksum"] as String?;
     if (storedChecksum == null) return true;
-    final checkPayload = Map<String, dynamic>.from(payload)
-      ..remove("checksum");
+    final checkPayload = Map<String, dynamic>.from(payload)..remove("checksum");
     final computed = sha256.convert(utf8.encode(jsonEncode(checkPayload)));
     return computed.toString() == storedChecksum;
   }
@@ -397,19 +396,24 @@ class BackupPreview {
 
   String get summary {
     final parts = <String>[];
-    if (tableCounts["library_items"] != null && tableCounts["library_items"]! > 0) {
+    if (tableCounts["library_items"] != null &&
+        tableCounts["library_items"]! > 0) {
       parts.add("${tableCounts["library_items"]} library items");
     }
-    if (tableCounts["series_subscriptions"] != null && tableCounts["series_subscriptions"]! > 0) {
+    if (tableCounts["series_subscriptions"] != null &&
+        tableCounts["series_subscriptions"]! > 0) {
       parts.add("${tableCounts["series_subscriptions"]} subscriptions");
     }
-    if (tableCounts["pull_list_entries"] != null && tableCounts["pull_list_entries"]! > 0) {
+    if (tableCounts["pull_list_entries"] != null &&
+        tableCounts["pull_list_entries"]! > 0) {
       parts.add("${tableCounts["pull_list_entries"]} pull list entries");
     }
-    if (tableCounts["reading_lists"] != null && tableCounts["reading_lists"]! > 0) {
+    if (tableCounts["reading_lists"] != null &&
+        tableCounts["reading_lists"]! > 0) {
       parts.add("${tableCounts["reading_lists"]} reading lists");
     }
-    final favCount = (tableCounts["favorite_series"] ?? 0) +
+    final favCount =
+        (tableCounts["favorite_series"] ?? 0) +
         (tableCounts["favorite_issues"] ?? 0) +
         (tableCounts["favorite_characters"] ?? 0) +
         (tableCounts["favorite_creators"] ?? 0);

@@ -105,6 +105,9 @@ void main() {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 3,
           reservedForeground: 1,
+          // This test isolates the per-minute burst reservation; the
+          // concurrency cap is covered by concurrency_reservation_test.
+          maxConcurrent: 8,
         );
 
         final bg1 = enqueue(RequestPriority.background, path: "/bg1");
@@ -282,8 +285,7 @@ void main() {
       });
     });
 
-    test("dispatches up to dynamic burst limit instead of hardcoded default",
-        () {
+    test("dispatches up to dynamic burst limit instead of hardcoded default", () {
       fakeAsync((async) {
         scheduler = MetronRequestScheduler(
           maxRequestsPerMinute: 20,
@@ -296,7 +298,7 @@ void main() {
           "x-ratelimit-burst-remaining": ["44"],
         });
 
-        // Enqueue 25 requests — all should dispatch without hitting the old 20 cap
+        // Enqueue 25 requests - all should dispatch without hitting the old 20 cap
         final requests = <_Tracked>[];
         for (var i = 0; i < 25; i++) {
           requests.add(enqueue(RequestPriority.normal, path: "/$i"));

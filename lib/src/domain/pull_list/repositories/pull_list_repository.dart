@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/domain/entities.dart";
 
 abstract class PullListRepository {
@@ -38,6 +39,14 @@ abstract class PullListRepository {
 }
 
 abstract class MetronPullListRepository {
+  Future<RemotePage<PullListSeriesItem>> getPullListSeriesPage({Uri? pageUrl});
+
+  Future<RemotePage<PullListIssueItem>> getPullListIssuesPage({
+    Uri? pageUrl,
+    DateTime? storeDateAfter,
+    DateTime? storeDateBefore,
+  });
+
   Future<List<PullListSeriesItem>> getPullListSeries({
     int page = 1,
     DateTime? modifiedGt,

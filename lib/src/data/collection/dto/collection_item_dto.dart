@@ -115,7 +115,10 @@ class CollectionItemDto {
 
     return CollectionItemDto(
       id: (json["id"] as num?)?.toInt() ?? 0,
-      issueId: (issueMap["id"] as num?)?.toInt() ?? (json["issue_id"] as num?)?.toInt() ?? 0,
+      issueId:
+          (issueMap["id"] as num?)?.toInt() ??
+          (json["issue_id"] as num?)?.toInt() ??
+          0,
       seriesId: (seriesMap["id"] as num?)?.toInt() ?? 0,
       seriesName: seriesMap["name"] as String? ?? "Unknown Series",
       issueNumber: issueMap["number"] as String? ?? "",
@@ -129,7 +132,8 @@ class CollectionItemDto {
       gradingCompany: json["grading_company"] as String?,
       purchaseDate: json["purchase_date"] as String?,
       purchasePrice: parsedPrice,
-      purchasePriceCurrency: json["purchase_price_currency"] as String? ?? "USD",
+      purchasePriceCurrency:
+          json["purchase_price_currency"] as String? ?? "USD",
       purchaseStore: json["purchase_store"] as String?,
       storageLocation: json["storage_location"] as String?,
       notes: json["notes"] as String?,
@@ -192,7 +196,9 @@ class CollectionItemDto {
       bookFormat: bookFormat,
       grade: grade,
       gradingCompany: gradingCompany,
-      purchaseDate: purchaseDate != null ? DateTime.tryParse(purchaseDate!) : null,
+      purchaseDate: purchaseDate != null
+          ? DateTime.tryParse(purchaseDate!)
+          : null,
       purchasePrice: purchasePrice,
       purchasePriceCurrency: purchasePriceCurrency,
       purchaseStore: purchaseStore,

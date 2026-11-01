@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
+import "package:flutter_cache_manager/flutter_cache_manager.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/presentation/features/library/export/collection_csv_export.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 import "package:takion/src/presentation/features/settings/widgets/settings_helpers.dart";
@@ -91,7 +93,9 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                       color: Colors.red,
                     ),
                   ),
-                  subtitle: const Text("Remove cached cover images only"),
+                  subtitle: const Text(
+                    "Remove cached cover images (memory & disk) only",
+                  ),
                   onTap: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
@@ -115,6 +119,14 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                     if (confirm == true) {
                       PaintingBinding.instance.imageCache.clear();
                       PaintingBinding.instance.imageCache.clearLiveImages();
+                      try {
+                        await DefaultCacheManager().emptyCache();
+                      } catch (e) {
+                        AppLogger.warning(
+                          "Failed to clear on-disk image cache: $e",
+                        );
+                      }
+                      ref.invalidate(imageCacheSizeProvider);
                       if (context.mounted) {
                         TakionAlerts.success(context, "Image Cache Cleared");
                       }
@@ -129,22 +141,26 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                     color: Theme.of(context).colorScheme.error,
                   ),
                   title: const Text(
-                    "Clear All Cache",
+                    "Rebuild Cache",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Colors.red,
                     ),
                   ),
-                  subtitle: const Text("Remove all cached metadata and images"),
+                  subtitle: const Text(
+                    "Rebuilds network metadata and image cache. Your library, "
+                    "reading lists, and offline changes are completely preserved.",
+                  ),
                   onTap: appSettings.isBusy
                       ? null
                       : () async {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text("Clear All Cache?"),
+                              title: const Text("Rebuild Cache?"),
                               content: const Text(
-                                "This will remove all cached data and images. Your account and preferences remain.",
+                                "This clears the network metadata cache and cover images so they re-sync from Metron. "
+                                "Your library, reading lists, and offline changes waiting to sync are completely preserved.",
                               ),
                               actions: [
                                 TextButton(
@@ -155,7 +171,7 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.of(context).pop(true),
-                                  child: const Text("Clear"),
+                                  child: const Text("Rebuild"),
                                 ),
                               ],
                             ),
@@ -164,10 +180,12 @@ void showDataStorageSettings(BuildContext context, WidgetRef ref) {
                             await ref
                                 .read(settingsProvider.notifier)
                                 .clearCache();
+                            ref.invalidate(cacheSizeProvider);
+                            ref.invalidate(imageCacheSizeProvider);
                             if (context.mounted) {
                               TakionAlerts.success(
                                 context,
-                                "All Cache Cleared",
+                                "Cache Rebuilt - library preserved",
                               );
                             }
                           }

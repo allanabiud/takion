@@ -125,29 +125,31 @@ void main() {
     },
   );
 
-  test("getArcIssueListAll falls back to cached issues when remote returns 304/empty", () async {
-    final localSource = MetronLocalDataSourceImpl(db);
-    await localSource.cacheArcIssueListResults(
-      123,
-      [_issue(1), _issue(2)],
-      page: 1,
-      limit: metronDefaultPageSize,
-      count: 2,
-    );
+  test(
+    "getArcIssueListAll falls back to cached issues when remote returns 304/empty",
+    () async {
+      final localSource = MetronLocalDataSourceImpl(db);
+      await localSource.cacheArcIssueListResults(
+        123,
+        [_issue(1), _issue(2)],
+        page: 1,
+        limit: metronDefaultPageSize,
+        count: 2,
+      );
 
-    // Remote returns empty response (simulating 304)
-    final remote = FakeMetronRemoteDataSource([]);
-    final repo = MetronRepositoryImpl(
-      remote,
-      localSource,
-      MetronEntityDao(db),
-      JunctionDao(db),
-      series_index.SeriesNameIndex(db),
-    );
+      // Remote returns empty response (simulating 304)
+      final remote = FakeMetronRemoteDataSource([]);
+      final repo = MetronRepositoryImpl(
+        remote,
+        localSource,
+        MetronEntityDao(db),
+        JunctionDao(db),
+        series_index.SeriesNameIndex(db),
+      );
 
-    final issues = await repo.getArcIssueListAll(123);
-    expect(issues, hasLength(2));
-    expect(issues.first.id, 1);
-  });
+      final issues = await repo.getArcIssueListAll(123);
+      expect(issues, hasLength(2));
+      expect(issues.first.id, 1);
+    },
+  );
 }
-

@@ -181,10 +181,7 @@ class NotificationService {
     try {
       await _plugin.cancel(_metronSyncNotificationId);
     } catch (e) {
-      AppLogger.warning(
-        "Failed to cancel Metron sync notification",
-        error: e,
-      );
+      AppLogger.warning("Failed to cancel Metron sync notification", error: e);
     }
   }
 

@@ -37,7 +37,9 @@ void main() {
   });
 
   group("MetronConnectionSettings", () {
-    testWidgets("renders Cloud Synchronization and API Usage when connected", (tester) async {
+    testWidgets("renders Cloud Synchronization and API Usage when connected", (
+      tester,
+    ) async {
       final now = DateTime(2026, 9, 4, 1, 0);
       final syncState = MetronSyncState(
         status: SyncStatus.success,
@@ -55,18 +57,24 @@ void main() {
           overrides: [
             driftDatabaseProvider.overrideWithValue(db),
             metronConnectionProvider.overrideWith((ref) async => true),
-            metronSyncStateProvider.overrideWith((ref) => Stream.value(syncState)),
+            metronSyncStateProvider.overrideWith(
+              (ref) => Stream.value(syncState),
+            ),
             metronSyncManagerProvider.overrideWithValue(mockSyncManager),
-            pendingOfflineWritesCountProvider.overrideWith((ref) => Stream.value(0)),
-            failedOfflineWritesCountProvider.overrideWith((ref) => Stream.value(0)),
+            pendingOfflineWritesCountProvider.overrideWith(
+              (ref) => Stream.value(0),
+            ),
+            failedOfflineWritesCountProvider.overrideWith(
+              (ref) => Stream.value(0),
+            ),
             rateLimitStatusProvider.overrideWith(FakeRateLimitNotifier.new),
-            migrationNeededProvider.overrideWithValue(const AsyncValue.data(true)),
+            migrationNeededProvider.overrideWithValue(
+              const AsyncValue.data(true),
+            ),
           ],
           child: const MaterialApp(
             home: Scaffold(
-              body: SingleChildScrollView(
-                child: MetronConnectionContent(),
-              ),
+              body: SingleChildScrollView(child: MetronConnectionContent()),
             ),
           ),
         ),
@@ -82,39 +90,46 @@ void main() {
       expect(find.text("480"), findsOneWidget);
     });
 
-    testWidgets("renders pending changes count in subtitle when pending changes exist", (tester) async {
-      const syncState = MetronSyncState(
-        status: SyncStatus.idle,
-      );
+    testWidgets(
+      "renders pending changes count in subtitle when pending changes exist",
+      (tester) async {
+        const syncState = MetronSyncState(status: SyncStatus.idle);
 
-      final mockSyncManager = MockMetronSyncManager();
-      when(() => mockSyncManager.currentState).thenReturn(syncState);
+        final mockSyncManager = MockMetronSyncManager();
+        when(() => mockSyncManager.currentState).thenReturn(syncState);
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            driftDatabaseProvider.overrideWithValue(db),
-            metronConnectionProvider.overrideWith((ref) async => true),
-            metronSyncStateProvider.overrideWith((ref) => Stream.value(syncState)),
-            metronSyncManagerProvider.overrideWithValue(mockSyncManager),
-            pendingOfflineWritesCountProvider.overrideWith((ref) => Stream.value(3)),
-            failedOfflineWritesCountProvider.overrideWith((ref) => Stream.value(0)),
-            rateLimitStatusProvider.overrideWith(FakeRateLimitNotifier.new),
-            migrationNeededProvider.overrideWithValue(const AsyncValue.data(true)),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: MetronConnectionContent(),
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              driftDatabaseProvider.overrideWithValue(db),
+              metronConnectionProvider.overrideWith((ref) async => true),
+              metronSyncStateProvider.overrideWith(
+                (ref) => Stream.value(syncState),
+              ),
+              metronSyncManagerProvider.overrideWithValue(mockSyncManager),
+              pendingOfflineWritesCountProvider.overrideWith(
+                (ref) => Stream.value(3),
+              ),
+              failedOfflineWritesCountProvider.overrideWith(
+                (ref) => Stream.value(0),
+              ),
+              rateLimitStatusProvider.overrideWith(FakeRateLimitNotifier.new),
+              migrationNeededProvider.overrideWithValue(
+                const AsyncValue.data(true),
+              ),
+            ],
+            child: const MaterialApp(
+              home: Scaffold(
+                body: SingleChildScrollView(child: MetronConnectionContent()),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text("3 changes not synced"), findsOneWidget);
-    });
+        expect(find.text("3 changes not synced"), findsOneWidget);
+      },
+    );
   });
 }

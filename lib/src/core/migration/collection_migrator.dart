@@ -9,9 +9,9 @@ class CollectionMigrator {
     required db.AppDatabase database,
     required MetronCollectionRemoteDataSource remoteDataSource,
     Duration Function()? rateLimitDelay,
-  })  : _database = database,
-        _remoteDataSource = remoteDataSource,
-        _rateLimitDelay = rateLimitDelay;
+  }) : _database = database,
+       _remoteDataSource = remoteDataSource,
+       _rateLimitDelay = rateLimitDelay;
 
   final db.AppDatabase _database;
   final MetronCollectionRemoteDataSource _remoteDataSource;
@@ -21,12 +21,10 @@ class CollectionMigrator {
       _rateLimitDelay?.call() ?? const Duration(milliseconds: 3200);
 
   Future<List<db.LibraryItem>> getUnmigratedItems() async {
-    return (_database.select(_database.libraryItems)
-          ..where(
-            (t) =>
-                t.ownershipStatus.equals("owned") &
-                t.metronCollectionId.isNull(),
-          ))
+    return (_database.select(_database.libraryItems)..where(
+          (t) =>
+              t.ownershipStatus.equals("owned") & t.metronCollectionId.isNull(),
+        ))
         .get();
   }
 
@@ -47,7 +45,9 @@ class CollectionMigrator {
     bool Function()? isCancelled,
   }) async {
     final unmigrated = await getUnmigratedItems();
-    if (unmigrated.isEmpty) return const MigrationResult(migrated: 0, failed: 0);
+    if (unmigrated.isEmpty) {
+      return const MigrationResult(migrated: 0, failed: 0);
+    }
 
     var migratedCount = 0;
     var failedCount = 0;
@@ -76,9 +76,9 @@ class CollectionMigrator {
           notes: item.notes,
         );
 
-        await (_database.update(_database.libraryItems)
-              ..where((t) => t.id.equals(item.id)))
-            .write(
+        await (_database.update(
+          _database.libraryItems,
+        )..where((t) => t.id.equals(item.id))).write(
           db.LibraryItemsCompanion(
             metronCollectionId: Value(dto.id),
             syncStatus: const Value("synced"),

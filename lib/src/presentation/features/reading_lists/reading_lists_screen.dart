@@ -90,8 +90,8 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
         final query = _searchController.text.toLowerCase().trim();
         final matchQuery = _isSearching && query.isNotEmpty
             ? (LocalReadingList l) =>
-                l.title.toLowerCase().contains(query) ||
-                l.description.toLowerCase().contains(query)
+                  l.title.toLowerCase().contains(query) ||
+                  l.description.toLowerCase().contains(query)
             : (LocalReadingList l) => true;
 
         final filtered = lists.where((l) {
@@ -154,9 +154,7 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
                 list: list,
                 flat: true,
                 onTap: () {
-                  context.pushRoute(
-                    ReadingListDetailsRoute(listId: list.id),
-                  );
+                  context.pushRoute(ReadingListDetailsRoute(listId: list.id));
                 },
               );
             },
@@ -166,10 +164,7 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: SizedBox(
                 width: double.infinity,
                 child: SegmentedButton<_MyListsFilter>(
@@ -201,10 +196,7 @@ class _ReadingListsScreenState extends ConsumerState<ReadingListsScreen> {
       loading: _buildSkeletonList,
       error: (e, _) => Center(
         child: Text(
-          TakionAlerts.cleanError(
-            e,
-            fallback: "Failed to load reading lists",
-          ),
+          TakionAlerts.cleanError(e, fallback: "Failed to load reading lists"),
         ),
       ),
     );

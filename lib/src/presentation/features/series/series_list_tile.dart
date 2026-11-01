@@ -79,6 +79,14 @@ class SeriesListTile extends ConsumerWidget {
     final isFavorite = ref.watch(
       favoriteSeriesIdsSetProvider.select((set) => set.contains(series.id)),
     );
+    final seriesStreamAsync = ref.watch(seriesStreamProvider(series.id));
+    final liveSeries = seriesStreamAsync.asData?.value;
+    final effectiveYear =
+        (liveSeries?.yearBegan != null && liveSeries!.yearBegan! > 0)
+        ? liveSeries.yearBegan
+        : (series.yearBegan != null && series.yearBegan! > 0
+              ? series.yearBegan
+              : null);
     final cachedIssueCountAsync = ref.watch(
       cachedSeriesIssueCountProvider(series.id),
     );
@@ -179,7 +187,9 @@ class SeriesListTile extends ConsumerWidget {
                             Row(
                               children: [
                                 Text(
-                                  '${series.yearBegan ?? 'Unknown'}',
+                                  effectiveYear != null
+                                      ? "$effectiveYear"
+                                      : "…",
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                                 const SizedBox(width: 8),

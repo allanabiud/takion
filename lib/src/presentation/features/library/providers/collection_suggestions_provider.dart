@@ -77,7 +77,9 @@ Future<IssueList> _toSuggestionIssueList(Ref ref, LibraryItem item) async {
   final localCatalog = ref.read(localCatalogRepositoryProvider);
   try {
     final localIssue = await localCatalog.getIssue(item.metronIssueId);
-    if (localIssue != null && localIssue.seriesId != null && localIssue.seriesId! > 0) {
+    if (localIssue != null &&
+        localIssue.seriesId != null &&
+        localIssue.seriesId! > 0) {
       final localSeries = await localCatalog.getSeries(localIssue.seriesId!);
       if (localSeries != null && localSeries.name.trim().isNotEmpty) {
         final sName = localSeries.name.trim();

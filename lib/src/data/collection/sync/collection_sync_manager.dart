@@ -24,8 +24,8 @@ class CollectionSyncManager {
   CollectionSyncManager({
     required db.AppDatabase database,
     required CollectionRepository collectionRepository,
-  })  : _database = database,
-        _collectionRepository = collectionRepository;
+  }) : _database = database,
+       _collectionRepository = collectionRepository;
 
   static const String _syncMetaKey = "metron_last_collection_sync";
   static const String _localUserId = "local-user";
@@ -59,16 +59,17 @@ class CollectionSyncManager {
       final lastSync = forceFullSync ? null : await getLastSyncTime();
       final isFullSync = lastSync == null;
 
-      var page = 1;
       var totalFetched = 0;
       var totalUpdated = 0;
       final now = DateTime.now().toUtc();
 
+      Uri? pageUrl;
       while (true) {
-        final items = await _collectionRepository.getCollection(
-          page: page,
+        final pageResult = await _collectionRepository.getCollectionPage(
+          pageUrl: pageUrl,
           modifiedGt: lastSync,
         );
+        final items = pageResult.items;
 
         if (items.isEmpty) break;
 
@@ -77,11 +78,10 @@ class CollectionSyncManager {
         final updatedCount = await _ingestCollectionItems(items);
         totalUpdated += updatedCount;
 
-        if (items.length < 20) {
-          // Metron default page size is 20, so fewer items means last page
+        if (pageResult.next == null) {
           break;
         }
-        page++;
+        pageUrl = pageResult.next;
       }
 
       await _database.syncMetaDao.set(_syncMetaKey, now.toIso8601String());
@@ -112,7 +112,9 @@ class CollectionSyncManager {
     if (items.isEmpty) return 0;
 
     final issueIds = items.map((i) => i.issueId).where((id) => id > 0).toList();
-    final existingLocal = await _database.libraryItemDao.getByIssueIds(issueIds);
+    final existingLocal = await _database.libraryItemDao.getByIssueIds(
+      issueIds,
+    );
 
     final companions = <db.LibraryItemsCompanion>[];
 
@@ -126,7 +128,8 @@ class CollectionSyncManager {
 
       final itemId = existing?.id ?? "lib-${item.issueId}";
       final nowIso = DateTime.now().toUtc().toIso8601String();
-      final createdAtIso = existing?.createdAt ?? item.modified?.toIso8601String() ?? nowIso;
+      final createdAtIso =
+          existing?.createdAt ?? item.modified?.toIso8601String() ?? nowIso;
       final updatedAtIso = item.modified?.toIso8601String() ?? nowIso;
 
       companions.add(
@@ -143,9 +146,15 @@ class CollectionSyncManager {
           purchaseDate: Value(item.purchaseDate?.toIso8601String()),
           pricePaid: Value(item.purchasePrice ?? existing?.pricePaid),
           quantityOwned: Value(item.quantity),
-          format: Value(item.bookFormat?.toLowerCase() ?? existing?.format ?? "print"),
+          format: Value(
+            item.bookFormat?.toLowerCase() ?? existing?.format ?? "print",
+          ),
           firstReadAt: Value(existing?.firstReadAt),
-          conditionGrade: Value(item.grade != null ? item.grade.toString() : existing?.conditionGrade),
+          conditionGrade: Value(
+            item.grade != null
+                ? item.grade.toString()
+                : existing?.conditionGrade,
+          ),
           acquiredOn: Value(existing?.acquiredOn),
           notes: Value(item.notes ?? existing?.notes),
           createdAt: Value(createdAtIso),

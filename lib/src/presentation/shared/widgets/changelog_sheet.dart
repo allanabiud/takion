@@ -10,7 +10,7 @@ const _expandedSize = 0.95;
 const _githubChangelogUrl =
     "https://github.com/allanabiud/takion/blob/master/CHANGELOG.md";
 
-final _releaseHeadingRegex = RegExp(r"^\[([^\]]+)\]\s*[-–—]\s*(.+)$");
+final _releaseHeadingRegex = RegExp(r"^\[([^\]]+)\]\s*[-–]\s*(.+)$");
 
 Future<void> showChangelogSheet(BuildContext context) {
   return showModalBottomSheet<void>(

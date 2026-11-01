@@ -131,7 +131,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
       if (hadBackup) {
         invalidateCacheBackedProvidersBatched(container.invalidate);
-        final isMetronConnected = ref.read(metronConnectionProvider).value == true;
+        final isMetronConnected =
+            ref.read(metronConnectionProvider).value == true;
         if (isMetronConnected) {
           ref.read(migrationManagerProvider).runMigration();
         }
@@ -162,7 +163,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           });
           TakionAlerts.info(
             context,
-            "No backup file found. Sync has been enabled — your data will be backed up to Drive.",
+            "No backup file found. Sync has been enabled - your data will be backed up to Drive.",
           );
         }
       }
@@ -202,7 +203,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       invalidateCacheBackedProvidersBatched(container.invalidate);
       await Future<void>.delayed(Duration.zero);
 
-      final isMetronConnected = ref.read(metronConnectionProvider).value == true;
+      final isMetronConnected =
+          ref.read(metronConnectionProvider).value == true;
       if (isMetronConnected) {
         ref.read(migrationManagerProvider).runMigration();
       }

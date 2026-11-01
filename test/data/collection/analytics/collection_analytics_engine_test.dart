@@ -68,24 +68,28 @@ void main() {
     int? publisherId,
     String number = "1",
   }) {
-    return db.into(db.metronIssues).insert(
-      MetronIssuesCompanion.insert(
-        id: Value(id),
-        number: number,
-        seriesId: presentInt(seriesId),
-        publisherId: presentInt(publisherId),
-      ),
-    );
+    return db
+        .into(db.metronIssues)
+        .insert(
+          MetronIssuesCompanion.insert(
+            id: Value(id),
+            number: number,
+            seriesId: presentInt(seriesId),
+            publisherId: presentInt(publisherId),
+          ),
+        );
   }
 
   Future<void> insertSeries(int id, String name, {int? publisherId}) {
-    return db.into(db.metronSeries).insert(
-      MetronSeriesCompanion.insert(
-        id: Value(id),
-        name: name,
-        publisherId: presentInt(publisherId),
-      ),
-    );
+    return db
+        .into(db.metronSeries)
+        .insert(
+          MetronSeriesCompanion.insert(
+            id: Value(id),
+            name: name,
+            publisherId: presentInt(publisherId),
+          ),
+        );
   }
 
   Future<void> insertPublisher(int id, String name) => db
@@ -159,23 +163,25 @@ void main() {
       expect(streak.longestDays, 5);
     });
 
-    test("an old last read breaks the active streak but not the record",
-        () async {
-      await insertLibraryItem(
-        issueId: 1,
-        isRead: true,
-        firstReadAt: "2026-09-19T10:00:00.000Z",
-      );
-      await insertLibraryItem(
-        issueId: 2,
-        isRead: true,
-        firstReadAt: "2026-09-20T10:00:00.000Z",
-      );
+    test(
+      "an old last read breaks the active streak but not the record",
+      () async {
+        await insertLibraryItem(
+          issueId: 1,
+          isRead: true,
+          firstReadAt: "2026-09-19T10:00:00.000Z",
+        );
+        await insertLibraryItem(
+          issueId: 2,
+          isRead: true,
+          firstReadAt: "2026-09-20T10:00:00.000Z",
+        );
 
-      final streak = await engine.getReadingStreak(now: now);
-      expect(streak.currentDays, 0);
-      expect(streak.longestDays, 2);
-    });
+        final streak = await engine.getReadingStreak(now: now);
+        expect(streak.currentDays, 0);
+        expect(streak.longestDays, 2);
+      },
+    );
 
     test("watch re-emits when a new read lands", () async {
       final future = engine
@@ -244,8 +250,7 @@ void main() {
   });
 
   group("monthly reading totals", () {
-    test("zero-fills the window and respects read/unread and bounds",
-        () async {
+    test("zero-fills the window and respects read/unread and bounds", () async {
       await insertLibraryItem(
         issueId: 1,
         isRead: true,
@@ -272,10 +277,7 @@ void main() {
         firstReadAt: "2026-05-01T10:00:00.000Z",
       );
 
-      final totals = await engine.getMonthlyReadingTotals(
-        now: now,
-        months: 3,
-      );
+      final totals = await engine.getMonthlyReadingTotals(now: now, months: 3);
 
       expect(totals, hasLength(3));
       expect(totals.map((t) => (t.year, t.month)), [
@@ -313,10 +315,23 @@ void main() {
       await insertLibraryItem(issueId: 102, seriesId: 10);
       await insertLibraryItem(issueId: 103, seriesId: 10);
       await insertLibraryItem(issueId: 104, seriesId: 11);
-      await insertLibraryItem(issueId: 105, seriesId: 10, ownershipStatus: "wishlist");
+      await insertLibraryItem(
+        issueId: 105,
+        seriesId: 10,
+        ownershipStatus: "wishlist",
+      );
       await insertLibraryItem(issueId: 106, seriesId: 10);
-      await insertLibraryItem(issueId: 107, seriesId: 10, ownershipStatus: "wishlist");
-      await insertLibraryItem(issueId: 108, seriesId: 11, ownershipStatus: "unknown", isRead: true);
+      await insertLibraryItem(
+        issueId: 107,
+        seriesId: 10,
+        ownershipStatus: "wishlist",
+      );
+      await insertLibraryItem(
+        issueId: 108,
+        seriesId: 11,
+        ownershipStatus: "unknown",
+        isRead: true,
+      );
       await insertLibraryItem(issueId: 109, seriesId: 10);
 
       await creditCreator(101, 1);
@@ -371,16 +386,18 @@ void main() {
       ]);
     });
 
-    test("topCharacters counts distinct issues and skips wishlist rows",
-        () async {
-      await seedRankings();
+    test(
+      "topCharacters counts distinct issues and skips wishlist rows",
+      () async {
+        await seedRankings();
 
-      final characters = await engine.topCharacters();
-      expect(characters.map((c) => (c.name, c.count)), [
-        ("Batman", 3), // 101,102,103 — 105 is wishlist, not counted
-        ("Spider-Man", 2), // 104,108
-      ]);
-    });
+        final characters = await engine.topCharacters();
+        expect(characters.map((c) => (c.name, c.count)), [
+          ("Batman", 3), // 101,102,103 - 105 is wishlist, not counted
+          ("Spider-Man", 2), // 104,108
+        ]);
+      },
+    );
   });
 
   group("spend time series", () {
@@ -510,15 +527,17 @@ void main() {
       expect(progress.achieved, isFalse);
     });
 
-    test("a non-positive target cannot divide by zero or self-achieve",
-        () async {
-      final progress = await engine.getReadingGoalProgress(
-        target: 0,
-        period: "yearly",
-        now: now,
-      );
-      expect(progress.percentComplete, 0);
-      expect(progress.achieved, isFalse);
-    });
+    test(
+      "a non-positive target cannot divide by zero or self-achieve",
+      () async {
+        final progress = await engine.getReadingGoalProgress(
+          target: 0,
+          period: "yearly",
+          now: now,
+        );
+        expect(progress.percentComplete, 0);
+        expect(progress.achieved, isFalse);
+      },
+    );
   });
 }

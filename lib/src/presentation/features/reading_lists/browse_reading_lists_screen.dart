@@ -55,13 +55,13 @@ class _BrowseReadingListsScreenState
   String _attributionLabel(String? s) => s ?? "All Sources";
 
   MetronReadingListFilter get _filter => MetronReadingListFilter(
-        page: _page,
-        name: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
-        listType: _selectedListType,
-        attributionSource: _selectedAttribution,
-      );
+    page: _page,
+    name: _searchController.text.trim().isEmpty
+        ? null
+        : _searchController.text.trim(),
+    listType: _selectedListType,
+    attributionSource: _selectedAttribution,
+  );
 
   @override
   void dispose() {
@@ -75,7 +75,8 @@ class _BrowseReadingListsScreenState
     final theme = Theme.of(context);
     final async = ref.watch(metronReadingListBrowseProvider(_filter));
     final importedListsAsync = ref.watch(localReadingListsProvider);
-    final importedLists = importedListsAsync.value ?? const <LocalReadingList>[];
+    final importedLists =
+        importedListsAsync.value ?? const <LocalReadingList>[];
     final previewItemsMap = ref.watch(metronListPreviewItemsProvider);
 
     return Scaffold(
@@ -214,11 +215,12 @@ class _BrowseReadingListsScreenState
         ),
         itemBuilder: (context, list, index, total) {
           final localList = importedLists.cast<LocalReadingList?>().firstWhere(
-                (l) => l?.metronSourceId == list.id,
-                orElse: () => null,
-              );
+            (l) => l?.metronSourceId == list.id,
+            orElse: () => null,
+          );
 
-          final previewItems = previewItemsMap[list.id]
+          final previewItems =
+              previewItemsMap[list.id]
                   ?.map(
                     (item) => LocalReadingListItem(
                       targetId: "issue-${item.issueId}",
@@ -233,7 +235,8 @@ class _BrowseReadingListsScreenState
                   .toList() ??
               const [];
 
-          final displayList = localList ??
+          final displayList =
+              localList ??
               LocalReadingList(
                 id: "metron-${list.id}",
                 title: list.name,

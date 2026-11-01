@@ -1,5 +1,7 @@
 import "package:dio/dio.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/network/remote_page.dart";
+import "package:takion/src/core/network/request_priority.dart";
 import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source.dart";
 import "package:takion/src/data/collection/dto/collection_item_dto.dart";
 import "package:takion/src/data/collection/dto/collection_stats_dto.dart";
@@ -11,6 +13,71 @@ class MetronCollectionRemoteDataSourceImpl
   final Dio _dio;
 
   MetronCollectionRemoteDataSourceImpl(this._dio);
+
+  @override
+  Future<RemotePage<CollectionItemDto>> getCollectionPage({
+    Uri? pageUrl,
+    DateTime? modifiedGt,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      // Sequential pagination is capped at one in-flight scan by the
+      // request scheduler (Phase 5 Step 2).
+      final scanOptions = Options(extra: const {paginationScanExtraKey: true});
+      final Response<dynamic> response;
+      if (pageUrl != null) {
+        response = await _dio.getUri(
+          pageUrl,
+          cancelToken: cancelToken,
+          options: scanOptions,
+        );
+      } else {
+        final queryParameters = <String, dynamic>{
+          if (modifiedGt != null)
+            "modified_gt": modifiedGt.toUtc().toIso8601String(),
+        };
+        response = await _dio.get(
+          "collection/",
+          queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
+          cancelToken: cancelToken,
+          options: scanOptions,
+        );
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? const [];
+      final items = results
+          .whereType<Map<String, dynamic>>()
+          .map(CollectionItemDto.fromJson)
+          .toList();
+      final count = data["count"] as int? ?? items.length;
+      final nextRaw = data["next"] as String?;
+      final prevRaw = data["previous"] as String?;
+
+      return RemotePage<CollectionItemDto>(
+        items: items,
+        count: count,
+        next: nextRaw != null && nextRaw.isNotEmpty
+            ? Uri.tryParse(nextRaw)
+            : null,
+        previous: prevRaw != null && prevRaw.isNotEmpty
+            ? Uri.tryParse(prevRaw)
+            : null,
+        fetchedAt: DateTime.now().toUtc(),
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return RemotePage<CollectionItemDto>(
+          items: const [],
+          count: 0,
+          next: null,
+          previous: null,
+          fetchedAt: DateTime.now().toUtc(),
+        );
+      }
+      rethrow;
+    }
+  }
 
   @override
   Future<List<CollectionItemDto>> getCollection({
@@ -28,8 +95,7 @@ class MetronCollectionRemoteDataSourceImpl
       "page": page,
       if (bookFormat != null && bookFormat.isNotEmpty)
         "book_format": bookFormat,
-      if (dateRead != null)
-        "date_read": DateFormatter.isoDate(dateRead),
+      if (dateRead != null) "date_read": DateFormatter.isoDate(dateRead),
       "grade": ?grade,
       if (gradingCompany != null && gradingCompany.isNotEmpty)
         "grading_company": gradingCompany,
@@ -125,15 +191,9 @@ class MetronCollectionRemoteDataSourceImpl
   }
 
   @override
-  Future<void> removeFromCollection(
-    int id, {
-    CancelToken? cancelToken,
-  }) async {
+  Future<void> removeFromCollection(int id, {CancelToken? cancelToken}) async {
     try {
-      await _dio.delete(
-        "collection/$id/",
-        cancelToken: cancelToken,
-      );
+      await _dio.delete("collection/$id/", cancelToken: cancelToken);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         return;

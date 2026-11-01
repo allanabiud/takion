@@ -38,7 +38,7 @@ void main() {
                   "year_began": 1938,
                   "publisher": {"name": "DC Comics"},
                 },
-              }
+              },
             ],
           },
         ),
@@ -67,11 +67,8 @@ void main() {
                 "id": 99,
                 "number": "1000",
                 "cover_date": "2024-05-01",
-                "series": {
-                  "id": 50,
-                  "name": "Action Comics",
-                },
-              }
+                "series": {"id": 50, "name": "Action Comics"},
+              },
             ],
           },
         ),

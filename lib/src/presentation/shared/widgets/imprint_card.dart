@@ -26,6 +26,15 @@ class ImprintCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    var effectiveImageUrl = imageUrl;
+    if ((effectiveImageUrl == null || effectiveImageUrl.trim().isEmpty) &&
+        imprintId > 0) {
+      effectiveImageUrl = ref
+          .watch(imprintImageStreamProvider(imprintId))
+          .asData
+          ?.value;
+    }
+
     return SizedBox(
       width: width,
       height: height,
@@ -44,7 +53,7 @@ class ImprintCard extends ConsumerWidget {
                   alpha: 0.8,
                 ),
                 child: EntityCover(
-                  imageUrl: imageUrl,
+                  imageUrl: effectiveImageUrl,
                   placeholderLabel: initials(name),
                   width: height,
                   height: height,

@@ -124,7 +124,7 @@ class _MetronAccountCardState extends State<MetronAccountCard> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    isConnected ? widget.maskedToken : "—",
+                    isConnected ? widget.maskedToken : "-",
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontFamily: "monospace",
                       fontWeight: FontWeight.w600,

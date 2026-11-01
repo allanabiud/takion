@@ -10,6 +10,7 @@ import "package:takion/src/core/sync/metron_sync_manager.dart";
 import "package:takion/src/presentation/providers/repository_providers.dart";
 
 class MockMetronAccountService extends Mock implements MetronAccountService {}
+
 class MockMetronSyncManager extends Mock implements MetronSyncManager {}
 
 void main() {
@@ -53,11 +54,14 @@ void main() {
       expect(coordinator.state, equals(SessionState.onboarding));
     });
 
-    test("validateMetronConnectionIfNeeded returns null when unauthenticated", () async {
-      final coordinator = container.read(sessionCoordinatorProvider);
-      final result = await coordinator.validateMetronConnectionIfNeeded();
-      expect(result, isNull);
-    });
+    test(
+      "validateMetronConnectionIfNeeded returns null when unauthenticated",
+      () async {
+        final coordinator = container.read(sessionCoordinatorProvider);
+        final result = await coordinator.validateMetronConnectionIfNeeded();
+        expect(result, isNull);
+      },
+    );
 
     test("syncMetronIfNeeded returns false when not authenticated", () async {
       final coordinator = container.read(sessionCoordinatorProvider);
@@ -67,10 +71,16 @@ void main() {
 
     test("onAuthStatusChanged transitions state appropriately", () {
       final coordinator = container.read(sessionCoordinatorProvider);
-      coordinator.onAuthStatusChanged(AuthStatus.unauthenticated, AuthStatus.authenticated);
+      coordinator.onAuthStatusChanged(
+        AuthStatus.unauthenticated,
+        AuthStatus.authenticated,
+      );
       expect(coordinator.state, equals(SessionState.validating));
 
-      coordinator.onAuthStatusChanged(AuthStatus.authenticated, AuthStatus.unauthenticated);
+      coordinator.onAuthStatusChanged(
+        AuthStatus.authenticated,
+        AuthStatus.unauthenticated,
+      );
       expect(coordinator.state, equals(SessionState.unauthenticated));
     });
   });

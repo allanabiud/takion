@@ -96,8 +96,9 @@ class ReadingListCover extends ConsumerWidget {
                           ),
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
-                            color: theme.colorScheme.outlineVariant
-                                .withValues(alpha: 0.5),
+                            color: theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.5,
+                            ),
                             width: 0.5,
                           ),
                         ),
@@ -115,8 +116,9 @@ class ReadingListCover extends ConsumerWidget {
                       child: Container(
                         padding: const EdgeInsets.all(2.5),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.errorContainer
-                              .withValues(alpha: 0.95),
+                          color: theme.colorScheme.errorContainer.withValues(
+                            alpha: 0.95,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
                             color: theme.colorScheme.error.withValues(

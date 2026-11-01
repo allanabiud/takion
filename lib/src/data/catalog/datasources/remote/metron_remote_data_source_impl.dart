@@ -153,6 +153,9 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     int page = 1,
     String? ordering,
     DateTime? modifiedGt,
+    DateTime? coverDateRangeAfter,
+    DateTime? coverDateRangeBefore,
+    bool? descIsSolicitation,
     CancelToken? cancelToken,
   }) async {
     final queryParameters = <String, dynamic>{"page": page};
@@ -161,6 +164,21 @@ class MetronRemoteDataSourceImpl implements MetronRemoteDataSource {
     }
     if (modifiedGt != null) {
       queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
+    }
+    if (coverDateRangeAfter != null) {
+      queryParameters["cover_date_range_after"] = coverDateRangeAfter
+          .toIso8601String()
+          .split("T")
+          .first;
+    }
+    if (coverDateRangeBefore != null) {
+      queryParameters["cover_date_range_before"] = coverDateRangeBefore
+          .toIso8601String()
+          .split("T")
+          .first;
+    }
+    if (descIsSolicitation != null) {
+      queryParameters["desc_is_solicitation"] = descIsSolicitation;
     }
     final response = nextUrl != null
         ? await _dio.getUri(nextUrl, cancelToken: cancelToken)

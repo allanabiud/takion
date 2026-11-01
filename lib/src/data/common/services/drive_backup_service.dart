@@ -334,10 +334,8 @@ class DriveSyncService {
       await _guarded(
         "upload",
         SyncPhase.uploading,
-        () => _transport.uploadFile(
-          _fullFileName,
-          Uint8List.fromList(jsonBytes),
-        ),
+        () =>
+            _transport.uploadFile(_fullFileName, Uint8List.fromList(jsonBytes)),
       );
       await _journal.setLastFullSnapshotUpload(DateTime.now());
     }
@@ -440,7 +438,9 @@ class DriveSyncService {
   Future<bool> rollback() async {
     final snapshot = await getRollbackSnapshot();
     if (snapshot == null) {
-      throw StateError("No rollback snapshot available (expired or not created)");
+      throw StateError(
+        "No rollback snapshot available (expired or not created)",
+      );
     }
     await _guarded(
       "apply",
@@ -509,7 +509,9 @@ class DriveSyncService {
     }
 
     if (!SyncDeltaApplier.validateChecksum(payload)) {
-      AppLogger.warning("Cloud backup checksum mismatch — file may be corrupted");
+      AppLogger.warning(
+        "Cloud backup checksum mismatch - file may be corrupted",
+      );
       throw StateError(
         "Backup file integrity check failed. The file may be corrupted.",
       );

@@ -31,7 +31,9 @@ void main() {
       wishlistSync = MockWishlistSyncManager();
       offlineQueue = MockOfflineWriteQueue();
 
-      when(() => offlineQueue.watchPendingCount()).thenAnswer((_) => Stream.value(0));
+      when(
+        () => offlineQueue.watchPendingCount(),
+      ).thenAnswer((_) => Stream.value(0));
       when(() => offlineQueue.processQueue()).thenAnswer((_) async => 0);
       when(() => offlineQueue.processAllEntries()).thenAnswer((_) async => 0);
       when(
@@ -85,44 +87,54 @@ void main() {
       syncManager.dispose();
     });
 
-    test("syncAll orchestrates all domain sync managers and emits success",
-        () async {
-      final states = <MetronSyncState>[];
-      final subscription = syncManager.stateStream.listen(states.add);
+    test(
+      "syncAll orchestrates all domain sync managers and emits success",
+      () async {
+        final states = <MetronSyncState>[];
+        final subscription = syncManager.stateStream.listen(states.add);
 
-      final result = await syncManager.syncAll();
+        final result = await syncManager.syncAll();
 
-      expect(result.status, SyncStatus.success);
-      expect(result.collectionItemsSynced, 5);
-      expect(result.pullListSeriesSynced, 2);
-      expect(result.pullListIssuesSynced, 3);
-      expect(result.wishlistItemsSynced, 4);
+        expect(result.status, SyncStatus.success);
+        expect(result.collectionItemsSynced, 5);
+        expect(result.pullListSeriesSynced, 2);
+        expect(result.pullListIssuesSynced, 3);
+        expect(result.wishlistItemsSynced, 4);
 
-      verify(() => offlineQueue.processAllEntries()).called(1);
-      verify(() => collectionSync.syncCollection(
+        verify(() => offlineQueue.processAllEntries()).called(1);
+        verify(
+          () => collectionSync.syncCollection(
             forceFullSync: false,
             onProgress: any(named: "onProgress"),
-          )).called(1);
-      verify(() => pullListSync.syncPullList(
+          ),
+        ).called(1);
+        verify(
+          () => pullListSync.syncPullList(
             forceFullSync: false,
             onProgress: any(named: "onProgress"),
-          )).called(1);
-      verify(() => wishlistSync.syncWishlist(
+          ),
+        ).called(1);
+        verify(
+          () => wishlistSync.syncWishlist(
             forceFullSync: false,
             onProgress: any(named: "onProgress"),
-          )).called(1);
+          ),
+        ).called(1);
 
-      await Future<void>.delayed(Duration.zero);
-      await subscription.cancel();
-      expect(states.any((s) => s.status == SyncStatus.syncing), isTrue);
-      expect(states.last.status, SyncStatus.success);
-    });
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
+        expect(states.any((s) => s.status == SyncStatus.syncing), isTrue);
+        expect(states.last.status, SyncStatus.success);
+      },
+    );
 
     test("syncAll handles failure in a domain manager gracefully", () async {
-      when(() => collectionSync.syncCollection(
-            forceFullSync: false,
-            onProgress: any(named: "onProgress"),
-          )).thenAnswer(
+      when(
+        () => collectionSync.syncCollection(
+          forceFullSync: false,
+          onProgress: any(named: "onProgress"),
+        ),
+      ).thenAnswer(
         (_) async => const CollectionSyncResult(
           itemsFetched: 0,
           itemsUpdated: 0,
@@ -137,33 +149,37 @@ void main() {
       expect(result.errorMessage, "Network timeout");
     });
 
-    test("syncAll emits live incremental progress updates during sync phases", () async {
-      when(
-        () => collectionSync.syncCollection(
-          forceFullSync: any(named: "forceFullSync"),
-          onProgress: any(named: "onProgress"),
-        ),
-      ).thenAnswer((invocation) async {
-        final onProgress = invocation.namedArguments[#onProgress] as void Function(int)?;
-        onProgress?.call(20);
-        onProgress?.call(40);
-        return const CollectionSyncResult(
-          itemsFetched: 40,
-          itemsUpdated: 40,
-          isFullSync: true,
-        );
-      });
+    test(
+      "syncAll emits live incremental progress updates during sync phases",
+      () async {
+        when(
+          () => collectionSync.syncCollection(
+            forceFullSync: any(named: "forceFullSync"),
+            onProgress: any(named: "onProgress"),
+          ),
+        ).thenAnswer((invocation) async {
+          final onProgress =
+              invocation.namedArguments[#onProgress] as void Function(int)?;
+          onProgress?.call(20);
+          onProgress?.call(40);
+          return const CollectionSyncResult(
+            itemsFetched: 40,
+            itemsUpdated: 40,
+            isFullSync: true,
+          );
+        });
 
-      final states = <MetronSyncState>[];
-      final subscription = syncManager.stateStream.listen(states.add);
+        final states = <MetronSyncState>[];
+        final subscription = syncManager.stateStream.listen(states.add);
 
-      await syncManager.syncAll();
-      await Future<void>.delayed(Duration.zero);
-      await subscription.cancel();
+        await syncManager.syncAll();
+        await Future<void>.delayed(Duration.zero);
+        await subscription.cancel();
 
-      expect(states.any((s) => s.collectionItemsSynced == 20), isTrue);
-      expect(states.any((s) => s.collectionItemsSynced == 40), isTrue);
-    });
+        expect(states.any((s) => s.collectionItemsSynced == 20), isTrue);
+        expect(states.any((s) => s.collectionItemsSynced == 40), isTrue);
+      },
+    );
 
     test("dispose cancels a pending debounced sync", () async {
       syncManager.scheduleSync(debounce: const Duration(milliseconds: 50));
@@ -179,22 +195,24 @@ void main() {
       );
     });
 
-    test("re-scheduling cancels the previous debounce so only one sync runs",
-        () async {
-      syncManager.scheduleSync(debounce: const Duration(milliseconds: 60));
-      await Future<void>.delayed(const Duration(milliseconds: 30));
-      syncManager.scheduleSync(debounce: const Duration(milliseconds: 60));
+    test(
+      "re-scheduling cancels the previous debounce so only one sync runs",
+      () async {
+        syncManager.scheduleSync(debounce: const Duration(milliseconds: 60));
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        syncManager.scheduleSync(debounce: const Duration(milliseconds: 60));
 
-      // First timer would have fired at t=60ms, second at t=90ms.
-      await Future<void>.delayed(const Duration(milliseconds: 180));
+        // First timer would have fired at t=60ms, second at t=90ms.
+        await Future<void>.delayed(const Duration(milliseconds: 180));
 
-      verify(
-        () => collectionSync.syncCollection(
-          forceFullSync: any(named: "forceFullSync"),
-          onProgress: any(named: "onProgress"),
-        ),
-      ).called(1);
-    });
+        verify(
+          () => collectionSync.syncCollection(
+            forceFullSync: any(named: "forceFullSync"),
+            onProgress: any(named: "onProgress"),
+          ),
+        ).called(1);
+      },
+    );
 
     test("syncAll while a sync is running returns the in-flight state "
         "without re-entering", () async {

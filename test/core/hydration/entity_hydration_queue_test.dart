@@ -53,8 +53,14 @@ void main() {
     final queue = container.read(entityHydrationQueueProvider);
 
     expect(queue.enqueue(HydrationEntityType.series, 101), isTrue);
-    expect(queue.enqueue(HydrationEntityType.series, 101), isFalse); // duplicate
-    expect(queue.enqueue(HydrationEntityType.series, -1), isFalse); // invalid id
+    expect(
+      queue.enqueue(HydrationEntityType.series, 101),
+      isFalse,
+    ); // duplicate
+    expect(
+      queue.enqueue(HydrationEntityType.series, -1),
+      isFalse,
+    ); // invalid id
 
     expect(queue.stats.queuedCount + queue.stats.inFlightCount, 1);
   });
@@ -62,7 +68,12 @@ void main() {
   test("enqueueMany adds unique IDs only", () {
     final queue = container.read(entityHydrationQueueProvider);
 
-    final added = queue.enqueueMany(HydrationEntityType.publisher, [1, 2, 2, 3]);
+    final added = queue.enqueueMany(HydrationEntityType.publisher, [
+      1,
+      2,
+      2,
+      3,
+    ]);
     expect(added, 3);
   });
 
@@ -78,7 +89,9 @@ void main() {
       publisher: SeriesDetailsNamedRef(id: 50, name: "Image Comics"),
     );
 
-    when(() => mockRepo.getSeriesDetails(201)).thenAnswer((_) async => seriesDetails);
+    when(
+      () => mockRepo.getSeriesDetails(201),
+    ).thenAnswer((_) async => seriesDetails);
 
     final queue = container.read(entityHydrationQueueProvider);
     queue.enqueue(HydrationEntityType.series, 201);
@@ -86,7 +99,10 @@ void main() {
     await pumpEventQueue();
 
     verify(() => mockRepo.getSeriesDetails(201)).called(1);
-    expect(queue.getStatus(HydrationEntityType.series, 201), HydrationStatus.succeeded);
+    expect(
+      queue.getStatus(HydrationEntityType.series, 201),
+      HydrationStatus.succeeded,
+    );
     expect(queue.stats.succeededCount, 1);
   });
 
@@ -107,7 +123,10 @@ void main() {
 
     await pumpEventQueue();
 
-    expect(queue.getStatus(HydrationEntityType.series, 999), HydrationStatus.notFound);
+    expect(
+      queue.getStatus(HydrationEntityType.series, 999),
+      HydrationStatus.notFound,
+    );
     expect(queue.stats.failedCount, 1);
 
     // Attempting to enqueue again should be rejected
@@ -132,7 +151,10 @@ void main() {
     await pumpEventQueue();
 
     // Should stay queued and not in flight or completed
-    expect(queue.getStatus(HydrationEntityType.character, 301), HydrationStatus.queued);
+    expect(
+      queue.getStatus(HydrationEntityType.character, 301),
+      HydrationStatus.queued,
+    );
     expect(queue.stats.inFlightCount, 0);
     verifyNever(() => mockRepo.getCharacterDetails(any()));
   });

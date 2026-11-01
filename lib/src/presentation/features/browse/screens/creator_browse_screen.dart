@@ -21,7 +21,7 @@ class CreatorBrowseScreen extends StatelessWidget {
       emptyIcon: Icons.search_off,
       errorPrefix: "Failed to load creators",
       itemBuilder: (context, item, index, total) => PersonListTile(
-        characterId: item.id,
+        creatorId: item.id,
         name: item.name,
         isFirst: index == 0,
         isLast: index == total - 1,

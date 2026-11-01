@@ -139,8 +139,9 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
         final vol = row.read(attachedDatabase.metronSeries.volume);
         final year = row.read(attachedDatabase.metronSeries.yearBegan);
         final totalIssues = row.read(attachedDatabase.metronSeries.issueCount);
-        final coverUrl =
-            row.read(attachedDatabase.metronSeries.computedCoverUrl);
+        final coverUrl = row.read(
+          attachedDatabase.metronSeries.computedCoverUrl,
+        );
         final ownedCount = row.read(ownedCountCol) ?? 0;
         final readCount = row.read(readCountCol) ?? 0;
         final subCount = row.read(subCountCol) ?? 0;
@@ -414,6 +415,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
 
   Future<List<LibraryItemStatusRow>> getStatusRows() async {
     final query = selectOnly(attachedDatabase.libraryItems)
+      ..where(attachedDatabase.libraryItems.deletedAt.isNull())
       ..addColumns([
         attachedDatabase.libraryItems.metronIssueId,
         attachedDatabase.libraryItems.ownershipStatus,
@@ -440,6 +442,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
 
   Stream<List<LibraryItemStatusRow>> watchStatusRows() {
     final query = selectOnly(attachedDatabase.libraryItems)
+      ..where(attachedDatabase.libraryItems.deletedAt.isNull())
       ..addColumns([
         attachedDatabase.libraryItems.metronIssueId,
         attachedDatabase.libraryItems.ownershipStatus,
@@ -536,6 +539,68 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     )..where((t) => t.metronIssueId.equals(metronIssueId))).watch();
   }
 
+  Future<LibraryItem?> getById(String id) => (select(
+    attachedDatabase.libraryItems,
+  )..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<LibraryItem> requireById(String id) async {
+    final item = await getById(id);
+    if (item == null) {
+      throw StateError("Library item $id not found");
+    }
+    return item;
+  }
+
+  Future<void> applyOptimisticPatch(
+    String id, {
+    Value<bool>? isRead,
+    Value<int?>? rating,
+    Value<String>? syncStatus,
+    Value<String?>? notes,
+    Value<String>? format,
+    Value<String?>? conditionGrade,
+    Value<double?>? pricePaid,
+    Value<String?>? purchaseDate,
+    Value<String?>? acquiredOn,
+    Value<int>? quantityOwned,
+    Value<String>? ownershipStatus,
+    Value<String?>? remoteModified,
+  }) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await (update(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.id.equals(id))).write(
+      LibraryItemsCompanion(
+        isRead: isRead ?? const Value.absent(),
+        rating: rating ?? const Value.absent(),
+        syncStatus: syncStatus ?? const Value.absent(),
+        notes: notes ?? const Value.absent(),
+        format: format ?? const Value.absent(),
+        conditionGrade: conditionGrade ?? const Value.absent(),
+        pricePaid: pricePaid ?? const Value.absent(),
+        purchaseDate: purchaseDate ?? const Value.absent(),
+        acquiredOn: acquiredOn ?? const Value.absent(),
+        quantityOwned: quantityOwned ?? const Value.absent(),
+        ownershipStatus: ownershipStatus ?? const Value.absent(),
+        remoteModified: remoteModified ?? const Value.absent(),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  Future<void> applyOptimisticDelete(String id) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    await (update(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.id.equals(id))).write(
+      LibraryItemsCompanion(
+        deletedAt: Value(now),
+        syncStatus: const Value("pending"),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
   Future<LibraryItem?> getByIssueId(int metronIssueId) async {
     return (select(
       attachedDatabase.libraryItems,
@@ -570,6 +635,25 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     if (item != null) {
       await deleteById(item.id);
     }
+  }
+
+  /// Removes local synced library items that were missing during a full collection scan [scanId].
+  /// Preserves pending or locally modified rows.
+  Future<int> reconcileMissingFromScan(String scanId) async {
+    final missing =
+        await (select(attachedDatabase.libraryItems)..where(
+              (t) =>
+                  t.syncStatus.equals("synced") &
+                  t.deletedAt.isNull() &
+                  (t.lastSeenScanId.isNull() |
+                      t.lastSeenScanId.equals(scanId).not()),
+            ))
+            .get();
+
+    for (final item in missing) {
+      await deleteById(item.id);
+    }
+    return missing.length;
   }
 
   Stream<List<LibraryItem>> watchCollected() {
@@ -711,15 +795,15 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
   }
 
   Future<List<LibraryItem>> getUnsyncedItems() async {
-    return (select(attachedDatabase.libraryItems)
-          ..where((t) => t.syncStatus.isNotValue("synced")))
-        .get();
+    return (select(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.syncStatus.isNotValue("synced"))).get();
   }
 
   Stream<List<LibraryItem>> watchUnsyncedItems() {
-    return (select(attachedDatabase.libraryItems)
-          ..where((t) => t.syncStatus.isNotValue("synced")))
-        .watch();
+    return (select(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.syncStatus.isNotValue("synced"))).watch();
   }
 
   Future<LibraryItem?> getByMetronCollectionId(int metronCollectionId) async {
@@ -732,9 +816,9 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     List<int> metronCollectionIds,
   ) async {
     if (metronCollectionIds.isEmpty) return {};
-    final rows = await (select(attachedDatabase.libraryItems)
-          ..where((t) => t.metronCollectionId.isIn(metronCollectionIds)))
-        .get();
+    final rows = await (select(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.metronCollectionId.isIn(metronCollectionIds))).get();
     return {
       for (final r in rows)
         if (r.metronCollectionId != null) r.metronCollectionId!: r,
@@ -746,8 +830,9 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     String syncStatus, {
     int? metronCollectionId,
   }) async {
-    await (update(attachedDatabase.libraryItems)..where((t) => t.id.equals(id)))
-        .write(
+    await (update(
+      attachedDatabase.libraryItems,
+    )..where((t) => t.id.equals(id))).write(
       LibraryItemsCompanion(
         syncStatus: Value(syncStatus),
         metronCollectionId: metronCollectionId != null
@@ -804,9 +889,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     return customSelect(
       "SELECT COUNT(*) AS cnt FROM library_items WHERE is_read = 1",
       readsFrom: {attachedDatabase.libraryItems},
-    ).watch().map(
-      (rows) => rows.isNotEmpty ? rows.first.read<int>("cnt") : 0,
-    );
+    ).watch().map((rows) => rows.isNotEmpty ? rows.first.read<int>("cnt") : 0);
   }
 
   Stream<double> watchAverageRating() {
@@ -847,10 +930,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       "WHERE is_read = 1 AND first_read_at IS NOT NULL "
       "AND first_read_at >= ? AND first_read_at < ? "
       "GROUP BY day ORDER BY day",
-      variables: [
-        Variable.withString(startDate),
-        Variable.withString(endDate),
-      ],
+      variables: [Variable.withString(startDate), Variable.withString(endDate)],
       readsFrom: {attachedDatabase.libraryItems},
     ).watch().map((rows) {
       return rows.map((r) {
@@ -918,9 +998,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
 
   Stream<List<LibraryItem>> watchRecentlyRead({int limit = 5}) {
     return (select(attachedDatabase.libraryItems)
-          ..where(
-            (t) => t.isRead.equals(true) & t.firstReadAt.isNotNull(),
-          )
+          ..where((t) => t.isRead.equals(true) & t.firstReadAt.isNotNull())
           ..orderBy([
             (t) => OrderingTerm(
               expression: t.firstReadAt,
@@ -938,10 +1016,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       readsFrom: {attachedDatabase.libraryItems},
     ).watch().map((rows) {
       return rows
-          .map(
-            (r) =>
-                DateTime.parse(r.read<String>("first_read_at")).toLocal(),
-          )
+          .map((r) => DateTime.parse(r.read<String>("first_read_at")).toLocal())
           .toList();
     });
   }
@@ -950,9 +1025,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     final col = attachedDatabase.libraryItems.id.count();
     return (selectOnly(attachedDatabase.libraryItems)
           ..addColumns([attachedDatabase.libraryItems.format, col])
-          ..where(
-            attachedDatabase.libraryItems.ownershipStatus.equals("owned"),
-          )
+          ..where(attachedDatabase.libraryItems.ownershipStatus.equals("owned"))
           ..groupBy([attachedDatabase.libraryItems.format]))
         .watch()
         .map((rows) {
@@ -960,8 +1033,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
               .map(
                 (r) => (
                   format:
-                      r.read(attachedDatabase.libraryItems.format) ??
-                      "UNKNOWN",
+                      r.read(attachedDatabase.libraryItems.format) ?? "UNKNOWN",
                   count: r.read(col) ?? 0,
                 ),
               )
@@ -1001,10 +1073,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
       "WHERE price_paid IS NOT NULL "
       "AND first_read_at >= ? AND first_read_at < ? "
       "GROUP BY day ORDER BY day",
-      variables: [
-        Variable.withString(startDate),
-        Variable.withString(endDate),
-      ],
+      variables: [Variable.withString(startDate), Variable.withString(endDate)],
       readsFrom: {attachedDatabase.libraryItems},
     ).watch().map((rows) {
       return rows.map((r) {
@@ -1027,8 +1096,7 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase> {
     final start = "$year-${startMonth.toString().padLeft(2, '0')}-01";
     final endMonthStr = endMonth >= 12 ? 1 : endMonth + 1;
     final endYear = endMonth >= 12 ? year + 1 : year;
-    final end =
-        "$endYear-${endMonthStr.toString().padLeft(2, '0')}-01";
+    final end = "$endYear-${endMonthStr.toString().padLeft(2, '0')}-01";
     return customSelect(
       "SELECT substr(first_read_at, 1, 7) AS month, "
       "COALESCE(SUM(price_paid * quantity_owned), 0.0) AS amount "

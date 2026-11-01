@@ -1,3 +1,4 @@
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/data/wishlist/datasources/remote/metron_wishlist_remote_data_source.dart";
 import "package:takion/src/data/wishlist/dto/wishlist_dto.dart";
 import "package:takion/src/domain/wishlist/entities/wishlist_item.dart";
@@ -9,6 +10,20 @@ class MetronWishlistRepositoryImpl implements MetronWishlistRepository {
   }) : _remoteDataSource = remoteDataSource;
 
   final MetronWishlistRemoteDataSource _remoteDataSource;
+
+  @override
+  Future<RemotePage<WishlistItem>> getWishListPage({Uri? pageUrl}) async {
+    final remotePage = await _remoteDataSource.getWishListPage(
+      pageUrl: pageUrl,
+    );
+    return RemotePage<WishlistItem>(
+      items: remotePage.items.map((dto) => dto.toEntity()).toList(),
+      count: remotePage.count,
+      next: remotePage.next,
+      previous: remotePage.previous,
+      fetchedAt: remotePage.fetchedAt,
+    );
+  }
 
   @override
   Stream<List<WishlistItem>> watchWishListItems({int? seriesId}) {

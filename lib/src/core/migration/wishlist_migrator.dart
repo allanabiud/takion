@@ -10,9 +10,9 @@ class WishlistMigrator {
     required db.AppDatabase database,
     required MetronWishlistRemoteDataSource remoteDataSource,
     Duration Function()? rateLimitDelay,
-  })  : _database = database,
-        _remoteDataSource = remoteDataSource,
-        _rateLimitDelay = rateLimitDelay;
+  }) : _database = database,
+       _remoteDataSource = remoteDataSource,
+       _rateLimitDelay = rateLimitDelay;
 
   final db.AppDatabase _database;
   final MetronWishlistRemoteDataSource _remoteDataSource;
@@ -22,8 +22,9 @@ class WishlistMigrator {
       _rateLimitDelay?.call() ?? const Duration(milliseconds: 3200);
 
   Future<List<db.WishlistItem>> getUnmigratedItems() async {
-    return (_database.select(_database.wishlistItems)
-          ..where((t) => t.syncStatus.equals("pending") | t.id.isSmallerThanValue(0)))
+    return (_database.select(_database.wishlistItems)..where(
+          (t) => t.syncStatus.equals("pending") | t.id.isSmallerThanValue(0),
+        ))
         .get();
   }
 
@@ -31,8 +32,10 @@ class WishlistMigrator {
     final countExp = _database.wishlistItems.id.count();
     final query = _database.selectOnly(_database.wishlistItems)
       ..addColumns([countExp])
-      ..where(_database.wishlistItems.syncStatus.equals("pending") |
-          _database.wishlistItems.id.isSmallerThanValue(0));
+      ..where(
+        _database.wishlistItems.syncStatus.equals("pending") |
+            _database.wishlistItems.id.isSmallerThanValue(0),
+      );
     final result = await query.getSingleOrNull();
     return result?.read(countExp) ?? 0;
   }
@@ -42,7 +45,9 @@ class WishlistMigrator {
     bool Function()? isCancelled,
   }) async {
     final unmigrated = await getUnmigratedItems();
-    if (unmigrated.isEmpty) return const MigrationResult(migrated: 0, failed: 0);
+    if (unmigrated.isEmpty) {
+      return const MigrationResult(migrated: 0, failed: 0);
+    }
 
     var migratedCount = 0;
     var failedCount = 0;
@@ -63,10 +68,12 @@ class WishlistMigrator {
 
         // Delete old local item if id was temporary negative, and re-insert or update
         if (item.id < 0 || item.id != dto.id) {
-          await (_database.delete(_database.wishlistItems)
-                ..where((t) => t.id.equals(item.id)))
-              .go();
-          await _database.into(_database.wishlistItems).insertOnConflictUpdate(
+          await (_database.delete(
+            _database.wishlistItems,
+          )..where((t) => t.id.equals(item.id))).go();
+          await _database
+              .into(_database.wishlistItems)
+              .insertOnConflictUpdate(
                 db.WishlistItemsCompanion(
                   id: Value(dto.id),
                   issueId: Value(item.issueId),
@@ -91,9 +98,9 @@ class WishlistMigrator {
                 ),
               );
         } else {
-          await (_database.update(_database.wishlistItems)
-                ..where((t) => t.id.equals(item.id)))
-              .write(
+          await (_database.update(
+            _database.wishlistItems,
+          )..where((t) => t.id.equals(item.id))).write(
             db.WishlistItemsCompanion(
               syncStatus: const Value("synced"),
               updatedAt: Value(DateTime.now().toUtc().toIso8601String()),

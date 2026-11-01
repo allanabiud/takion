@@ -24,7 +24,10 @@ class MissingIssueDto {
 
     return MissingIssueDto(
       id: (json["id"] as num?)?.toInt() ?? 0,
-      seriesId: (seriesMap["id"] as num?)?.toInt() ?? (json["series_id"] as num?)?.toInt() ?? 0,
+      seriesId:
+          (seriesMap["id"] as num?)?.toInt() ??
+          (json["series_id"] as num?)?.toInt() ??
+          0,
       seriesName: seriesMap["name"] as String? ?? "Unknown Series",
       issueNumber: json["number"] as String? ?? "",
       coverDate: json["cover_date"] as String?,

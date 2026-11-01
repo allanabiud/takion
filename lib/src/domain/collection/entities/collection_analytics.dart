@@ -50,7 +50,11 @@ class MonthlyReadingTotal {
 
 /// A catalog entity ranked by how many collected/read issues reference it.
 class RankedEntity {
-  const RankedEntity({required this.id, required this.name, required this.count});
+  const RankedEntity({
+    required this.id,
+    required this.name,
+    required this.count,
+  });
 
   final int id;
   final String name;

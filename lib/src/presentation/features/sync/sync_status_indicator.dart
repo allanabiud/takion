@@ -1,11 +1,12 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:takion/src/core/commands/outbox_constants.dart";
 import "package:takion/src/core/sync/metron_sync_state.dart";
 import "package:takion/src/presentation/providers/repository_providers.dart";
 
 final pendingQueueCountProvider = StreamProvider.autoDispose<int>((ref) {
   final db = ref.watch(driftDatabaseProvider);
-  return db.offlineQueueDao.watchPendingCount();
+  return db.outboxDao.watchPendingCount();
 });
 
 class SyncStatusIndicator extends ConsumerStatefulWidget {
@@ -55,7 +56,7 @@ class _SyncStatusIndicatorState extends ConsumerState<SyncStatusIndicator>
         maxChildSize: 0.85,
         expand: false,
         builder: (_, scrollController) => FutureBuilder(
-          future: db.offlineQueueDao.getPendingEntries(limit: 50),
+          future: db.outboxDao.getPendingEntries(limit: 50),
           builder: (context, snapshot) {
             final entries = snapshot.data ?? [];
             return Padding(
@@ -68,7 +69,9 @@ class _SyncStatusIndicatorState extends ConsumerState<SyncStatusIndicator>
                       width: 32,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.4,
+                        ),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -80,7 +83,9 @@ class _SyncStatusIndicatorState extends ConsumerState<SyncStatusIndicator>
                       const SizedBox(width: 8),
                       Text(
                         "Offline Sync Queue",
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const Spacer(),
                       Text(
@@ -117,27 +122,38 @@ class _SyncStatusIndicatorState extends ConsumerState<SyncStatusIndicator>
                         : ListView.separated(
                             controller: scrollController,
                             itemCount: entries.length,
-                            separatorBuilder: (_, _) => const Divider(height: 1),
+                            separatorBuilder: (_, _) =>
+                                const Divider(height: 1),
                             itemBuilder: (context, index) {
                               final entry = entries[index];
+                              final isDelete =
+                                  entry.operation == OutboxOperationType.delete;
                               return ListTile(
                                 leading: Icon(
-                                  entry.operation == "delete"
+                                  isDelete
                                       ? Icons.delete_outline
                                       : Icons.upload_outlined,
-                                  color: entry.operation == "delete"
+                                  color: isDelete
                                       ? theme.colorScheme.error
                                       : theme.colorScheme.primary,
                                 ),
                                 title: Text(
                                   "${entry.entityType.toUpperCase()} ${entry.operation.toUpperCase()}",
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                subtitle: Text("Entity #${entry.entityId} • Retries: ${entry.retryCount}"),
-                                trailing: entry.lastError != null
+                                subtitle: Text(
+                                  "Local #${entry.entityLocalId} • Attempts: ${entry.attemptCount} • ${entry.state}",
+                                ),
+                                trailing: entry.lastErrorMessage != null
                                     ? Tooltip(
-                                        message: entry.lastError!,
-                                        child: Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
+                                        message: entry.lastErrorMessage!,
+                                        child: Icon(
+                                          Icons.error_outline,
+                                          color: theme.colorScheme.error,
+                                          size: 20,
+                                        ),
                                       )
                                     : const Icon(Icons.schedule, size: 20),
                               );

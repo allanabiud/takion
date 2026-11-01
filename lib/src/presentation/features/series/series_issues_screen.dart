@@ -28,8 +28,7 @@ class SeriesIssuesScreen extends ConsumerStatefulWidget {
   final String? seriesName;
 
   @override
-  ConsumerState<SeriesIssuesScreen> createState() =>
-      _SeriesIssuesScreenState();
+  ConsumerState<SeriesIssuesScreen> createState() => _SeriesIssuesScreenState();
 }
 
 class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
@@ -74,7 +73,10 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final details = ref.watch(seriesDetailsProvider(widget.seriesId)).asData?.value;
+    final details = ref
+        .watch(seriesDetailsProvider(widget.seriesId))
+        .asData
+        ?.value;
     final seriesName = widget.seriesName ?? details?.name ?? "";
     final yearBegan = details?.yearBegan;
     final cleanName = seriesName.replaceAll(RegExp(r"\s*\(\d{4}\)\s*$"), "");
@@ -83,7 +85,10 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
     final issuesPageAsync = _selectedFilter == "all"
         ? ref.watch(
             seriesIssueListProvider(
-              SeriesIssueListArgs(seriesId: widget.seriesId, page: _currentPage),
+              SeriesIssueListArgs(
+                seriesId: widget.seriesId,
+                page: _currentPage,
+              ),
             ),
           )
         : null;
@@ -92,14 +97,17 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
     final totalPages = pageData != null && pageSize > 0
         ? (pageData.count / pageSize).ceil()
         : 1;
-    final hasPagination = _selectedFilter == "all" &&
+    final hasPagination =
+        _selectedFilter == "all" &&
         pageData != null &&
         (pageData.hasNext || pageData.hasPrevious || totalPages > 1);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          subtitle.isNotEmpty ? subtitle : (seriesName.isNotEmpty ? seriesName : "Issues"),
+          subtitle.isNotEmpty
+              ? subtitle
+              : (seriesName.isNotEmpty ? seriesName : "Issues"),
           style: Theme.of(context).textTheme.titleMedium,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -189,10 +197,7 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
     final isSelected = _selectedFilter == filterKey;
     return ChoiceChip(
       key: _chipKey(filterKey),
-      label: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
+      label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
       selected: isSelected,
       onSelected: (_) {
         HapticFeedback.selectionClick();
@@ -286,9 +291,11 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
             case "owned":
               return item.ownershipStatus == LibraryOwnershipStatus.owned;
             case "read":
-              return item.ownershipStatus == LibraryOwnershipStatus.owned && item.isRead;
+              return item.ownershipStatus == LibraryOwnershipStatus.owned &&
+                  item.isRead;
             case "unread":
-              return item.ownershipStatus == LibraryOwnershipStatus.owned && !item.isRead;
+              return item.ownershipStatus == LibraryOwnershipStatus.owned &&
+                  !item.isRead;
             case "wishlist":
               return item.ownershipStatus == LibraryOwnershipStatus.wishlist;
             case "unrated":
@@ -339,7 +346,9 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
 
   Widget _buildMissingIssuesList() {
     final missingAsync = ref.watch(
-      seriesMissingIssuesProvider(SeriesMissingIssuesArgs(seriesId: widget.seriesId)),
+      seriesMissingIssuesProvider(
+        SeriesMissingIssuesArgs(seriesId: widget.seriesId),
+      ),
     );
     final sortOption = ref.watch(
       sortPreferenceForContextProvider(
@@ -352,7 +361,9 @@ class _SeriesIssuesScreenState extends ConsumerState<SeriesIssuesScreen> {
       error: (e, _) => AsyncStatePanel.error(
         errorMessage: "Failed to load missing issues",
         onRetry: () => ref.invalidate(
-          seriesMissingIssuesProvider(SeriesMissingIssuesArgs(seriesId: widget.seriesId)),
+          seriesMissingIssuesProvider(
+            SeriesMissingIssuesArgs(seriesId: widget.seriesId),
+          ),
         ),
       ),
       data: (missing) {

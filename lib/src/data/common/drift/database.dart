@@ -2,6 +2,7 @@
 /// Metron catalog metadata, junction tables, and API/image cache.
 library;
 
+import "dart:convert";
 import "dart:io";
 
 import "package:drift/drift.dart";
@@ -24,6 +25,12 @@ import "daos/metron_entity_dao.dart";
 import "daos/junction_dao.dart";
 import "daos/offline_queue_dao.dart";
 import "daos/wishlist_dao.dart";
+import "daos/outbox_dao.dart";
+import "daos/sync_cursor_dao.dart";
+import "daos/sync_job_dao.dart";
+import "daos/sync_lease_dao.dart";
+import "daos/remote_cache_dao.dart";
+import "daos/sync_conflict_dao.dart";
 
 part "database.g.dart";
 
@@ -55,6 +62,9 @@ class LibraryItems extends Table {
   TextColumn get conditionGrade => text().nullable()();
   TextColumn get acquiredOn => text().nullable()();
   TextColumn get notes => text().nullable()();
+  TextColumn get remoteModified => text().nullable()();
+  TextColumn get lastSeenScanId => text().nullable()();
+  TextColumn get deletedAt => text().nullable()();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
 
@@ -114,6 +124,9 @@ class SeriesSubscriptions extends Table {
   TextColumn get subscribedAt => text()();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
+  TextColumn get remoteModified => text().nullable()();
+  TextColumn get lastSeenScanId => text().nullable()();
+  TextColumn get deletedAt => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -144,6 +157,10 @@ class WishlistItems extends Table {
   TextColumn get syncStatus => text().withDefault(const Constant("synced"))();
   TextColumn get createdAt => text()();
   TextColumn get updatedAt => text()();
+  TextColumn get localId => text().nullable()();
+  TextColumn get remoteModified => text().nullable()();
+  TextColumn get lastSeenScanId => text().nullable()();
+  TextColumn get deletedAt => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -669,6 +686,117 @@ class SyncMeta extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// Durable intent log for Metron-owned local changes. This is additive to the
+/// legacy [OfflineWriteQueue] while command and sync execution migrate in
+/// later phases; never delete legacy rows from a schema migration.
+@TableIndex(name: "idx_outbox_ready", columns: {#accountId, #state, #notBefore})
+@TableIndex(
+  name: "idx_outbox_entity",
+  columns: {#accountId, #coalesceKey, #state},
+)
+class OutboxOperations extends Table {
+  TextColumn get id => text()();
+  TextColumn get accountId => text()();
+  TextColumn get entityType => text()();
+  TextColumn get entityLocalId => text()();
+  IntColumn get entityRemoteId => integer().nullable()();
+  TextColumn get operation => text()();
+  TextColumn get payloadJson => text()();
+  TextColumn get coalesceKey => text()();
+  TextColumn get dependsOnId => text().nullable()();
+  TextColumn get state => text().withDefault(const Constant("pending"))();
+  IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get notBefore => dateTime().nullable()();
+  TextColumn get baseRemoteModified => text().nullable()();
+  TextColumn get lastErrorCode => text().nullable()();
+  TextColumn get lastErrorMessage => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Checkpoint for one remote resource. [cursorJson] stores the opaque next
+/// URL and resource-specific scan/watermark state without turning SyncMeta
+/// into another untyped synchronization API.
+class SyncCursors extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get resource => text()();
+  TextColumn get cursorJson => text()();
+  BoolColumn get isComplete => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, resource};
+}
+
+@TableIndex(
+  name: "idx_sync_jobs_due",
+  columns: {#accountId, #state, #notBefore},
+)
+class SyncJobs extends Table {
+  TextColumn get id => text()();
+  TextColumn get accountId => text()();
+  TextColumn get resource => text().nullable()();
+  TextColumn get reason => text()();
+  TextColumn get state => text().withDefault(const Constant("pending"))();
+  IntColumn get priority => integer().withDefault(const Constant(0))();
+  DateTimeColumn get notBefore => dateTime().nullable()();
+  DateTimeColumn get startedAt => dateTime().nullable()();
+  DateTimeColumn get finishedAt => dateTime().nullable()();
+  TextColumn get lastError => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class SyncLeases extends Table {
+  TextColumn get name => text()();
+  TextColumn get ownerId => text()();
+  DateTimeColumn get expiresAt => dateTime()();
+  DateTimeColumn get heartbeatAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {name};
+}
+
+@TableIndex(name: "idx_remote_cache_expiry", columns: {#accountId, #staleAt})
+class RemoteCacheEntries extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get cacheKey => text()();
+  TextColumn get etag => text().nullable()();
+  TextColumn get lastModified => text().nullable()();
+  TextColumn get payloadJson => text().nullable()();
+  DateTimeColumn get fetchedAt => dateTime()();
+  DateTimeColumn get staleAt => dateTime()();
+  DateTimeColumn get lastAccessedAt => dateTime()();
+  BoolColumn get isPinned => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {accountId, cacheKey};
+}
+
+@TableIndex(name: "idx_sync_conflicts_open", columns: {#accountId, #state})
+class SyncConflicts extends Table {
+  TextColumn get id => text()();
+  TextColumn get accountId => text()();
+  TextColumn get entityType => text()();
+  TextColumn get entityLocalId => text()();
+  IntColumn get entityRemoteId => integer().nullable()();
+  TextColumn get localPayloadJson => text()();
+  TextColumn get remotePayloadJson => text().nullable()();
+  TextColumn get state => text().withDefault(const Constant("open"))();
+  TextColumn get resolution => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get resolvedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     LibraryItems,
@@ -716,6 +844,12 @@ class SyncMeta extends Table {
     WishlistItems,
     PagedQueryCaches,
     PagedQueryItems,
+    OutboxOperations,
+    SyncCursors,
+    SyncJobs,
+    SyncLeases,
+    RemoteCacheEntries,
+    SyncConflicts,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -737,9 +871,15 @@ class AppDatabase extends _$AppDatabase {
   late final JunctionDao junctionDao = JunctionDao(this);
   late final OfflineQueueDao offlineQueueDao = OfflineQueueDao(this);
   late final WishlistDao wishlistDao = WishlistDao(this);
+  late final OutboxDao outboxDao = OutboxDao(this);
+  late final SyncCursorDao syncCursorDao = SyncCursorDao(this);
+  late final SyncJobDao syncJobDao = SyncJobDao(this);
+  late final SyncLeaseDao syncLeaseDao = SyncLeaseDao(this);
+  late final RemoteCacheDao remoteCacheDao = RemoteCacheDao(this);
+  late final SyncConflictDao syncConflictDao = SyncConflictDao(this);
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration {
@@ -854,6 +994,37 @@ class AppDatabase extends _$AppDatabase {
             "DELETE FROM app_settings WHERE key LIKE 'paged\\_cache%' ESCAPE '\\'",
           );
         }
+        if (from < 20) {
+          await m.addColumn(libraryItems, libraryItems.remoteModified);
+          await m.addColumn(libraryItems, libraryItems.lastSeenScanId);
+          await m.addColumn(libraryItems, libraryItems.deletedAt);
+          await m.addColumn(
+            seriesSubscriptions,
+            seriesSubscriptions.remoteModified,
+          );
+          await m.addColumn(
+            seriesSubscriptions,
+            seriesSubscriptions.lastSeenScanId,
+          );
+          await m.addColumn(seriesSubscriptions, seriesSubscriptions.deletedAt);
+          await m.addColumn(wishlistItems, wishlistItems.localId);
+          await m.addColumn(wishlistItems, wishlistItems.remoteModified);
+          await m.addColumn(wishlistItems, wishlistItems.lastSeenScanId);
+          await m.addColumn(wishlistItems, wishlistItems.deletedAt);
+          await m.createTable(outboxOperations);
+          await m.createTable(syncCursors);
+          await m.createTable(syncJobs);
+          await m.createTable(syncLeases);
+          await m.createTable(remoteCacheEntries);
+          await m.createTable(syncConflicts);
+          await m.createIndex(idxOutboxReady);
+          await m.createIndex(idxOutboxEntity);
+          await m.createIndex(idxSyncJobsDue);
+          await m.createIndex(idxRemoteCacheExpiry);
+          await m.createIndex(idxSyncConflictsOpen);
+          await _backfillV20LocalIdentifiers();
+          await _backfillV20OutboxAndCursors();
+        }
       },
     );
   }
@@ -924,6 +1095,110 @@ class AppDatabase extends _$AppDatabase {
     await (delete(
       libraryItems,
     )..where((t) => t.ownershipStatus.equals("wishlist"))).go();
+  }
+
+  Future<void> _backfillV20LocalIdentifiers() async {
+    await customStatement(
+      "UPDATE wishlist_items SET local_id = 'wish-' || issue_id "
+      "WHERE local_id IS NULL",
+    );
+  }
+
+  Future<void> _backfillV20OutboxAndCursors() async {
+    // 1. Backfill legacy offline_write_queue into outbox_operations
+    try {
+      final legacyRows = await customSelect(
+        "SELECT id, operation, entity_type, entity_id, payload, created_at, "
+        "retry_count, status, last_error, last_attempt_at "
+        "FROM offline_write_queue WHERE status IN ('pending', 'failed')",
+      ).get();
+
+      for (final row in legacyRows) {
+        final id = row.read<int>("id");
+        final operation = row.read<String>("operation");
+        final rawEntityType = row.read<String>("entity_type");
+        final entityId = row.read<String?>("entity_id") ?? "$id";
+        final payload = row.read<String>("payload");
+        final createdAtMs = row.read<int>("created_at");
+        final retryCount = row.read<int>("retry_count");
+        final status = row.read<String>("status");
+        final lastError = row.read<String?>("last_error");
+        final lastAttemptMs = row.read<int?>("last_attempt_at");
+
+        final entityType = rawEntityType == "wish_list"
+            ? "wishlist"
+            : rawEntityType;
+        final outboxId = "legacy_owq_$id";
+        final coalesceKey = "$entityType:$entityId";
+        final createdAt = DateTime.fromMillisecondsSinceEpoch(
+          createdAtMs,
+          isUtc: true,
+        );
+        final updatedAt = DateTime.fromMillisecondsSinceEpoch(
+          lastAttemptMs ?? createdAtMs,
+          isUtc: true,
+        );
+        final state = status == "failed" ? "failed" : "pending";
+        final remoteId = int.tryParse(entityId);
+
+        await into(outboxOperations).insertOnConflictUpdate(
+          OutboxOperationsCompanion(
+            id: Value(outboxId),
+            accountId: const Value("default"),
+            entityType: Value(entityType),
+            entityLocalId: Value(entityId),
+            entityRemoteId: Value(remoteId),
+            operation: Value(operation),
+            payloadJson: Value(payload),
+            coalesceKey: Value(coalesceKey),
+            state: Value(state),
+            attemptCount: Value(retryCount),
+            lastErrorMessage: Value(lastError),
+            createdAt: Value(createdAt),
+            updatedAt: Value(updatedAt),
+          ),
+        );
+      }
+    } catch (_) {
+      // Table might not exist or error during select in non-standard fixtures
+    }
+
+    // 2. Map legacy sync timestamps conservatively to complete cursors
+    try {
+      final metaRows = await customSelect(
+        "SELECT key, value FROM sync_meta WHERE key IN "
+        "('metron_last_collection_sync', 'metron_last_pull_list_sync', 'metron_last_wishlist_sync')",
+      ).get();
+
+      for (final row in metaRows) {
+        final key = row.read<String>("key");
+        final val = row.read<String>("value");
+        final dt = DateTime.tryParse(val);
+        if (dt != null) {
+          final resource = switch (key) {
+            "metron_last_collection_sync" => "collection",
+            "metron_last_pull_list_sync" => "pull_series",
+            "metron_last_wishlist_sync" => "wishlist",
+            _ => null,
+          };
+          if (resource != null) {
+            final cursorJson = jsonEncode({
+              "watermark": dt.toUtc().toIso8601String(),
+              "migratedFromSyncMeta": true,
+            });
+            await into(syncCursors).insertOnConflictUpdate(
+              SyncCursorsCompanion(
+                accountId: const Value("default"),
+                resource: Value(resource),
+                cursorJson: Value(cursorJson),
+                isComplete: const Value(true),
+                updatedAt: Value(dt.toUtc()),
+              ),
+            );
+          }
+        }
+      }
+    } catch (_) {}
   }
 }
 

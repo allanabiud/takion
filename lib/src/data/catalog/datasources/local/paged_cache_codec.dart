@@ -14,7 +14,7 @@ import "package:takion/src/data/reading_list/dto/reading_list_dto.dart";
 ///
 /// An embedded issue series is normalized by its id (`dto.series.id`); a
 /// series snapshot without an id has no row to link to, so such pages read
-/// back with `series == null` — the same convention the issue-stub upsert
+/// back with `series == null` - the same convention the issue-stub upsert
 /// already uses for `dto.series?.id`.
 abstract class PagedCacheCodec<T> {
   const PagedCacheCodec();
@@ -155,8 +155,9 @@ class _SeriesListCodec extends PagedCacheCodec<SeriesListDto> {
 
   @override
   Future<List<SeriesListDto>?> loadByIds(AppDatabase db, List<int> ids) async {
-    final rows =
-        await (db.select(db.metronSeries)..where((t) => t.id.isIn(ids))).get();
+    final rows = await (db.select(
+      db.metronSeries,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <SeriesListDto>[];
     for (final id in ids) {
@@ -207,9 +208,9 @@ class _CharacterListCodec extends PagedCacheCodec<CharacterListDto> {
     AppDatabase db,
     List<int> ids,
   ) async {
-    final rows =
-        await (db.select(db.metronCharacters)..where((t) => t.id.isIn(ids)))
-            .get();
+    final rows = await (db.select(
+      db.metronCharacters,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <CharacterListDto>[];
     for (final id in ids) {
@@ -235,7 +236,10 @@ class _CreatorListCodec extends PagedCacheCodec<CreatorListDto> {
   int entityId(CreatorListDto item) => item.id;
 
   @override
-  Future<void> upsertEntities(AppDatabase db, List<CreatorListDto> items) async {
+  Future<void> upsertEntities(
+    AppDatabase db,
+    List<CreatorListDto> items,
+  ) async {
     await db.batch((batch) {
       batch.insertAllOnConflictUpdate(db.metronCreators, [
         for (final dto in items)
@@ -250,8 +254,9 @@ class _CreatorListCodec extends PagedCacheCodec<CreatorListDto> {
 
   @override
   Future<List<CreatorListDto>?> loadByIds(AppDatabase db, List<int> ids) async {
-    final rows =
-        await (db.select(db.metronCreators)..where((t) => t.id.isIn(ids))).get();
+    final rows = await (db.select(
+      db.metronCreators,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <CreatorListDto>[];
     for (final id in ids) {
@@ -272,7 +277,10 @@ class _ImprintListCodec extends PagedCacheCodec<ImprintListDto> {
   int entityId(ImprintListDto item) => item.id;
 
   @override
-  Future<void> upsertEntities(AppDatabase db, List<ImprintListDto> items) async {
+  Future<void> upsertEntities(
+    AppDatabase db,
+    List<ImprintListDto> items,
+  ) async {
     await db.batch((batch) {
       batch.insertAllOnConflictUpdate(db.metronImprints, [
         for (final dto in items)
@@ -287,8 +295,9 @@ class _ImprintListCodec extends PagedCacheCodec<ImprintListDto> {
 
   @override
   Future<List<ImprintListDto>?> loadByIds(AppDatabase db, List<int> ids) async {
-    final rows =
-        await (db.select(db.metronImprints)..where((t) => t.id.isIn(ids))).get();
+    final rows = await (db.select(
+      db.metronImprints,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <ImprintListDto>[];
     for (final id in ids) {
@@ -330,9 +339,9 @@ class _PublisherListCodec extends PagedCacheCodec<PublisherListDto> {
     AppDatabase db,
     List<int> ids,
   ) async {
-    final rows =
-        await (db.select(db.metronPublishers)..where((t) => t.id.isIn(ids)))
-            .get();
+    final rows = await (db.select(
+      db.metronPublishers,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <PublisherListDto>[];
     for (final id in ids) {
@@ -368,8 +377,9 @@ class _TeamListCodec extends PagedCacheCodec<TeamListDto> {
 
   @override
   Future<List<TeamListDto>?> loadByIds(AppDatabase db, List<int> ids) async {
-    final rows =
-        await (db.select(db.metronTeams)..where((t) => t.id.isIn(ids))).get();
+    final rows = await (db.select(
+      db.metronTeams,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <TeamListDto>[];
     for (final id in ids) {
@@ -409,9 +419,9 @@ class _UniverseListCodec extends PagedCacheCodec<UniverseListDto> {
     AppDatabase db,
     List<int> ids,
   ) async {
-    final rows =
-        await (db.select(db.metronUniverses)..where((t) => t.id.isIn(ids)))
-            .get();
+    final rows = await (db.select(
+      db.metronUniverses,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <UniverseListDto>[];
     for (final id in ids) {
@@ -447,8 +457,9 @@ class _ArcListCodec extends PagedCacheCodec<ArcListDto> {
 
   @override
   Future<List<ArcListDto>?> loadByIds(AppDatabase db, List<int> ids) async {
-    final rows =
-        await (db.select(db.metronArcs)..where((t) => t.id.isIn(ids))).get();
+    final rows = await (db.select(
+      db.metronArcs,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <ArcListDto>[];
     for (final id in ids) {
@@ -467,7 +478,10 @@ class _ReadingListCodec extends PagedCacheCodec<ReadingListDto> {
   int entityId(ReadingListDto item) => item.id;
 
   @override
-  Future<void> upsertEntities(AppDatabase db, List<ReadingListDto> items) async {
+  Future<void> upsertEntities(
+    AppDatabase db,
+    List<ReadingListDto> items,
+  ) async {
     await db.batch((batch) {
       batch.insertAllOnConflictUpdate(db.metronReadingLists, [
         for (final dto in items)
@@ -488,9 +502,9 @@ class _ReadingListCodec extends PagedCacheCodec<ReadingListDto> {
 
   @override
   Future<List<ReadingListDto>?> loadByIds(AppDatabase db, List<int> ids) async {
-    final rows =
-        await (db.select(db.metronReadingLists)..where((t) => t.id.isIn(ids)))
-            .get();
+    final rows = await (db.select(
+      db.metronReadingLists,
+    )..where((t) => t.id.isIn(ids))).get();
     final byId = {for (final row in rows) row.id: row};
     final dtos = <ReadingListDto>[];
     for (final id in ids) {

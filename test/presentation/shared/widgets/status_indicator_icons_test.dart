@@ -4,7 +4,9 @@ import "package:takion/src/presentation/shared/widgets/status_indicator_icons.da
 
 void main() {
   group("StatusIndicatorIcons", () {
-    testWidgets("renders active status icons for collected and read", (tester) async {
+    testWidgets("renders active status icons for collected and read", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -26,7 +28,9 @@ void main() {
       expect(find.byIcon(Icons.sync_problem_outlined), findsNothing);
     });
 
-    testWidgets("renders active status icons for pulled and wishlisted", (tester) async {
+    testWidgets("renders active status icons for pulled and wishlisted", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

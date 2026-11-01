@@ -53,10 +53,47 @@ void main() {
 
     // Downgrade the freshly created schema to its v18 shape: neither new
     // column nor either new table exists yet.
+    for (final table in const [
+      "outbox_operations",
+      "sync_cursors",
+      "sync_jobs",
+      "sync_leases",
+      "remote_cache_entries",
+      "sync_conflicts",
+    ]) {
+      await seed.customStatement("DROP TABLE $table");
+    }
+    for (final column in const [
+      "remote_modified",
+      "last_seen_scan_id",
+      "deleted_at",
+    ]) {
+      await seed.customStatement(
+        "ALTER TABLE library_items DROP COLUMN $column",
+      );
+      await seed.customStatement(
+        "ALTER TABLE series_subscriptions DROP COLUMN $column",
+      );
+    }
+    await seed.customStatement(
+      "ALTER TABLE wishlist_items DROP COLUMN local_id",
+    );
+    await seed.customStatement(
+      "ALTER TABLE wishlist_items DROP COLUMN remote_modified",
+    );
+    await seed.customStatement(
+      "ALTER TABLE wishlist_items DROP COLUMN last_seen_scan_id",
+    );
+    await seed.customStatement(
+      "ALTER TABLE wishlist_items DROP COLUMN deleted_at",
+    );
+
     await seed.customStatement(
       "ALTER TABLE metron_issues DROP COLUMN issue_name",
     );
-    await seed.customStatement("ALTER TABLE metron_characters DROP COLUMN slug");
+    await seed.customStatement(
+      "ALTER TABLE metron_characters DROP COLUMN slug",
+    );
     await seed.customStatement("DROP TABLE paged_query_caches");
     await seed.customStatement("DROP TABLE paged_query_items");
 
@@ -97,20 +134,20 @@ void main() {
     );
     await seed.close();
 
-    // ---- Reopen: onUpgrade(18 → 19) runs ----
+    // ---- Reopen: onUpgrade(18 → 20) runs ----
     final migrated = AppDatabase.forTesting(NativeDatabase(dbFile));
 
-    expect(await userVersion(migrated), 19);
+    expect(await userVersion(migrated), 20);
 
     // New normalized paged-cache schema exists.
     final tables = await tableNames(migrated);
     expect(tables, contains("paged_query_caches"));
     expect(tables, contains("paged_query_items"));
-    expect(await columnNames(migrated, "metron_issues"), contains("issue_name"));
     expect(
-      await columnNames(migrated, "metron_characters"),
-      contains("slug"),
+      await columnNames(migrated, "metron_issues"),
+      contains("issue_name"),
     );
+    expect(await columnNames(migrated, "metron_characters"), contains("slug"));
 
     // Legacy paged-cache key-value rows are gone; everything else survives.
     final keys = await settingKeys(migrated);

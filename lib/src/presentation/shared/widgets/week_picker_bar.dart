@@ -31,9 +31,9 @@ class WeekPickerBar extends ConsumerWidget {
           Expanded(
             child: Text(
               "Week of $dateString",
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
             ),
           ),

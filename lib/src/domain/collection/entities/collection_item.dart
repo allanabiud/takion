@@ -71,11 +71,7 @@ class CollectionIssueRef {
 }
 
 class CollectionReadDate {
-  const CollectionReadDate({
-    required this.id,
-    this.readDate,
-    this.createdOn,
-  });
+  const CollectionReadDate({required this.id, this.readDate, this.createdOn});
 
   final int id;
   final DateTime? readDate;

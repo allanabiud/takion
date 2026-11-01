@@ -58,6 +58,7 @@ class EntityCover extends StatelessWidget {
     final theme = Theme.of(context);
     final hasPendingSync = syncStatus == "pending";
     final hasFailedSync = syncStatus == "failed";
+    final hasConflictSync = syncStatus == "conflict";
     final hasRoleBadge = role != null && role != ItemRole.standard;
 
     Widget cover = RepaintBoundary(
@@ -123,7 +124,10 @@ class EntityCover extends StatelessWidget {
                             )
                           : Icon(placeholderIcon, size: iconSize),
                     ),
-              if (hasRoleBadge || hasPendingSync || hasFailedSync)
+              if (hasRoleBadge ||
+                  hasPendingSync ||
+                  hasFailedSync ||
+                  hasConflictSync)
                 Positioned(
                   top: 4,
                   left: 4,
@@ -132,7 +136,8 @@ class EntityCover extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (hasRoleBadge) RoleBadge(role: role!),
-                      if (hasRoleBadge && (hasPendingSync || hasFailedSync))
+                      if (hasRoleBadge &&
+                          (hasPendingSync || hasFailedSync || hasConflictSync))
                         const SizedBox(height: 3),
                       if (hasPendingSync)
                         Tooltip(
@@ -191,6 +196,36 @@ class EntityCover extends StatelessWidget {
                               Icons.sync_problem_outlined,
                               size: 13,
                               color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        )
+                      else if (hasConflictSync)
+                        Tooltip(
+                          message: "Sync conflict detected",
+                          child: Container(
+                            padding: const EdgeInsets.all(3.5),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.tertiaryContainer
+                                  .withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                color: theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.6,
+                                ),
+                                width: 0.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.warning_amber_rounded,
+                              size: 13,
+                              color: theme.colorScheme.onTertiaryContainer,
                             ),
                           ),
                         ),

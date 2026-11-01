@@ -1,8 +1,9 @@
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
-class EntityCard extends StatelessWidget {
+class EntityCard extends ConsumerWidget {
   const EntityCard({
     super.key,
     required this.entityType,
@@ -33,13 +34,27 @@ class EntityCard extends StatelessWidget {
   final int? cacheHeight;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final effectiveImageWidth = imageWidth ?? (width ?? 100);
     final effectiveImageHeight = imageHeight ?? effectiveImageWidth;
 
-    final effectiveCacheWidth = cacheWidth ?? (effectiveImageWidth.isFinite ? (effectiveImageWidth * 2).round() : 300);
-    final effectiveCacheHeight = cacheHeight ?? (effectiveImageHeight.isFinite ? (effectiveImageHeight * 2).round() : 450);
+    final effectiveCacheWidth =
+        cacheWidth ??
+        (effectiveImageWidth.isFinite
+            ? (effectiveImageWidth * 2).round()
+            : 300);
+    final effectiveCacheHeight =
+        cacheHeight ??
+        (effectiveImageHeight.isFinite
+            ? (effectiveImageHeight * 2).round()
+            : 450);
+
+    var effectiveImageUrl = imageUrl;
+    if ((effectiveImageUrl == null || effectiveImageUrl.trim().isEmpty) &&
+        entityId > 0) {
+      effectiveImageUrl = watchEntityImageUrl(ref, entityType, entityId);
+    }
 
     Widget card = InkWell(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -61,7 +76,7 @@ class EntityCard extends StatelessWidget {
                   ),
                 ),
                 child: EntityCover(
-                  imageUrl: imageUrl,
+                  imageUrl: effectiveImageUrl,
                   placeholderLabel: initials(name),
                   width: effectiveImageWidth,
                   height: effectiveImageHeight,

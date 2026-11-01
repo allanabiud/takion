@@ -1,3 +1,4 @@
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/data/collection/datasources/remote/metron_collection_remote_data_source.dart";
 import "package:takion/src/data/collection/dto/scrobble_dto.dart";
 import "package:takion/src/domain/collection/entities/collection_item.dart";
@@ -10,6 +11,24 @@ class MetronCollectionRepositoryImpl implements CollectionRepository {
   MetronCollectionRepositoryImpl(this._remoteDataSource);
 
   final MetronCollectionRemoteDataSource _remoteDataSource;
+
+  @override
+  Future<RemotePage<CollectionItem>> getCollectionPage({
+    Uri? pageUrl,
+    DateTime? modifiedGt,
+  }) async {
+    final remotePage = await _remoteDataSource.getCollectionPage(
+      pageUrl: pageUrl,
+      modifiedGt: modifiedGt,
+    );
+    return RemotePage<CollectionItem>(
+      items: remotePage.items.map((dto) => dto.toEntity()).toList(),
+      count: remotePage.count,
+      next: remotePage.next,
+      previous: remotePage.previous,
+      fetchedAt: remotePage.fetchedAt,
+    );
+  }
 
   @override
   Future<List<CollectionItem>> getCollection({
@@ -86,8 +105,9 @@ class MetronCollectionRepositoryImpl implements CollectionRepository {
     String? notes,
     bool? isRead,
   }) async {
+    final sanitizedRating = (rating != null && rating > 0) ? rating : null;
     final data = <String, dynamic>{
-      "rating": ?rating,
+      if (rating != null) "rating": sanitizedRating,
       "quantity": ?quantity,
       "book_format": ?bookFormat,
       "grade": ?grade,
@@ -115,10 +135,11 @@ class MetronCollectionRepositoryImpl implements CollectionRepository {
     DateTime? dateRead,
     int? rating,
   }) async {
+    final sanitizedRating = (rating != null && rating > 0) ? rating : null;
     final request = ScrobbleRequestDto(
       issueId: issueId,
       dateRead: dateRead?.toUtc().toIso8601String(),
-      rating: rating,
+      rating: sanitizedRating,
     );
     final dto = await _remoteDataSource.scrobble(request);
     return dto.toEntity();

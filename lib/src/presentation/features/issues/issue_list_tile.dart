@@ -133,13 +133,20 @@ class IssueListTile extends ConsumerWidget {
     final pullEntryAsync = effectiveIssue.id == null
         ? null
         : ref.watch(issuePullListEntryProvider(effectiveIssue.id!));
+    final seriesId = effectiveIssue.series?.id;
+    final subAsync = seriesId != null
+        ? ref.watch(seriesSubscriptionProvider(seriesId))
+        : null;
+    final isSubscribed = subAsync?.asData?.value?.isActive == true;
+
     final effectiveIsCollected =
-        isCollected ?? providerStatus?.isCollected ?? false;
+        providerStatus?.isCollected ?? isCollected ?? false;
     final effectiveIsWishlisted = providerStatus?.isWishlisted ?? false;
-    final effectiveIsRead = isRead ?? providerStatus?.isRead ?? false;
-    final effectiveIsPulled = pullEntryAsync?.asData?.value != null;
-    final effectiveRating = rating ?? providerStatus?.rating;
-    final effectiveSyncStatus = syncStatus ?? providerStatus?.syncStatus;
+    final effectiveIsRead = providerStatus?.isRead ?? isRead ?? false;
+    final effectiveIsPulled =
+        (pullEntryAsync?.asData?.value != null) || isSubscribed;
+    final effectiveRating = providerStatus?.rating ?? rating;
+    final effectiveSyncStatus = providerStatus?.syncStatus ?? syncStatus;
     final effectiveStoreDate =
         effectiveIssue.storeDate ?? effectiveIssue.coverDate;
     final hasStoreDate = effectiveStoreDate != null;
@@ -302,10 +309,7 @@ class IssueListTile extends ConsumerWidget {
                     ],
                   ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 8),
-            trailing!,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 8), trailing!],
         ],
       ),
     );

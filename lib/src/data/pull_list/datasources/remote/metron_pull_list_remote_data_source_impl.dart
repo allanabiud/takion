@@ -1,5 +1,7 @@
 import "package:dio/dio.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
+import "package:takion/src/core/network/remote_page.dart";
+import "package:takion/src/core/network/request_priority.dart";
 import "package:takion/src/data/pull_list/datasources/remote/metron_pull_list_remote_data_source.dart";
 import "package:takion/src/data/pull_list/dto/pull_list_dto.dart";
 
@@ -8,6 +10,133 @@ class MetronPullListRemoteDataSourceImpl
   final Dio _dio;
 
   MetronPullListRemoteDataSourceImpl(this._dio);
+
+  @override
+  Future<RemotePage<PullListSeriesDto>> getPullListSeriesPage({
+    Uri? pageUrl,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      // Sequential pagination is capped at one in-flight scan by the
+      // request scheduler (Phase 5 Step 2).
+      final scanOptions = Options(extra: const {paginationScanExtraKey: true});
+      final Response<dynamic> response;
+      if (pageUrl != null) {
+        response = await _dio.getUri(
+          pageUrl,
+          cancelToken: cancelToken,
+          options: scanOptions,
+        );
+      } else {
+        response = await _dio.get(
+          "pull_list/series/",
+          cancelToken: cancelToken,
+          options: scanOptions,
+        );
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? const [];
+      final items = results
+          .whereType<Map<String, dynamic>>()
+          .map(PullListSeriesDto.fromJson)
+          .toList();
+      final count = data["count"] as int? ?? items.length;
+      final nextRaw = data["next"] as String?;
+      final prevRaw = data["previous"] as String?;
+
+      return RemotePage<PullListSeriesDto>(
+        items: items,
+        count: count,
+        next: nextRaw != null && nextRaw.isNotEmpty
+            ? Uri.tryParse(nextRaw)
+            : null,
+        previous: prevRaw != null && prevRaw.isNotEmpty
+            ? Uri.tryParse(prevRaw)
+            : null,
+        fetchedAt: DateTime.now().toUtc(),
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return RemotePage<PullListSeriesDto>(
+          items: const [],
+          count: 0,
+          next: null,
+          previous: null,
+          fetchedAt: DateTime.now().toUtc(),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<RemotePage<PullListIssueDto>> getPullListIssuesPage({
+    Uri? pageUrl,
+    DateTime? storeDateAfter,
+    DateTime? storeDateBefore,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      // Sequential pagination is capped at one in-flight scan by the
+      // request scheduler (Phase 5 Step 2).
+      final scanOptions = Options(extra: const {paginationScanExtraKey: true});
+      final Response<dynamic> response;
+      if (pageUrl != null) {
+        response = await _dio.getUri(
+          pageUrl,
+          cancelToken: cancelToken,
+          options: scanOptions,
+        );
+      } else {
+        final queryParameters = <String, dynamic>{
+          if (storeDateAfter != null)
+            "store_date_range_after": DateFormatter.isoDate(storeDateAfter),
+          if (storeDateBefore != null)
+            "store_date_range_before": DateFormatter.isoDate(storeDateBefore),
+        };
+        response = await _dio.get(
+          "pull_list/issue/",
+          queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
+          cancelToken: cancelToken,
+          options: scanOptions,
+        );
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? const [];
+      final items = results
+          .whereType<Map<String, dynamic>>()
+          .map(PullListIssueDto.fromJson)
+          .toList();
+      final count = data["count"] as int? ?? items.length;
+      final nextRaw = data["next"] as String?;
+      final prevRaw = data["previous"] as String?;
+
+      return RemotePage<PullListIssueDto>(
+        items: items,
+        count: count,
+        next: nextRaw != null && nextRaw.isNotEmpty
+            ? Uri.tryParse(nextRaw)
+            : null,
+        previous: prevRaw != null && prevRaw.isNotEmpty
+            ? Uri.tryParse(prevRaw)
+            : null,
+        fetchedAt: DateTime.now().toUtc(),
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return RemotePage<PullListIssueDto>(
+          items: const [],
+          count: 0,
+          next: null,
+          previous: null,
+          fetchedAt: DateTime.now().toUtc(),
+        );
+      }
+      rethrow;
+    }
+  }
 
   @override
   Future<List<PullListReadDto>> getPullLists({
@@ -39,10 +168,7 @@ class MetronPullListRemoteDataSourceImpl
     int id, {
     CancelToken? cancelToken,
   }) async {
-    final response = await _dio.get(
-      "pull_list/$id/",
-      cancelToken: cancelToken,
-    );
+    final response = await _dio.get("pull_list/$id/", cancelToken: cancelToken);
     return PullListReadDto.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -55,8 +181,7 @@ class MetronPullListRemoteDataSourceImpl
     try {
       final queryParameters = <String, dynamic>{"page": page};
       if (modifiedGt != null) {
-        queryParameters["modified_gt"] =
-            modifiedGt.toUtc().toIso8601String();
+        queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
       }
       final response = await _dio.get(
         "pull_list/series/",

@@ -4,37 +4,8 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
 import "package:takion/src/presentation/features/library/providers/library_stats_models.dart";
-import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/presentation/shared/widgets/animated_counter_text.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
-
-class _TopEntityImageArgs {
-  const _TopEntityImageArgs({required this.entityType, required this.id});
-  final String entityType;
-  final int id;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is _TopEntityImageArgs &&
-          entityType == other.entityType &&
-          id == other.id;
-
-  @override
-  int get hashCode => entityType.hashCode ^ id.hashCode;
-}
-
-final _topEntityImageProvider = FutureProvider.autoDispose
-    .family<String?, _TopEntityImageArgs>((ref, args) async {
-      final db = ref.watch(driftDatabaseProvider);
-      if (args.entityType == "character") {
-        final char = await db.metronEntityDao.getCharacter(args.id);
-        return char?.imageUrl;
-      } else {
-        final creator = await db.metronEntityDao.getCreator(args.id);
-        return creator?.imageUrl;
-      }
-    });
 
 class TopEntityTile extends ConsumerWidget {
   final int index;
@@ -54,13 +25,9 @@ class TopEntityTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    final cacheKey = isCharacter ? "character" : "creator";
-    final imageAsync = ref.watch(
-      _topEntityImageProvider(
-        _TopEntityImageArgs(entityType: cacheKey, id: entity.id),
-      ),
-    );
-    final cachedImage = imageAsync.asData?.value;
+    final cachedImage = isCharacter
+        ? ref.watch(characterImageStreamProvider(entity.id)).asData?.value
+        : ref.watch(creatorImageStreamProvider(entity.id)).asData?.value;
 
     return Column(
       children: [

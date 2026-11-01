@@ -88,9 +88,7 @@ void main() {
     test("scrobble delegates and maps response", () async {
       registerFallbackValue(const ScrobbleRequestDto(issueId: 10));
 
-      when(
-        () => remoteDataSource.scrobble(any()),
-      ).thenAnswer(
+      when(() => remoteDataSource.scrobble(any())).thenAnswer(
         (_) async => const ScrobbleResponseDto(
           id: 99,
           isRead: true,
@@ -120,9 +118,7 @@ void main() {
     });
 
     test("getMissingIssues maps missing issue DTOs to entities", () async {
-      when(
-        () => remoteDataSource.getMissingIssues(100, page: 1),
-      ).thenAnswer(
+      when(() => remoteDataSource.getMissingIssues(100, page: 1)).thenAnswer(
         (_) async => const MissingIssuesPageDto(
           count: 1,
           results: [
@@ -144,9 +140,7 @@ void main() {
     });
 
     test("getMissingSeries maps missing series DTOs to entities", () async {
-      when(
-        () => remoteDataSource.getMissingSeries(page: 1),
-      ).thenAnswer(
+      when(() => remoteDataSource.getMissingSeries(page: 1)).thenAnswer(
         (_) async => [
           const MissingSeriesDto(
             id: 100,

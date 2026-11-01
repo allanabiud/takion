@@ -62,7 +62,9 @@ class SessionCoordinator {
     final status = await service.validateStoredConnection();
 
     if (status == MetronConnectionStatus.invalid) {
-      AppLogger.warning("Metron session check: invalid credentials, disconnecting");
+      AppLogger.warning(
+        "Metron session check: invalid credentials, disconnecting",
+      );
       await service.disconnect();
       _ref.invalidate(authStateProvider);
       setState(SessionState.recovering);
@@ -114,14 +116,18 @@ class SessionCoordinator {
     }
 
     if (!ignoreThrottle && await driveService.isThrottled()) {
-      AppLogger.info("Drive auto sync skipped: throttled (< 5m since last sync attempt)");
+      AppLogger.info(
+        "Drive auto sync skipped: throttled (< 5m since last sync attempt)",
+      );
       return false;
     }
 
     AppLogger.info("Drive auto sync triggered");
     syncNotifier.setSyncing(true);
     try {
-      final ran = await driveService.triggerSync(ignoreThrottle: ignoreThrottle);
+      final ran = await driveService.triggerSync(
+        ignoreThrottle: ignoreThrottle,
+      );
       if (ran) {
         await syncNotifier.updateLastSync();
         syncNotifier.clearError();
@@ -146,7 +152,8 @@ class SessionCoordinator {
     void Function(ProviderOrFamily)? onInvalidateCache,
   }) async {
     await scheduleWeeklyPullNotification(_ref);
-    if (DateTime.now().difference(_lastMetronSyncAt) > const Duration(minutes: 5)) {
+    if (DateTime.now().difference(_lastMetronSyncAt) >
+        const Duration(minutes: 5)) {
       final synced = await syncMetronIfNeeded();
       if (synced) _lastMetronSyncAt = DateTime.now();
     } else {

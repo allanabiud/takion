@@ -1,5 +1,6 @@
 import "dart:async";
 import "package:dio/dio.dart";
+import "package:takion/src/core/cache/cache_mode.dart";
 import "package:takion/src/core/cache/cache_policy.dart";
 import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/core/performance/performance_metrics.dart";
@@ -31,11 +32,18 @@ class PagedResourceRepository<TDto, TEntity> {
     required int count,
     String? next,
     String? previous,
-  }) cacheLocal;
+  })
+  cacheLocal;
   final Future<({List<TDto> items, int count, String? next, String? previous})>
-      Function(String key, CancelToken? cancelToken) getRemotePage;
-  final TEntity Function(List<TDto> dtos, int count, String? next, String? previous)
-      dtoToEntity;
+  Function(String key, CancelToken? cancelToken)
+  getRemotePage;
+  final TEntity Function(
+    List<TDto> dtos,
+    int count,
+    String? next,
+    String? previous,
+  )
+  dtoToEntity;
   final Future<void> Function(List<TDto> items)? onPersistItems;
   final DateTime Function() now;
 
@@ -44,15 +52,25 @@ class PagedResourceRepository<TDto, TEntity> {
   Future<TEntity> getPage(
     String cacheKey, {
     bool forceRefresh = false,
+    CacheMode? cacheMode,
     CancelToken? cancelToken,
   }) async {
-    // 1. Check local paged cache with TTL
-    if (!forceRefresh) {
+    final effectiveMode =
+        cacheMode ??
+        (forceRefresh ? CacheMode.validate : CacheMode.staleWhileRevalidate);
+
+    // 1. Check local paged cache
+    if (effectiveMode != CacheMode.networkOnly &&
+        effectiveMode != CacheMode.validate) {
       final cachedItems = await getLocalItems(cacheKey);
       if (cachedItems != null) {
         final cachedAt = await getCachedAt(cacheKey);
-        if (cachedAt != null && cachePolicy.isFresh(cachedAt, now())) {
-          AppPerformanceMetrics.instance.recordCacheHit("${resourceName}_paged");
+        if (effectiveMode == CacheMode.offlineOnly ||
+            effectiveMode == CacheMode.cacheFirst ||
+            (cachedAt != null && cachePolicy.isFresh(cachedAt, now()))) {
+          AppPerformanceMetrics.instance.recordCacheHit(
+            "${resourceName}_paged",
+          );
           final meta = await getLocalMeta(cacheKey);
           if (onPersistItems != null) await onPersistItems!(cachedItems);
           return dtoToEntity(
@@ -65,9 +83,25 @@ class PagedResourceRepository<TDto, TEntity> {
       }
     }
 
+    if (effectiveMode == CacheMode.offlineOnly) {
+      final cachedItems = await getLocalItems(cacheKey);
+      if (cachedItems != null) {
+        final meta = await getLocalMeta(cacheKey);
+        return dtoToEntity(
+          cachedItems,
+          meta?.count ?? cachedItems.length,
+          meta?.next,
+          meta?.previous,
+        );
+      }
+      throw StateError(
+        "Offline only and no cached data for $resourceName $cacheKey",
+      );
+    }
+
     AppPerformanceMetrics.instance.recordCacheMiss("${resourceName}_paged");
 
-    final coalescingKey = "$cacheKey|$forceRefresh";
+    final coalescingKey = "$cacheKey|$effectiveMode";
     if (_inFlight.containsKey(coalescingKey)) {
       return _inFlight[coalescingKey]!;
     }

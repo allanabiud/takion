@@ -10,6 +10,14 @@ import "package:takion/src/core/network/request_priority.dart";
 
 enum RequestDispatch { sent, dropped }
 
+/// Snapshot of the rate-limit counters observed from Metron responses.
+///
+/// In addition to the in-memory burst/sustained window counters, the state
+/// carries [retryAfterUntil]: an absolute UTC epoch-seconds deadline computed
+/// from a `Retry-After` header (or a 429 reset header). The whole state is
+/// JSON-serializable so it can be persisted to SQLite ([SyncMetaDao] key
+/// `ratelimit:<accountId>`) and restored after the process is killed, which
+/// prevents background jobs from firing into a known rate-limit blackout.
 class RateLimitState {
   final int sustainedLimit;
   final int sustainedRemaining;
@@ -17,6 +25,10 @@ class RateLimitState {
   final int burstLimit;
   final int burstRemaining;
   final int burstReset;
+
+  /// Absolute UTC epoch-seconds deadline until which all requests are
+  /// throttled after a 429 `Retry-After`. `0` means no active cooldown.
+  final int retryAfterUntil;
   final bool hasObservedHeaders;
 
   const RateLimitState({
@@ -26,17 +38,66 @@ class RateLimitState {
     this.burstLimit = 20,
     this.burstRemaining = 20,
     this.burstReset = 0,
+    this.retryAfterUntil = 0,
     this.hasObservedHeaders = false,
   });
 
+  bool get isRetryAfterActive => retryAfterUntil > _now();
+
   bool get isSustainedExhausted =>
       sustainedRemaining <= 0 && sustainedReset > _now();
+
+  /// True while any form of rate-limit cooldown blocks new requests.
+  bool get isBlocked => isSustainedExhausted || isRetryAfterActive;
 
   Duration? get sustainedWaitDuration {
     if (!isSustainedExhausted) return null;
     final wait = sustainedReset - _now();
     return Duration(seconds: wait > 0 ? wait + 1 : 0);
   }
+
+  Duration? get retryAfterWaitDuration {
+    if (!isRetryAfterActive) return null;
+    final wait = retryAfterUntil - _now();
+    return Duration(seconds: wait > 0 ? wait + 1 : 0);
+  }
+
+  /// The latest UTC time at which requests may be dispatched again, or null
+  /// when no sustained-reset or Retry-After cooldown is active.
+  DateTime? get blockedUntil {
+    final now = _now();
+    var latest = 0;
+    if (retryAfterUntil > now) latest = retryAfterUntil;
+    if (sustainedRemaining <= 0 &&
+        sustainedReset > now &&
+        sustainedReset > latest) {
+      latest = sustainedReset;
+    }
+    if (latest == 0) return null;
+    return DateTime.fromMillisecondsSinceEpoch(latest * 1000, isUtc: true);
+  }
+
+  Map<String, dynamic> toJson() => {
+    "sustainedLimit": sustainedLimit,
+    "sustainedRemaining": sustainedRemaining,
+    "sustainedReset": sustainedReset,
+    "burstLimit": burstLimit,
+    "burstRemaining": burstRemaining,
+    "burstReset": burstReset,
+    "retryAfterUntil": retryAfterUntil,
+    "hasObservedHeaders": hasObservedHeaders,
+  };
+
+  factory RateLimitState.fromJson(Map<String, dynamic> json) => RateLimitState(
+    sustainedLimit: (json["sustainedLimit"] as num?)?.toInt() ?? 5000,
+    sustainedRemaining: (json["sustainedRemaining"] as num?)?.toInt() ?? 5000,
+    sustainedReset: (json["sustainedReset"] as num?)?.toInt() ?? 0,
+    burstLimit: (json["burstLimit"] as num?)?.toInt() ?? 20,
+    burstRemaining: (json["burstRemaining"] as num?)?.toInt() ?? 20,
+    burstReset: (json["burstReset"] as num?)?.toInt() ?? 0,
+    retryAfterUntil: (json["retryAfterUntil"] as num?)?.toInt() ?? 0,
+    hasObservedHeaders: json["hasObservedHeaders"] as bool? ?? false,
+  );
 
   static int _now() => clock.now().millisecondsSinceEpoch ~/ 1000;
 }
@@ -55,13 +116,26 @@ class _ScheduledRequest {
   final Completer<RequestDispatch> completer;
 }
 
+/// Paces Metron API requests through per-minute burst and daily sustained
+/// budgets while preserving strict priority ordering.
+///
+/// Phase 5 concurrency invariants:
+/// - At most [maxConcurrent] requests are in flight at any time.
+/// - At most [reservedForeground] of those slots are withheld from
+///   background work so interactive user actions are never starved.
+/// - At most [maxConcurrentPagination] pagination/snapshot scans run at any
+///   time; non-pagination work flows around a blocked scan.
+/// - Any `Retry-After` cooldown blocks dispatch and is surfaced through
+///   [rateLimitedUntil] so callers can persist/reschedule instead of sleeping.
 class MetronRequestScheduler {
   MetronRequestScheduler({
     this.maxRequestsPerMinute = 20,
     this.fallbackDailyLimit = 5000,
-    this.reservedForeground = 3,
-    this.maxConcurrent = 8,
+    this.reservedForeground = 1,
+    this.maxConcurrent = 3,
+    this.maxConcurrentPagination = 1,
     this.backgroundMaxWait = const Duration(seconds: 30),
+    this.onStateChanged,
   }) {
     _sustainedLimit = fallbackDailyLimit;
     _sustainedRemaining = fallbackDailyLimit;
@@ -72,9 +146,23 @@ class MetronRequestScheduler {
 
   final int maxRequestsPerMinute;
   final int fallbackDailyLimit;
+
+  /// Number of concurrent request slots withheld from background work.
+  /// Clamped to `maxConcurrent - 1` so a single-slot scheduler cannot
+  /// deadlock background requests forever.
   final int reservedForeground;
   final int maxConcurrent;
+
+  /// Maximum number of concurrent pagination/snapshot scans.
+  final int maxConcurrentPagination;
   final Duration backgroundMaxWait;
+
+  /// Invoked (synchronously) whenever the observable state changes. Callers
+  /// typically debounce and persist the state to SQLite here.
+  final void Function(RateLimitState state)? onStateChanged;
+
+  int get _effectiveForegroundReservation =>
+      min(reservedForeground, max(0, maxConcurrent - 1));
 
   final List<int> _recentRequests = [];
   final List<int> _recentBackgroundRequests = [];
@@ -92,12 +180,20 @@ class MetronRequestScheduler {
   int _burstLimit = 20;
   int _burstRemaining = 20;
   int _burstReset = 0;
+  int _retryAfterUntil = 0;
   bool _hasObservedHeaders = false;
 
   int _activeRequests = 0;
+  int _activePaginationScans = 0;
   Timer? _wakeTimer;
 
   int get burstLimit => _burstLimit;
+
+  /// Number of requests currently in flight.
+  int get activeRequestCount => _activeRequests;
+
+  /// Number of pagination/snapshot scans currently in flight.
+  int get activePaginationScanCount => _activePaginationScans;
 
   final ValueNotifier<RateLimitState> stateNotifier = ValueNotifier(
     const RateLimitState(),
@@ -110,14 +206,79 @@ class MetronRequestScheduler {
     burstLimit: _burstLimit,
     burstRemaining: _burstRemaining,
     burstReset: _burstReset,
+    retryAfterUntil: _retryAfterUntil,
     hasObservedHeaders: _hasObservedHeaders,
   );
 
-  void _notify() => stateNotifier.value = state;
+  void _notify() {
+    stateNotifier.value = state;
+    onStateChanged?.call(state);
+  }
 
   bool get _sustainedExhausted =>
       _sustainedRemaining <= 0 &&
       _sustainedReset > clock.now().millisecondsSinceEpoch ~/ 1000;
+
+  bool get _retryAfterActive =>
+      _retryAfterUntil > clock.now().millisecondsSinceEpoch ~/ 1000;
+
+  bool get _isBlocked => _sustainedExhausted || _retryAfterActive;
+
+  /// The latest UTC time at which any request may be dispatched again, or
+  /// null when no sustained-reset or Retry-After cooldown is active. Used by
+  /// the sync engine to reschedule durable jobs instead of sleeping.
+  DateTime? get rateLimitedUntil {
+    final now = clock.now().millisecondsSinceEpoch ~/ 1000;
+    var latest = 0;
+    if (_retryAfterUntil > now) latest = _retryAfterUntil;
+    if (_sustainedRemaining <= 0 && _sustainedReset > now) {
+      latest = max(latest, _sustainedReset);
+    }
+    if (latest == 0) return null;
+    return DateTime.fromMillisecondsSinceEpoch(latest * 1000, isUtc: true);
+  }
+
+  /// Hydrates scheduler state from a persisted snapshot (e.g. after the app
+  /// process was killed during a 429 cooldown). Counters and the
+  /// Retry-After deadline are restored so requests remain throttled without
+  /// needing to hit the network first.
+  void restoreState(RateLimitState restored) {
+    _sustainedLimit = restored.sustainedLimit;
+    _sustainedRemaining = restored.sustainedRemaining;
+    _sustainedReset = restored.sustainedReset;
+    _burstLimit = restored.burstLimit;
+    _burstRemaining = restored.burstRemaining;
+    _burstReset = restored.burstReset;
+    _retryAfterUntil = restored.retryAfterUntil;
+    _hasObservedHeaders = restored.hasObservedHeaders;
+    _notify();
+    _pump();
+  }
+
+  /// Starts a Retry-After cooldown of [duration] measured from now. Relative
+  /// duration (not a server timestamp) keeps the deadline safe against clock
+  /// drift between the device and Metron.
+  void noteRetryAfter(Duration duration) {
+    noteRetryAfterUntil(clock.now().toUtc().add(duration));
+  }
+
+  /// Starts a Retry-After cooldown until [untilUtc], keeping the later of
+  /// the new deadline and any cooldown already in effect.
+  void noteRetryAfterUntil(DateTime untilUtc) {
+    final until = untilUtc.toUtc();
+    final untilSeconds = until.millisecondsSinceEpoch ~/ 1000;
+    if (untilSeconds <= _retryAfterUntil) return;
+    _retryAfterUntil = untilSeconds;
+    _notify();
+    _scheduleWake();
+  }
+
+  /// Cancels the pending wake timer. Call when this scheduler instance is
+  /// discarded so no background timer outlives it.
+  void dispose() {
+    _wakeTimer?.cancel();
+    _wakeTimer = null;
+  }
 
   Future<RequestDispatch> enqueue({
     required RequestOptions request,
@@ -136,36 +297,47 @@ class MetronRequestScheduler {
     return completer.future;
   }
 
-  void requestCompleted() {
+  void requestCompleted({RequestOptions? request}) {
     _activeRequests = max(0, _activeRequests - 1);
+    if (request != null && isPaginationScan(request)) {
+      _activePaginationScans = max(0, _activePaginationScans - 1);
+    }
     _pump();
   }
 
-  void onResponse(Map<String, List<String>> headers) {
+  void onResponse(
+    Map<String, List<String>> headers, {
+    RequestOptions? request,
+  }) {
     if (headers.isNotEmpty) _updateFromHeaders(headers);
     _notify();
-    requestCompleted();
+    requestCompleted(request: request);
   }
 
-  void onError({required int? statusCode, Map<String, List<String>>? headers}) {
+  void onError({
+    required int? statusCode,
+    Map<String, List<String>>? headers,
+    RequestOptions? request,
+  }) {
     if (statusCode != 429) {
       _sustainedRemaining = min(_sustainedLimit, _sustainedRemaining + 1);
       _burstRemaining = min(_burstLimit, _burstRemaining + 1);
     }
     if (headers != null && headers.isNotEmpty) _updateFromHeaders(headers);
     _notify();
-    requestCompleted();
+    requestCompleted(request: request);
   }
 
   void _pump() {
     _pruneWindow();
     _applyDeadlines();
-    if (_sustainedExhausted) {
+    if (_isBlocked) {
       _scheduleWake();
       return;
     }
     while (_activeRequests < maxConcurrent) {
-      final next = _nextDispatchable();
+      final availableSlots = maxConcurrent - _activeRequests;
+      final next = _nextDispatchable(availableSlots: availableSlots);
       if (next == null) break;
       _dispatch(next);
     }
@@ -208,19 +380,36 @@ class MetronRequestScheduler {
     }
   }
 
-  _ScheduledRequest? _nextDispatchable() {
-    for (var level = 0; level < _queue.length; level++) {
-      final q = _queue[level];
-      if (q.isEmpty) continue;
-      final candidate = q.first;
-      if (_canDispatch(candidate)) return candidate;
-      return null;
+  /// Returns the next request that may dispatch given [availableSlots], or
+  /// null when the head of every queue is blocked.
+  ///
+  /// Ordering rules:
+  /// - Queues are scanned in strict priority order.
+  /// - Background requests may not occupy the slots reserved for foreground
+  ///   work; when the reservation is hit the scan stops (queue order kept).
+  /// - A pagination scan blocked by [maxConcurrentPagination] is skipped so
+  ///   non-pagination work flows around it.
+  /// - Rate-window blocks (burst/sustained) stop the scan to keep ordering.
+  _ScheduledRequest? _nextDispatchable({required int availableSlots}) {
+    final reservation = _effectiveForegroundReservation;
+    for (final q in _queue) {
+      for (final candidate in q) {
+        if (candidate.priority.isBackground && availableSlots <= reservation) {
+          return null;
+        }
+        if (isPaginationScan(candidate.request) &&
+            _activePaginationScans >= maxConcurrentPagination) {
+          continue;
+        }
+        if (!_canDispatch(candidate)) return null;
+        return candidate;
+      }
     }
     return null;
   }
 
   bool _canDispatch(_ScheduledRequest req) {
-    if (_sustainedExhausted) return false;
+    if (_isBlocked) return false;
     if (_recentRequests.length >= _burstLimit) return false;
     if (req.priority.isBackground) {
       final bgCap = max(1, _burstLimit - reservedForeground);
@@ -230,8 +419,9 @@ class MetronRequestScheduler {
   }
 
   void _dispatch(_ScheduledRequest req) {
-    _queue[req.priority.level].removeFirst();
+    _queue[req.priority.level].remove(req);
     _activeRequests++;
+    if (isPaginationScan(req.request)) _activePaginationScans++;
     final nowMs = clock.now().millisecondsSinceEpoch;
     _recentRequests.add(nowMs);
     if (req.priority.isBackground) _recentBackgroundRequests.add(nowMs);
@@ -265,6 +455,12 @@ class MetronRequestScheduler {
       nextWake = _earlier(
         nextWake,
         _timestampToDateTime(_sustainedReset * 1000),
+      );
+    }
+    if (_retryAfterActive) {
+      nextWake = _earlier(
+        nextWake,
+        _timestampToDateTime(_retryAfterUntil * 1000),
       );
     }
     for (final level in [

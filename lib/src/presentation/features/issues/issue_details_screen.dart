@@ -16,10 +16,11 @@ import "package:takion/src/presentation/features/library/providers/pulls_provide
 import "package:takion/src/presentation/shared/widgets/async_state_panel.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/presentation/features/issues/issue_details/issue_details_sheet.dart";
-import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/presentation/features/issues/issue_details/issue_details_skeleton.dart";
 import "package:takion/src/presentation/features/issues/issue_details/providers/issue_series_navigation_provider.dart";
+import "package:takion/src/presentation/features/issues/issue_details/widgets/issue_cover_carousel.dart";
 import "package:takion/src/presentation/features/issues/issue_share_util.dart";
+import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/presentation/features/issues/series_subscription_toggle.dart";
 import "package:takion/src/presentation/shared/resource_url_actions.dart";
 import "package:takion/src/presentation/shared/detail_refresh_actions.dart";
@@ -71,11 +72,30 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
   }
 
   late int _currentIssueId;
+  int _slideDirection = 0;
+  String? _currentCoverUrl;
+  IssueDetails? _lastLoadedIssue;
 
   @override
   void initState() {
     super.initState();
     _currentIssueId = widget.issueId;
+    _currentCoverUrl = widget.initialImageUrl;
+  }
+
+  void _navigateToIssue(
+    int newIssueId, {
+    required int direction,
+    String? targetCoverUrl,
+  }) {
+    if (_currentIssueId == newIssueId) return;
+    setState(() {
+      _slideDirection = direction;
+      _currentIssueId = newIssueId;
+      if (targetCoverUrl != null && targetCoverUrl.isNotEmpty) {
+        _currentCoverUrl = targetCoverUrl;
+      }
+    });
   }
 
   String _displayTitle(IssueDetails issue) {
@@ -264,12 +284,22 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
     final isFavoriteAsync = ref.watch(isIssueFavoriteProvider(_currentIssueId));
 
     final issue = issueAsync.asData?.value;
-    final seriesId = issue?.series?.id;
+    final isCurrentData = issue != null && issue.id == _currentIssueId;
+    if (isCurrentData) {
+      _lastLoadedIssue = issue;
+      if (issue.image != null && issue.image!.trim().isNotEmpty) {
+        _currentCoverUrl = issue.image;
+      }
+    }
+
+    final displayIssue = isCurrentData ? issue : _lastLoadedIssue;
+    final seriesId = displayIssue?.series?.id ?? issue?.series?.id;
 
     final subscriptionAsync = seriesId != null
         ? ref.watch(seriesSubscriptionProvider(seriesId))
         : const AsyncValue.data(null);
     final isSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
+    final effectiveIsPulled = isInPullList || isSubscribed;
 
     final navAsync = seriesId == null
         ? const AsyncValue<IssueSeriesNavResult>.data(IssueSeriesNavResult())
@@ -278,8 +308,11 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
               IssueSeriesNavArgs(seriesId: seriesId, issueId: _currentIssueId),
             ),
           );
-    final previousIssueId = navAsync.asData?.value.previousIssueId;
-    final nextIssueId = navAsync.asData?.value.nextIssueId;
+    final navResult = navAsync.asData?.value;
+    final previousIssueId = navResult?.previousIssueId;
+    final nextIssueId = navResult?.nextIssueId;
+    final previousImageUrl = navResult?.previousImageUrl;
+    final nextImageUrl = navResult?.nextImageUrl;
 
     if (seriesId != null) {
       ref.listen(
@@ -287,23 +320,25 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
           IssueSeriesNavArgs(seriesId: seriesId, issueId: _currentIssueId),
         ),
         (previous, next) {
-          final navResult = next.asData?.value;
-          if (navResult != null) {
-            if (navResult.previousIssueId != null) {
-              ref.read(issueDetailsProvider(navResult.previousIssueId!).future);
+          final res = next.asData?.value;
+          if (res != null) {
+            if (res.previousIssueId != null) {
+              ref.read(issueDetailsProvider(res.previousIssueId!).future);
             }
-            if (navResult.nextIssueId != null) {
-              ref.read(issueDetailsProvider(navResult.nextIssueId!).future);
+            if (res.nextIssueId != null) {
+              ref.read(issueDetailsProvider(res.nextIssueId!).future);
             }
           }
         },
       );
     }
 
-    if (issue == null) {
+    if (displayIssue == null) {
       return Scaffold(
         body: issueAsync.when(
-          loading: () => IssueDetailsSkeleton(imageUrl: widget.initialImageUrl),
+          loading: () => IssueDetailsSkeleton(
+            imageUrl: _currentCoverUrl ?? widget.initialImageUrl,
+          ),
           error: (error, stack) => Scaffold(
             appBar: AppBar(),
             body: AsyncStatePanel.fromFailure(
@@ -318,257 +353,230 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
       );
     }
 
-    final isCurrentData = issue.id == _currentIssueId;
-
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        switchInCurve: Curves.easeIn,
-        switchOutCurve: Curves.easeOut,
-        transitionBuilder: (child, animation) =>
-            FadeTransition(opacity: animation, child: child),
-        child: KeyedSubtree(
-          key: ValueKey(_currentIssueId),
-          child: Stack(
-            children: [
-              SizedBox(
-                height: 350,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (isCurrentData && issue.image != null)
-                      ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                        child: CachedNetworkImage(
-                          imageUrl: issue.image!,
-                          fit: BoxFit.cover,
-                          memCacheWidth: 720,
-                        ),
-                      )
-                    else
-                      ColoredBox(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                      ),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            theme.colorScheme.surface.withValues(alpha: 0.75),
-                            Colors.transparent,
-                            theme.colorScheme.surface.withValues(alpha: 0.75),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.chevron_left),
-                            style: IconButton.styleFrom(
-                              backgroundColor: theme
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withValues(alpha: 0.85),
-                              foregroundColor:
-                                  theme.colorScheme.onSurfaceVariant,
-                              shape: const CircleBorder(),
-                              fixedSize: const Size(36, 36),
-                              padding: EdgeInsets.zero,
-                            ),
-                            onPressed: previousIssueId == null
-                                ? null
-                                : () => setState(
-                                    () => _currentIssueId = previousIssueId,
-                                  ),
-                          ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: isCurrentData
-                                ? () => _openCoverGallery(issue)
-                                : null,
-                            child: Hero(
-                              tag: "issue-cover-$_currentIssueId",
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: SizedBox(
-                                  width: 180,
-                                  height: 270,
-                                  child: isCurrentData && issue.image != null
-                                      ? CachedNetworkImage(
-                                          imageUrl: issue.image!,
-                                          fit: BoxFit.cover,
-                                          memCacheWidth: 720,
-                                        )
-                                      : Container(
-                                          color: theme
-                                              .colorScheme
-                                              .surfaceContainerHighest,
-                                          child: const Icon(
-                                            Icons.image,
-                                            size: 48,
-                                          ),
-                                        ),
-                                ),
+      body: Stack(
+        children: [
+          SizedBox(
+            height: 350,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  switchInCurve: Curves.easeIn,
+                  switchOutCurve: Curves.easeOut,
+                  child: KeyedSubtree(
+                    key: ValueKey(_currentCoverUrl ?? _currentIssueId),
+                    child: SizedBox.expand(
+                      child:
+                          (_currentCoverUrl != null &&
+                              _currentCoverUrl!.trim().isNotEmpty)
+                          ? ImageFiltered(
+                              imageFilter: ImageFilter.blur(
+                                sigmaX: 8,
+                                sigmaY: 8,
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.chevron_right),
-                            style: IconButton.styleFrom(
-                              backgroundColor: theme
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withValues(alpha: 0.85),
-                              foregroundColor:
-                                  theme.colorScheme.onSurfaceVariant,
-                              shape: const CircleBorder(),
-                              fixedSize: const Size(36, 36),
-                              padding: EdgeInsets.zero,
-                            ),
-                            onPressed: nextIssueId == null
-                                ? null
-                                : () => setState(
-                                    () => _currentIssueId = nextIssueId,
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: AppBar(
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        actions: [
-                          if (issueAsync.isRefreshing || (issueAsync.isLoading && issueAsync.hasValue))
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.surfaceContainerHigh
-                                        .withValues(alpha: 0.85),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: theme.colorScheme.primary
-                                          .withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SizedBox(
-                                        width: 12,
-                                        height: 12,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        "Updating...",
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.primary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              child: CachedNetworkImage(
+                                imageUrl: _currentCoverUrl!,
+                                fit: BoxFit.cover,
+                                memCacheWidth: 720,
                               ),
                             )
-                          else if (issueAsync.hasError)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.errorContainer
-                                        .withValues(alpha: 0.85),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: theme.colorScheme.error
-                                          .withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.cloud_off_outlined,
-                                        size: 12,
-                                        color: theme.colorScheme.onErrorContainer,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        "Cached",
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.onErrorContainer,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
+                          : ColoredBox(
+                              color: theme.colorScheme.surfaceContainerHighest,
+                            ),
+                    ),
+                  ),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        theme.colorScheme.surface.withValues(alpha: 0.75),
+                        Colors.transparent,
+                        theme.colorScheme.surface.withValues(alpha: 0.75),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+                Center(
+                  child: IssueCoverCarousel(
+                    currentIssueId: _currentIssueId,
+                    currentImageUrl:
+                        _currentCoverUrl ??
+                        (isCurrentData ? issue.image : null),
+                    slideDirection: _slideDirection,
+                    previousIssueId: previousIssueId,
+                    nextIssueId: nextIssueId,
+                    onPrevious: previousIssueId == null
+                        ? null
+                        : () => _navigateToIssue(
+                            previousIssueId,
+                            direction: -1,
+                            targetCoverUrl: previousImageUrl,
+                          ),
+                    onNext: nextIssueId == null
+                        ? null
+                        : () => _navigateToIssue(
+                            nextIssueId,
+                            direction: 1,
+                            targetCoverUrl: nextImageUrl,
+                          ),
+                    onTapCover: isCurrentData
+                        ? () => _openCoverGallery(displayIssue)
+                        : null,
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: AppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: Center(
+                      child: BackButton(
+                        style: detailHeaderIconButtonStyle(theme),
+                      ),
+                    ),
+                    actions: [
+                      if (issueAsync.isRefreshing ||
+                          (issueAsync.isLoading && issueAsync.hasValue))
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHigh
+                                    .withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.3,
                                   ),
                                 ),
                               ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Updating...",
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          EntityDetailActions(
+                          ),
+                        )
+                      else if (issueAsync.hasError)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.errorContainer
+                                    .withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: theme.colorScheme.error.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_off_outlined,
+                                    size: 12,
+                                    color: theme.colorScheme.onErrorContainer,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Cached",
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onErrorContainer,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Center(
+                          child: EntityDetailActions(
+                            style: detailHeaderIconButtonStyle(theme),
                             onRefresh: isCurrentData
                                 ? () => refreshDetails(context)
                                 : null,
-                            onShare: isCurrentData
-                                ? () => shareResourceUrl(context, issue)
-                                : null,
-                            onOpenInBrowser: isCurrentData
-                                ? () => openResourceUrlInBrowser(context, issue)
-                                : null,
+                            onShare: () =>
+                                shareResourceUrl(context, displayIssue),
+                            onOpenInBrowser: () =>
+                                openResourceUrlInBrowser(context, displayIssue),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              DraggableScrollableSheet(
-                initialChildSize: 0.60,
-                minChildSize: 0.60,
-                maxChildSize: 0.9,
-                snap: true,
-                snapSizes: [0.60, 0.9],
-                builder: (context, scrollController) {
-                  return IssueDetailsSheet(
+              ],
+            ),
+          ),
+          DraggableScrollableSheet(
+            initialChildSize: 0.60,
+            minChildSize: 0.60,
+            maxChildSize: 0.9,
+            snap: true,
+            snapSizes: const [0.60, 0.9],
+            builder: (context, scrollController) {
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                child: KeyedSubtree(
+                  key: ValueKey(_currentIssueId),
+                  child: IssueDetailsSheet(
                     scrollController: scrollController,
-                    issue: issue,
+                    issue: displayIssue,
                     issueId: _currentIssueId,
                     collectionStatus: isCurrentData ? issueStatus : null,
-                    isInPullList: isCurrentData ? isInPullList : false,
+                    isInPullList: isCurrentData ? effectiveIsPulled : false,
                     isFavorite: isCurrentData
                         ? (isFavoriteAsync.asData?.value ?? false)
                         : false,
-                    displayTitle: isCurrentData ? _displayTitle(issue) : "",
+                    displayTitle: _displayTitle(displayIssue),
                     onShowScrobbleSheet: isCurrentData
                         ? scrobbleCurrentIssue
                         : () {},
                     onToggleFavorite: isCurrentData ? toggleFavorite : () {},
                     onNavigateToSeries: isCurrentData
-                        ? () => _navigateToSeries(issue)
+                        ? () => _navigateToSeries(displayIssue)
                         : () {},
                     seriesId: isCurrentData ? seriesId : null,
                     isSubscribed: isCurrentData ? isSubscribed : false,
@@ -576,12 +584,12 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                         (isCurrentData && seriesId != null)
                         ? () => _setSeriesSubscription(!isSubscribed, seriesId)
                         : null,
-                  );
-                },
-              ),
-            ],
+                  ),
+                ),
+              );
+            },
           ),
-        ),
+        ],
       ),
     );
   }

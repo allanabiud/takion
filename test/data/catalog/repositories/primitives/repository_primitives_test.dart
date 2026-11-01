@@ -35,9 +35,11 @@ void main() {
           );
         },
         getLocalCachedJson: (id) async => cachedJson,
-        getCachedAt: (id) async => DateTime.now().subtract(const Duration(minutes: 5)),
+        getCachedAt: (id) async =>
+            DateTime.now().subtract(const Duration(minutes: 5)),
         cacheLocalJson: (id, json) async {},
-        dtoFromJson: (json) => SampleDto(json["id"] as int, json["name"] as String),
+        dtoFromJson: (json) =>
+            SampleDto(json["id"] as int, json["name"] as String),
         dtoToEntity: (dto) => SampleEntity(dto.id, dto.name),
       );
 
@@ -69,7 +71,8 @@ void main() {
         cacheLocalJson: (id, json) async {
           cachedSaved = true;
         },
-        dtoFromJson: (json) => SampleDto(json["id"] as int, json["name"] as String),
+        dtoFromJson: (json) =>
+            SampleDto(json["id"] as int, json["name"] as String),
         dtoToEntity: (dto) => SampleEntity(dto.id, dto.name),
       );
 
@@ -92,7 +95,8 @@ void main() {
         cachePolicy: const CachePolicy(ttl: Duration(hours: 1)),
         getLocalItems: (key) async => items,
         getLocalMeta: (key) async => const PageCacheMeta(count: 2),
-        getCachedAt: (key) async => DateTime.now().subtract(const Duration(minutes: 10)),
+        getCachedAt: (key) async =>
+            DateTime.now().subtract(const Duration(minutes: 10)),
         cacheLocal: (key, items, {required count, next, previous}) async {},
         getRemotePage: (key, token) async {
           remoteCalled = true;

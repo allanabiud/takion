@@ -80,7 +80,10 @@ class _BackupContentState extends ConsumerState<_BackupContent> {
                 height: 24,
                 child: CircularProgressIndicator(strokeWidth: 2.5),
               )
-            : Icon(Icons.folder_open_outlined, color: theme.colorScheme.primary),
+            : Icon(
+                Icons.folder_open_outlined,
+                color: theme.colorScheme.primary,
+              ),
         title: Text(
           _isRestoring ? "Restoring..." : "Restore from Local Backup",
           style: const TextStyle(fontWeight: FontWeight.w600),
@@ -142,7 +145,10 @@ class _BackupContentState extends ConsumerState<_BackupContent> {
                   height: 24,
                   child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
-              : Icon(Icons.cloud_upload_outlined, color: theme.colorScheme.primary),
+              : Icon(
+                  Icons.cloud_upload_outlined,
+                  color: theme.colorScheme.primary,
+                ),
           title: Text(
             _isCloudBackingUp ? "Backing up..." : "Create Cloud Backup",
             style: const TextStyle(fontWeight: FontWeight.w600),
@@ -160,7 +166,10 @@ class _BackupContentState extends ConsumerState<_BackupContent> {
                   height: 24,
                   child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
-              : Icon(Icons.cloud_download_outlined, color: theme.colorScheme.primary),
+              : Icon(
+                  Icons.cloud_download_outlined,
+                  color: theme.colorScheme.primary,
+                ),
           title: Text(
             _isCloudRestoring ? "Restoring..." : "Restore from Cloud Backup",
             style: const TextStyle(fontWeight: FontWeight.w600),
@@ -180,9 +189,7 @@ class _BackupContentState extends ConsumerState<_BackupContent> {
             "Automatic Backups",
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
-          subtitle: const Text(
-            "Backup to Google Drive periodically",
-          ),
+          subtitle: const Text("Backup to Google Drive periodically"),
           value: syncState.autoBackupOnRestart,
           onChanged: (value) {
             ref
@@ -200,10 +207,7 @@ class _BackupContentState extends ConsumerState<_BackupContent> {
                   height: 24,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(
-                  Icons.delete_outline,
-                  color: theme.colorScheme.error,
-                ),
+              : Icon(Icons.delete_outline, color: theme.colorScheme.error),
           title: Text(
             _isDeletingBackup
                 ? "Deleting Backup..."
@@ -277,7 +281,8 @@ class _BackupContentState extends ConsumerState<_BackupContent> {
     if (hasError) {
       icon = Icons.error_outline;
       color = theme.colorScheme.error;
-      text = "Last backup failed · ${DateFormatter.relativeShort(lastErrorTime)}";
+      text =
+          "Last backup failed · ${DateFormatter.relativeShort(lastErrorTime)}";
     } else if (lastSuccess != null) {
       icon = Icons.check_circle_outline;
       color = theme.colorScheme.primary;
@@ -502,11 +507,7 @@ class _BackupContentState extends ConsumerState<_BackupContent> {
       }
     } catch (e) {
       if (mounted) {
-        TakionAlerts.safeError(
-          context,
-          e,
-          userMessage: "Rollback failed",
-        );
+        TakionAlerts.safeError(context, e, userMessage: "Rollback failed");
       }
     }
   }

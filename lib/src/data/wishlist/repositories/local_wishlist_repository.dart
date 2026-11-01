@@ -1,4 +1,5 @@
-import "package:drift/drift.dart";
+import "package:takion/src/core/commands/wishlist_command_service.dart";
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/core/sync/offline_queue/offline_write_queue.dart";
 import "package:takion/src/data/common/drift/database.dart" as db;
 import "package:takion/src/domain/wishlist/entities/wishlist_item.dart";
@@ -8,10 +9,11 @@ class LocalWishlistRepository implements WishlistRepository {
   LocalWishlistRepository(
     this._database, {
     OfflineWriteQueue? offlineQueue,
-  }) : _offlineQueue = offlineQueue;
+    WishlistCommandService? commandService,
+  }) : _commandService = commandService ?? WishlistCommandService(_database);
 
   final db.AppDatabase _database;
-  final OfflineWriteQueue? _offlineQueue;
+  final WishlistCommandService _commandService;
 
   WishlistItem _toDomain(db.WishlistItem d) {
     return WishlistItem(
@@ -42,6 +44,18 @@ class LocalWishlistRepository implements WishlistRepository {
         ? _database.wishlistDao.watchBySeries(seriesId)
         : _database.wishlistDao.watchAll();
     return stream.map((rows) => rows.map(_toDomain).toList());
+  }
+
+  @override
+  Future<RemotePage<WishlistItem>> getWishListPage({Uri? pageUrl}) async {
+    final items = await getWishListItems();
+    return RemotePage<WishlistItem>(
+      items: items,
+      count: items.length,
+      next: null,
+      previous: null,
+      fetchedAt: DateTime.now().toUtc(),
+    );
   }
 
   @override
@@ -83,82 +97,20 @@ class LocalWishlistRepository implements WishlistRepository {
     String maxPriceCurrency = "USD",
     String? notes,
   }) async {
-    final existing = await _database.wishlistDao.getByIssueId(issueId);
-    final now = DateTime.now().toUtc();
-    final syncStatus =
-        _offlineQueue != null ? "pending" : (existing?.syncStatus ?? "synced");
-
-    final item = WishlistItem(
-      id: existing?.id ?? issueId,
+    final item = await _commandService.addToWishlist(
       issueId: issueId,
-      seriesId: seriesId ?? existing?.seriesId ?? 0,
-      seriesName: seriesName ?? existing?.seriesName ?? "Unknown Series",
-      issueNumber: issueNumber ?? existing?.issueNumber ?? "",
-      seriesVolume: existing?.seriesVolume,
-      seriesYearBegan: existing?.seriesYearBegan,
-      coverDate: existing?.coverDate,
-      storeDate: existing?.storeDate,
-      imageUrl: imageUrl ?? existing?.imageUrl,
+      seriesId: seriesId,
+      seriesName: seriesName,
+      issueNumber: issueNumber,
+      imageUrl: imageUrl,
       priority: priority,
-      desiredGrade: desiredGrade ?? existing?.desiredGrade,
-      maxPrice: maxPrice ?? existing?.maxPrice,
+      desiredGrade: desiredGrade,
+      maxPrice: maxPrice,
       maxPriceCurrency: maxPriceCurrency,
-      notes: notes ?? existing?.notes,
-      addedOn: existing?.addedOn ?? now,
-      modified: now,
-      syncStatus: syncStatus,
+      notes: notes,
     );
 
-    await _database.transaction(() async {
-      // If issue was owned in collection, delete it to enforce mutual exclusivity
-      final libItem = await _database.libraryItemDao.getByIssueId(issueId);
-      if (libItem != null && libItem.ownershipStatus == "owned") {
-        await _database.libraryItemDao.deleteByIssueId(issueId);
-        if (_offlineQueue != null && libItem.metronCollectionId != null) {
-          await _offlineQueue.enqueueCollectionDelete(
-            metronCollectionId: libItem.metronCollectionId!,
-          );
-        }
-      }
-
-      await _database.wishlistDao.upsert(
-        db.WishlistItemsCompanion(
-          id: Value(item.id),
-          issueId: Value(item.issueId),
-          seriesId: Value(item.seriesId),
-          seriesName: Value(item.seriesName),
-          issueNumber: Value(item.issueNumber),
-          seriesVolume: Value(item.seriesVolume),
-          seriesYearBegan: Value(item.seriesYearBegan),
-          coverDate: Value(item.coverDate),
-          storeDate: Value(item.storeDate),
-          imageUrl: Value(item.imageUrl),
-          priority: Value(item.priority),
-          desiredGrade: Value(item.desiredGrade),
-          maxPrice: Value(item.maxPrice),
-          maxPriceCurrency: Value(item.maxPriceCurrency),
-          notes: Value(item.notes),
-          addedOn: Value(item.addedOn),
-          modified: Value(item.modified),
-          syncStatus: Value(item.syncStatus),
-          createdAt: Value(existing?.createdAt ?? now.toIso8601String()),
-          updatedAt: Value(now.toIso8601String()),
-        ),
-      );
-
-      if (_offlineQueue != null) {
-        await _offlineQueue.enqueueWishlistAdd(
-          issueId: issueId,
-          priority: priority,
-          desiredGrade: desiredGrade,
-          maxPrice: maxPrice,
-          maxPriceCurrency: maxPriceCurrency,
-          notes: notes,
-        );
-      }
-    });
-
-    return item;
+    return _toDomain(item);
   }
 
   @override
@@ -170,71 +122,27 @@ class LocalWishlistRepository implements WishlistRepository {
     String? purchaseStore,
     String? notes,
   }) async {
-    var wishlistItem = await _database.wishlistDao.getById(itemId);
-    wishlistItem ??= await _database.wishlistDao.getByIssueId(itemId);
-    final effectiveItemId = wishlistItem?.id ?? itemId;
+    final wishlistItem =
+        (await _database.wishlistDao.getById(itemId)) ??
+        (await _database.wishlistDao.getByIssueId(itemId));
     final issueId = wishlistItem?.issueId ?? itemId;
 
-    await _database.wishlistDao.deleteById(effectiveItemId);
-    await _database.wishlistDao.deleteByIssueId(issueId);
-
-    final libItem = await _database.libraryItemDao.getByIssueId(issueId);
-    final now = DateTime.now().toUtc();
-    final nowIso = now.toIso8601String();
-    final purchaseDateIso = (purchaseDate ?? now).toIso8601String();
-    final itemIdString = libItem?.id ?? "lib-$issueId";
-    final seriesId = (wishlistItem?.seriesId != null && wishlistItem!.seriesId > 0)
-        ? wishlistItem.seriesId
-        : (libItem?.metronSeriesId ?? 0);
-
-    await _database.libraryItemDao.upsert(
-      db.LibraryItemsCompanion(
-        id: Value(itemIdString),
-        userId: const Value("local-user"),
-        metronIssueId: Value(issueId),
-        metronSeriesId: Value(seriesId),
-        ownershipStatus: const Value("owned"),
-        isRead: Value(libItem?.isRead ?? false),
-        rating: Value(libItem?.rating),
-        quantityOwned: Value(libItem?.quantityOwned ?? 1),
-        format: Value(libItem?.format ?? "print"),
-        purchaseDate: Value(purchaseDateIso),
-        pricePaid: purchasePrice != null
-            ? Value(purchasePrice)
-            : (libItem?.pricePaid != null
-                ? Value(libItem!.pricePaid)
-                : const Value.absent()),
-        acquiredOn: Value(purchaseDateIso),
-        notes: notes != null
-            ? Value(notes)
-            : (libItem?.notes != null
-                ? Value(libItem!.notes)
-                : const Value.absent()),
-        syncStatus: const Value("synced"),
-        createdAt: Value(libItem?.createdAt ?? nowIso),
-        updatedAt: Value(nowIso),
-      ),
+    await _commandService.acquireIssue(
+      issueId: issueId,
+      seriesId: wishlistItem?.seriesId,
+      purchaseDate: purchaseDate,
+      purchasePrice: purchasePrice,
+      purchasePriceCurrency: purchasePriceCurrency,
+      purchaseStore: purchaseStore,
+      notes: notes,
     );
-
-    if (_offlineQueue != null) {
-      await _offlineQueue.enqueueWishlistAcquire(
-        itemId: effectiveItemId,
-        purchaseDate: purchaseDate,
-        purchasePrice: purchasePrice,
-        purchasePriceCurrency: purchasePriceCurrency,
-        purchaseStore: purchaseStore,
-        notes: notes,
-      );
-    }
   }
 
   @override
   Future<void> removeFromWishList(int itemId) async {
-    await _database.wishlistDao.deleteById(itemId);
-
-    if (_offlineQueue != null) {
-      await _offlineQueue.enqueueWishlistRemove(itemId: itemId);
-    }
+    final existing = await _database.wishlistDao.getById(itemId);
+    final issueId = existing?.issueId ?? itemId;
+    await _commandService.removeFromWishlist(issueId: issueId);
   }
 
   @override
@@ -242,10 +150,6 @@ class LocalWishlistRepository implements WishlistRepository {
     final existing = await _database.wishlistDao.getByIssueId(issueId);
     if (existing == null) return;
 
-    await _database.wishlistDao.deleteByIssueId(issueId);
-
-    if (_offlineQueue != null) {
-      await _offlineQueue.enqueueWishlistRemove(itemId: existing.id);
-    }
+    await _commandService.removeFromWishlist(issueId: issueId);
   }
 }

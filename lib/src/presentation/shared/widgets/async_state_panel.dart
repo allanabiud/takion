@@ -122,7 +122,9 @@ class AsyncStatePanel extends StatelessWidget {
         customAction ??= "Retry";
       case AuthFailure():
         icon = Icons.lock_outline;
-        title = failure.isExpired ? "Session Expired" : "Authentication Required";
+        title = failure.isExpired
+            ? "Session Expired"
+            : "Authentication Required";
         customAction ??= "Log In";
       case RateLimitFailure():
         icon = Icons.speed_outlined;
@@ -186,10 +188,7 @@ class AsyncStatePanel extends StatelessWidget {
             ),
             if (message != null) ...[
               const SizedBox(width: 12),
-              Text(
-                message!,
-                style: theme.textTheme.bodySmall,
-              ),
+              Text(message!, style: theme.textTheme.bodySmall),
             ],
           ],
         ),
@@ -203,10 +202,14 @@ class AsyncStatePanel extends StatelessWidget {
       effectiveIconBg = theme.colorScheme.errorContainer.withValues(alpha: 0.4);
     } else if (_isEmpty) {
       effectiveIconColor = theme.colorScheme.primary;
-      effectiveIconBg = theme.colorScheme.primaryContainer.withValues(alpha: 0.4);
+      effectiveIconBg = theme.colorScheme.primaryContainer.withValues(
+        alpha: 0.4,
+      );
     } else {
       effectiveIconColor = theme.colorScheme.tertiary;
-      effectiveIconBg = theme.colorScheme.tertiaryContainer.withValues(alpha: 0.4);
+      effectiveIconBg = theme.colorScheme.tertiaryContainer.withValues(
+        alpha: 0.4,
+      );
     }
 
     return Center(
@@ -237,11 +240,7 @@ class AsyncStatePanel extends StatelessWidget {
                         color: effectiveIconBg,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        icon,
-                        size: 36,
-                        color: effectiveIconColor,
-                      ),
+                      child: Icon(icon, size: 36, color: effectiveIconColor),
                     ),
                     const SizedBox(height: 16),
                   ],

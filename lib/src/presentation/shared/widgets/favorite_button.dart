@@ -67,7 +67,9 @@ class _WiggleFavoriteButtonState extends State<WiggleFavoriteButton>
     final activeColor = widget.activeColor ?? theme.colorScheme.primary;
     final inactiveColor = widget.inactiveColor ?? theme.colorScheme.outline;
 
-    final tooltip = widget.isFavorite ? "Remove from favorites" : "Add to favorites";
+    final tooltip = widget.isFavorite
+        ? "Remove from favorites"
+        : "Add to favorites";
 
     return IconButton(
       iconSize: widget.iconSize,

@@ -232,69 +232,69 @@ abstract class MetronSearchLocalDataSource {
 
 class MetronSearchLocalDataSourceImpl implements MetronSearchLocalDataSource {
   MetronSearchLocalDataSourceImpl(AppDatabase db)
-      : _issueSearch = PagedLocalCache<IssueListDto>(
-          db: db,
-          cacheKeyPrefix: "issue_search",
-          entityType: "issue_search",
-          fromJson: IssueListDto.fromJson,
-          toJson: (i) => i.toJson(),
-        ),
-        _seriesSearch = PagedLocalCache<SeriesListDto>(
-          db: db,
-          cacheKeyPrefix: "series_search",
-          entityType: "series_search",
-          fromJson: SeriesListDto.fromJson,
-          toJson: (s) => s.toJson(),
-        ),
-        _characterSearch = PagedLocalCache<CharacterListDto>(
-          db: db,
-          cacheKeyPrefix: "character_search",
-          entityType: "character_search",
-          fromJson: CharacterListDto.fromJson,
-          toJson: (c) => c.toJson(),
-        ),
-        _creatorSearch = PagedLocalCache<CreatorListDto>(
-          db: db,
-          cacheKeyPrefix: "creator_search",
-          entityType: "creator_search",
-          fromJson: CreatorListDto.fromJson,
-          toJson: (c) => c.toJson(),
-        ),
-        _universeSearch = PagedLocalCache<UniverseListDto>(
-          db: db,
-          cacheKeyPrefix: "universe_search",
-          entityType: "universe_search",
-          fromJson: UniverseListDto.fromJson,
-          toJson: (u) => u.toJson(),
-        ),
-        _imprintSearch = PagedLocalCache<ImprintListDto>(
-          db: db,
-          cacheKeyPrefix: "imprint_search",
-          entityType: "imprint_search",
-          fromJson: ImprintListDto.fromJson,
-          toJson: (i) => i.toJson(),
-        ),
-        _teamSearch = PagedLocalCache<TeamListDto>(
-          db: db,
-          cacheKeyPrefix: "team_search",
-          entityType: "team_search",
-          fromJson: TeamListDto.fromJson,
-          toJson: (t) => t.toJson(),
-        ),
-        _arcSearch = PagedLocalCache<ArcListDto>(
-          db: db,
-          cacheKeyPrefix: "arc_search",
-          entityType: "arc_search",
-          fromJson: ArcListDto.fromJson,
-          toJson: (a) => a.toJson(),
-        ),
-        _publisherSearch = PagedLocalCache<PublisherListDto>(
-          db: db,
-          cacheKeyPrefix: "publisher_search",
-          entityType: "publisher_search",
-          fromJson: PublisherListDto.fromJson,
-          toJson: (p) => p.toJson(),
-        );
+    : _issueSearch = PagedLocalCache<IssueListDto>(
+        db: db,
+        cacheKeyPrefix: "issue_search",
+        entityType: "issue_search",
+        fromJson: IssueListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      ),
+      _seriesSearch = PagedLocalCache<SeriesListDto>(
+        db: db,
+        cacheKeyPrefix: "series_search",
+        entityType: "series_search",
+        fromJson: SeriesListDto.fromJson,
+        toJson: (s) => s.toJson(),
+      ),
+      _characterSearch = PagedLocalCache<CharacterListDto>(
+        db: db,
+        cacheKeyPrefix: "character_search",
+        entityType: "character_search",
+        fromJson: CharacterListDto.fromJson,
+        toJson: (c) => c.toJson(),
+      ),
+      _creatorSearch = PagedLocalCache<CreatorListDto>(
+        db: db,
+        cacheKeyPrefix: "creator_search",
+        entityType: "creator_search",
+        fromJson: CreatorListDto.fromJson,
+        toJson: (c) => c.toJson(),
+      ),
+      _universeSearch = PagedLocalCache<UniverseListDto>(
+        db: db,
+        cacheKeyPrefix: "universe_search",
+        entityType: "universe_search",
+        fromJson: UniverseListDto.fromJson,
+        toJson: (u) => u.toJson(),
+      ),
+      _imprintSearch = PagedLocalCache<ImprintListDto>(
+        db: db,
+        cacheKeyPrefix: "imprint_search",
+        entityType: "imprint_search",
+        fromJson: ImprintListDto.fromJson,
+        toJson: (i) => i.toJson(),
+      ),
+      _teamSearch = PagedLocalCache<TeamListDto>(
+        db: db,
+        cacheKeyPrefix: "team_search",
+        entityType: "team_search",
+        fromJson: TeamListDto.fromJson,
+        toJson: (t) => t.toJson(),
+      ),
+      _arcSearch = PagedLocalCache<ArcListDto>(
+        db: db,
+        cacheKeyPrefix: "arc_search",
+        entityType: "arc_search",
+        fromJson: ArcListDto.fromJson,
+        toJson: (a) => a.toJson(),
+      ),
+      _publisherSearch = PagedLocalCache<PublisherListDto>(
+        db: db,
+        cacheKeyPrefix: "publisher_search",
+        entityType: "publisher_search",
+        fromJson: PublisherListDto.fromJson,
+        toJson: (p) => p.toJson(),
+      );
 
   final PagedLocalCache<IssueListDto> _issueSearch;
   final PagedLocalCache<SeriesListDto> _seriesSearch;

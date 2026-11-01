@@ -1,9 +1,15 @@
+import "package:takion/src/core/network/remote_page.dart";
 import "package:takion/src/domain/collection/entities/collection_item.dart";
 import "package:takion/src/domain/collection/entities/collection_stats.dart";
 import "package:takion/src/domain/collection/entities/missing_issue.dart";
 import "package:takion/src/domain/collection/entities/scrobble_result.dart";
 
 abstract class CollectionRepository {
+  Future<RemotePage<CollectionItem>> getCollectionPage({
+    Uri? pageUrl,
+    DateTime? modifiedGt,
+  });
+
   Future<List<CollectionItem>> getCollection({
     int page = 1,
     String? bookFormat,

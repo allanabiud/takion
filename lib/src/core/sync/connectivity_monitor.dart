@@ -3,7 +3,7 @@ import "package:connectivity_plus/connectivity_plus.dart";
 
 class ConnectivityMonitor {
   ConnectivityMonitor({Connectivity? connectivity})
-      : _connectivity = connectivity ?? Connectivity();
+    : _connectivity = connectivity ?? Connectivity();
 
   final Connectivity _connectivity;
   StreamSubscription<List<ConnectivityResult>>? _subscription;
@@ -28,8 +28,7 @@ class ConnectivityMonitor {
       _onReconnectedControllers.add(onReconnected);
     }
 
-    _subscription ??=
-        _connectivity.onConnectivityChanged.listen((results) {
+    _subscription ??= _connectivity.onConnectivityChanged.listen((results) {
       final online = _isResultOnline(results);
       if (online && !_wasOnline) {
         for (final cb in _onReconnectedControllers) {

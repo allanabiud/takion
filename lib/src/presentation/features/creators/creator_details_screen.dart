@@ -77,6 +77,7 @@ class _CreatorDetailsScreenState extends ConsumerState<CreatorDetailsScreen>
 
     return DetailScreenShell<CreatorDetails>(
       asyncValue: detailsAsync,
+      entityId: widget.creatorId,
       loadingImageUrl: widget.initialImageUrl,
       entityType: "creator",
       initialChildSize: 0.60,

@@ -14,16 +14,24 @@ void main() {
     await db.close();
   });
 
-  Future<List<String>> explainQuery(String sql, [List<dynamic> args = const []]) async {
-    final result = await db.customSelect("EXPLAIN QUERY PLAN $sql", variables: [
-      for (final arg in args)
-        if (arg is int)
-          Variable.withInt(arg)
-        else if (arg is String)
-          Variable.withString(arg)
-        else if (arg is bool)
-          Variable.withBool(arg)
-    ]).get();
+  Future<List<String>> explainQuery(
+    String sql, [
+    List<dynamic> args = const [],
+  ]) async {
+    final result = await db
+        .customSelect(
+          "EXPLAIN QUERY PLAN $sql",
+          variables: [
+            for (final arg in args)
+              if (arg is int)
+                Variable.withInt(arg)
+              else if (arg is String)
+                Variable.withString(arg)
+              else if (arg is bool)
+                Variable.withBool(arg),
+          ],
+        )
+        .get();
 
     return result.map((row) => row.read<String>("detail")).toList();
   }
@@ -36,7 +44,9 @@ void main() {
       );
 
       expect(
-        plan.any((p) => p.contains("idx_lib_status_read") || p.contains("USING INDEX")),
+        plan.any(
+          (p) => p.contains("idx_lib_status_read") || p.contains("USING INDEX"),
+        ),
         isTrue,
         reason: "Expected index usage on library items query: $plan",
       );
@@ -49,7 +59,9 @@ void main() {
       );
 
       expect(
-        plan.any((p) => p.contains("idx_pull_release") || p.contains("USING INDEX")),
+        plan.any(
+          (p) => p.contains("idx_pull_release") || p.contains("USING INDEX"),
+        ),
         isTrue,
         reason: "Expected index usage on pull list query: $plan",
       );
@@ -62,7 +74,9 @@ void main() {
       );
 
       expect(
-        plan.any((p) => p.contains("idx_activity") || p.contains("USING INDEX")),
+        plan.any(
+          (p) => p.contains("idx_activity") || p.contains("USING INDEX"),
+        ),
         isTrue,
         reason: "Expected index usage on activity events query: $plan",
       );
@@ -75,7 +89,9 @@ void main() {
       );
 
       expect(
-        plan.any((p) => p.contains("idx_sub_series") || p.contains("USING INDEX")),
+        plan.any(
+          (p) => p.contains("idx_sub_series") || p.contains("USING INDEX"),
+        ),
         isTrue,
         reason: "Expected index usage on series subscriptions query: $plan",
       );
@@ -88,7 +104,9 @@ void main() {
       );
 
       expect(
-        plan.any((p) => p.contains("idx_rli_list") || p.contains("USING INDEX")),
+        plan.any(
+          (p) => p.contains("idx_rli_list") || p.contains("USING INDEX"),
+        ),
         isTrue,
         reason: "Expected index usage on reading list items query: $plan",
       );

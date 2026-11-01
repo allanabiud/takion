@@ -1,4 +1,6 @@
 import "package:dio/dio.dart";
+import "package:takion/src/core/network/remote_page.dart";
+import "package:takion/src/core/network/request_priority.dart";
 import "package:takion/src/data/wishlist/datasources/remote/metron_wishlist_remote_data_source.dart";
 import "package:takion/src/data/wishlist/dto/wishlist_dto.dart";
 
@@ -7,6 +9,65 @@ class MetronWishlistRemoteDataSourceImpl
   final Dio _dio;
 
   MetronWishlistRemoteDataSourceImpl(this._dio);
+
+  @override
+  Future<RemotePage<WishListItemDto>> getWishListPage({
+    Uri? pageUrl,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      // Sequential pagination is capped at one in-flight scan by the
+      // request scheduler (Phase 5 Step 2).
+      final scanOptions = Options(extra: const {paginationScanExtraKey: true});
+      final Response<dynamic> response;
+      if (pageUrl != null) {
+        response = await _dio.getUri(
+          pageUrl,
+          cancelToken: cancelToken,
+          options: scanOptions,
+        );
+      } else {
+        response = await _dio.get(
+          "wish_list/items/",
+          cancelToken: cancelToken,
+          options: scanOptions,
+        );
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      final results = data["results"] as List<dynamic>? ?? const [];
+      final items = results
+          .whereType<Map<String, dynamic>>()
+          .map(WishListItemDto.fromJson)
+          .toList();
+      final count = data["count"] as int? ?? items.length;
+      final nextRaw = data["next"] as String?;
+      final prevRaw = data["previous"] as String?;
+
+      return RemotePage<WishListItemDto>(
+        items: items,
+        count: count,
+        next: nextRaw != null && nextRaw.isNotEmpty
+            ? Uri.tryParse(nextRaw)
+            : null,
+        previous: prevRaw != null && prevRaw.isNotEmpty
+            ? Uri.tryParse(prevRaw)
+            : null,
+        fetchedAt: DateTime.now().toUtc(),
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return RemotePage<WishListItemDto>(
+          items: const [],
+          count: 0,
+          next: null,
+          previous: null,
+          fetchedAt: DateTime.now().toUtc(),
+        );
+      }
+      rethrow;
+    }
+  }
 
   @override
   Future<List<WishListReadDto>> getWishLists({
@@ -38,10 +99,7 @@ class MetronWishlistRemoteDataSourceImpl
     int id, {
     CancelToken? cancelToken,
   }) async {
-    final response = await _dio.get(
-      "wish_list/$id/",
-      cancelToken: cancelToken,
-    );
+    final response = await _dio.get("wish_list/$id/", cancelToken: cancelToken);
     return WishListReadDto.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -54,8 +112,7 @@ class MetronWishlistRemoteDataSourceImpl
     try {
       final queryParameters = <String, dynamic>{"page": page};
       if (modifiedGt != null) {
-        queryParameters["modified_gt"] =
-            modifiedGt.toUtc().toIso8601String();
+        queryParameters["modified_gt"] = modifiedGt.toUtc().toIso8601String();
       }
       final response = await _dio.get(
         "wish_list/items/",

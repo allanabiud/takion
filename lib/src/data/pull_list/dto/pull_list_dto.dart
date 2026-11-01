@@ -57,12 +57,23 @@ class PullListSeriesDto {
 
     return PullListSeriesDto(
       id: (json["id"] as num?)?.toInt() ?? 0,
-      seriesId: (seriesMap["id"] as num?)?.toInt() ?? (json["series_id"] as num?)?.toInt() ?? 0,
-      seriesName: seriesMap["name"] as String? ?? "Unknown Series",
+      seriesId:
+          (seriesMap["id"] as num?)?.toInt() ??
+          (json["series_id"] as num?)?.toInt() ??
+          0,
+      seriesName:
+          (seriesMap["series"] as String?) ??
+          (seriesMap["name"] as String?) ??
+          (json["series_name"] as String?) ??
+          "Unknown Series",
       volume: (seriesMap["volume"] as num?)?.toInt(),
       yearBegan: (seriesMap["year_began"] as num?)?.toInt(),
-      publisherName: publisherMap["name"] as String? ?? seriesMap["publisher_name"] as String?,
-      imageUrl: (seriesMap["image"] as String?) ?? (seriesMap["resource_url"] as String?),
+      publisherName:
+          publisherMap["name"] as String? ??
+          seriesMap["publisher_name"] as String?,
+      imageUrl:
+          (seriesMap["image"] as String?) ??
+          (seriesMap["resource_url"] as String?),
       addedOn: json["added_on"] as String?,
     );
   }
@@ -132,7 +143,10 @@ class PullListIssueDto {
 
     return PullListIssueDto(
       id: (json["id"] as num?)?.toInt() ?? 0,
-      issueId: (json["issue_id"] as num?)?.toInt() ?? (json["id"] as num?)?.toInt() ?? 0,
+      issueId:
+          (json["issue_id"] as num?)?.toInt() ??
+          (json["id"] as num?)?.toInt() ??
+          0,
       seriesId: (seriesMap["id"] as num?)?.toInt() ?? 0,
       seriesName: seriesMap["name"] as String? ?? "Unknown Series",
       issueNumber: json["number"] as String? ?? "",
@@ -147,10 +161,7 @@ class PullListIssueDto {
   Map<String, dynamic> toJson() => {
     "id": id,
     "number": issueNumber,
-    "series": {
-      "id": seriesId,
-      "name": seriesName,
-    },
+    "series": {"id": seriesId, "name": seriesName},
     if (coverDate != null) "cover_date": coverDate,
     if (storeDate != null) "store_date": storeDate,
     if (imageUrl != null) "image": imageUrl,

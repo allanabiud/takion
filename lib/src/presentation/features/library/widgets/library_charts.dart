@@ -254,8 +254,7 @@ class SpendingTrendChart extends StatelessWidget {
     final maxAmount = data
         .map((e) => e.amount)
         .fold(0.0, (prev, curr) => curr > prev ? curr : prev);
-    final interval =
-        maxAmount > 50 ? (maxAmount / 5).ceilToDouble() : 10.0;
+    final interval = maxAmount > 50 ? (maxAmount / 5).ceilToDouble() : 10.0;
 
     return AspectRatio(
       aspectRatio: 1.7,
@@ -336,10 +335,7 @@ class SpendingTrendChart extends StatelessWidget {
               spots: data
                   .asMap()
                   .entries
-                  .map(
-                    (e) =>
-                        FlSpot(e.key.toDouble(), e.value.amount),
-                  )
+                  .map((e) => FlSpot(e.key.toDouble(), e.value.amount))
                   .toList(),
               isCurved: true,
               gradient: LinearGradient(

@@ -1,5 +1,8 @@
 abstract class SettingsKeys {
   static const String metronApiToken = "metron_api_token";
+  static const String metronSyncRandomOffsetMinutes =
+      "metron_sync_random_offset_minutes";
+  static const String metronSyncFrequencyHours = "metron_sync_frequency_hours";
   static const String hasSeenOnboarding = "has_seen_onboarding";
   static const String driveSyncEnabled = "drive_sync_enabled";
   static const String driveSyncEmail = "drive_sync_email";

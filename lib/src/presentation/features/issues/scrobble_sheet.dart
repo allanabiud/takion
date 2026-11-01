@@ -347,7 +347,9 @@ Future<void> showScrobbleSheet({
                                   addToCollection: addToCollection,
                                   markAsRead: markAsRead,
                                   addToWishlist: addToWishlist,
-                                  rating: selectedRating,
+                                  rating: selectedRating > 0
+                                      ? selectedRating
+                                      : null,
                                   dateRead: markAsRead
                                       ? DateTime.now().toUtc()
                                       : null,

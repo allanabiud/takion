@@ -96,8 +96,8 @@ class _TakionAppState extends ConsumerState<TakionApp>
       // Let the initial frame settle before starting network and database
       // work. This callback is already detached from rendering, so the delay
       // keeps launch sync out of the first-frame critical path. A cancellable
-      // timer (rather than Future.delayed) ensures disposing the app first —
-      // e.g. in widget tests — does not leave it pending.
+      // timer (rather than Future.delayed) ensures disposing the app first -
+      // e.g. in widget tests - does not leave it pending.
       final launchGate = Completer<void>();
       _launchSyncDelayTimer = Timer(
         const Duration(milliseconds: 500),

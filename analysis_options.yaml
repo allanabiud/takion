@@ -5,6 +5,10 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "**/*.gr.dart"
+    - build/**
+    - android/**
+  errors:
+    unawaited_return_in_try_block: ignore
 
 linter:
   rules:

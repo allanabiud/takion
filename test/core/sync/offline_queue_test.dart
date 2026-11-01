@@ -50,10 +50,7 @@ void main() {
       wishlistRemote: mockWishlistRemote,
     );
 
-    queue = OfflineWriteQueue(
-      dao: db.offlineQueueDao,
-      processor: processor,
-    );
+    queue = OfflineWriteQueue(dao: db.offlineQueueDao, processor: processor);
   });
 
   tearDown(() async {
@@ -112,14 +109,9 @@ void main() {
     test("enqueueScrobble and process successfully", () async {
       when(
         () => mockCollectionRemote.scrobble(any()),
-      ).thenAnswer(
-        (_) async => const ScrobbleResponseDto(id: 1, isRead: true),
-      );
+      ).thenAnswer((_) async => const ScrobbleResponseDto(id: 1, isRead: true));
 
-      await queue.enqueueScrobble(
-        issueId: 200,
-        rating: 5,
-      );
+      await queue.enqueueScrobble(issueId: 200, rating: 5);
 
       final processed = await queue.processQueue();
       expect(processed, 1);
@@ -127,10 +119,64 @@ void main() {
       verify(() => mockCollectionRemote.scrobble(any())).called(1);
     });
 
+    test(
+      "enqueueScrobble sanitizes rating of 0 to null (never sends 0 to Metron)",
+      () async {
+        ScrobbleRequestDto? capturedRequest;
+        when(() => mockCollectionRemote.scrobble(any())).thenAnswer((
+          invocation,
+        ) async {
+          capturedRequest =
+              invocation.positionalArguments.first as ScrobbleRequestDto;
+          return const ScrobbleResponseDto(id: 1, isRead: true);
+        });
+
+        await queue.enqueueScrobble(issueId: 205, rating: 0);
+
+        final processed = await queue.processQueue();
+        expect(processed, 1);
+
+        expect(capturedRequest, isNotNull);
+        expect(capturedRequest!.issueId, 205);
+        expect(capturedRequest!.rating, isNull);
+        expect(capturedRequest!.toJson().containsKey("rating"), isFalse);
+      },
+    );
+
+    test(
+      "enqueueCollectionUpdate sanitizes rating of 0 to null to clear rating cleanly",
+      () async {
+        Map<String, dynamic>? capturedUpdates;
+        when(
+          () => mockCollectionRemote.updateCollectionItem(any(), any()),
+        ).thenAnswer((invocation) async {
+          capturedUpdates =
+              invocation.positionalArguments[1] as Map<String, dynamic>;
+          return const CollectionItemDto(
+            id: 50,
+            issueId: 210,
+            seriesId: 10,
+            seriesName: "Batman",
+            issueNumber: "2",
+          );
+        });
+
+        await queue.enqueueCollectionUpdate(
+          metronCollectionId: 50,
+          updates: {"rating": 0, "notes": "Read it"},
+        );
+
+        final processed = await queue.processQueue();
+        expect(processed, 1);
+
+        expect(capturedUpdates, isNotNull);
+        expect(capturedUpdates!["rating"], isNull);
+        expect(capturedUpdates!["notes"], "Read it");
+      },
+    );
+
     test("enqueuePullListAdd and process successfully", () async {
-      when(
-        () => mockPullListRemote.addSeriesToPullList(300),
-      ).thenAnswer(
+      when(() => mockPullListRemote.addSeriesToPullList(300)).thenAnswer(
         (_) async => const PullListSeriesDto(
           id: 1,
           seriesId: 300,
@@ -147,9 +193,7 @@ void main() {
     });
 
     test("enqueueWishlistAdd and process successfully", () async {
-      when(
-        () => mockWishlistRemote.addToWishList(any()),
-      ).thenAnswer(
+      when(() => mockWishlistRemote.addToWishList(any())).thenAnswer(
         (_) async => const WishListItemDto(
           id: 1,
           issueId: 400,
@@ -167,20 +211,23 @@ void main() {
       verify(() => mockWishlistRemote.addToWishList(any())).called(1);
     });
 
-    test("handles failure by incrementing retry count and storing error", () async {
-      when(
-        () => mockPullListRemote.removeSeriesFromPullList(999),
-      ).thenThrow(Exception("Network unreachable"));
+    test(
+      "handles failure by incrementing retry count and storing error",
+      () async {
+        when(
+          () => mockPullListRemote.removeSeriesFromPullList(999),
+        ).thenThrow(Exception("Network unreachable"));
 
-      await queue.enqueuePullListRemove(seriesId: 999);
+        await queue.enqueuePullListRemove(seriesId: 999);
 
-      final processed = await queue.processQueue();
-      expect(processed, 0);
+        final processed = await queue.processQueue();
+        expect(processed, 0);
 
-      final pending = await db.offlineQueueDao.getPendingEntries();
-      expect(pending.length, 1);
-      expect(pending.first.retryCount, 1);
-      expect(pending.first.lastError, contains("Network unreachable"));
-    });
+        final pending = await db.offlineQueueDao.getPendingEntries();
+        expect(pending.length, 1);
+        expect(pending.first.retryCount, 1);
+        expect(pending.first.lastError, contains("Network unreachable"));
+      },
+    );
   });
 }

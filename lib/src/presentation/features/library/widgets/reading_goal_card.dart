@@ -38,8 +38,7 @@ class _ReadingGoalCardState extends ConsumerState<ReadingGoalCard> {
             (progressAsync.hasValue ? progressAsync.value : null);
         final progress = progressValue?.readCount ?? 0;
         final target = goal.target;
-        final percent = (progressValue?.percentComplete ?? 0.0)
-            .clamp(0.0, 1.0);
+        final percent = (progressValue?.percentComplete ?? 0.0).clamp(0.0, 1.0);
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
