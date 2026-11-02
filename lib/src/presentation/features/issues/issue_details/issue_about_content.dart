@@ -310,7 +310,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Creators",
           itemCount: credits.length,
-          height: 164,
+          height: 148,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final credit = credits[index];
@@ -328,7 +328,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
                   ? creator
                   : "Unknown Creator",
               subtitle: roles.isNotEmpty ? roles.join(", ") : null,
-              width: 105,
+              width: 95,
             );
           },
         ),
@@ -350,7 +350,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
         HorizontalPreviewSection(
           title: "Characters",
           itemCount: characters.length,
-          height: 160,
+          height: 132,
           separatorWidth: 0,
           itemBuilder: (context, index) {
             final character = characters[index];
@@ -359,7 +359,7 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: character.name.trim().isNotEmpty
                   ? character.name.trim()
                   : "Unknown Character",
-              width: 105,
+              width: 95,
             );
           },
         ),
@@ -368,7 +368,9 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   }
 
   Widget _buildTeamsSection(BuildContext context) {
-    final teams = widget.issue.teams;
+    final teams = widget.issue.teams
+        .where((t) => t.id > 0 || t.name.trim().isNotEmpty)
+        .toList();
     if (teams.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -389,8 +391,10 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: team.name.trim().isNotEmpty
                   ? team.name.trim()
                   : "Unknown Team",
-              width: 115,
-              imageHeight: 105,
+              width: 95,
+              imageWidth: 84,
+              imageHeight: 126,
+              fit: BoxFit.cover,
               onTap: () => context.pushRoute(TeamDetailsRoute(teamId: team.id)),
             );
           },
@@ -400,7 +404,9 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   }
 
   Widget _buildArcsSection(BuildContext context) {
-    final arcs = widget.issue.arcs;
+    final arcs = widget.issue.arcs
+        .where((a) => a.id > 0 || a.name.trim().isNotEmpty)
+        .toList();
     if (arcs.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -421,8 +427,10 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: arc.name.trim().isNotEmpty
                   ? arc.name.trim()
                   : "Unknown Arc",
-              width: 115,
-              imageHeight: 105,
+              width: 95,
+              imageWidth: 84,
+              imageHeight: 126,
+              fit: BoxFit.cover,
               onTap: () => context.pushRoute(ArcDetailsRoute(arcId: arc.id)),
             );
           },
@@ -432,7 +440,9 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
   }
 
   Widget _buildUniversesSection(BuildContext context) {
-    final universes = widget.issue.universes;
+    final universes = widget.issue.universes
+        .where((u) => u.id > 0 || u.name.trim().isNotEmpty)
+        .toList();
     if (universes.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -453,8 +463,10 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               name: universe.name.trim().isNotEmpty
                   ? universe.name.trim()
                   : "Unknown Universe",
-              width: 115,
-              imageHeight: 105,
+              width: 95,
+              imageWidth: 84,
+              imageHeight: 126,
+              fit: BoxFit.cover,
               onTap: () => context.pushRoute(
                 UniverseDetailsRoute(universeId: universe.id),
               ),
@@ -622,10 +634,18 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
     final hasStories = _storyNames().isNotEmpty;
     final hasReprints = widget.issue.reprints.any((reprint) => reprint.id > 0);
     final hasCreators = widget.issue.credits.isNotEmpty;
-    final hasCharacters = widget.issue.characters.isNotEmpty;
-    final hasTeams = widget.issue.teams.isNotEmpty;
-    final hasArcs = widget.issue.arcs.isNotEmpty;
-    final hasUniverses = widget.issue.universes.isNotEmpty;
+    final hasCharacters = widget.issue.characters.any(
+      (c) => c.id > 0 || c.name.trim().isNotEmpty,
+    );
+    final hasTeams = widget.issue.teams.any(
+      (t) => t.id > 0 || t.name.trim().isNotEmpty,
+    );
+    final hasArcs = widget.issue.arcs.any(
+      (a) => a.id > 0 || a.name.trim().isNotEmpty,
+    );
+    final hasUniverses = widget.issue.universes.any(
+      (u) => u.id > 0 || u.name.trim().isNotEmpty,
+    );
     final hasImprint = widget.issue.imprint?.name.trim().isNotEmpty ?? false;
     final hasGenres = widget.issue.series?.genres.isNotEmpty ?? false;
 
@@ -659,47 +679,47 @@ class _IssueAboutContentState extends ConsumerState<IssueAboutContent> {
               });
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasCreators) ...[
           _buildSectionCard(context, _buildCreatorsSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasCharacters) ...[
           _buildSectionCard(context, _buildCharactersSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasTeams) ...[
           _buildSectionCard(context, _buildTeamsSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasUniverses) ...[
           _buildSectionCard(context, _buildUniversesSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasArcs) ...[
           _buildSectionCard(context, _buildArcsSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasStories) ...[
           _buildSectionCard(context, _buildStoriesSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasAdditionalInfo) ...[
           _buildAdditionalInformationSection(context),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasReprints) ...[
           _buildSectionCard(context, _buildReprintsSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasImprint) ...[
           _buildSectionCard(context, _buildImprintSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         if (hasGenres) ...[
           _buildSectionCard(context, _buildGenresSection(context)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
         ],
         DatabaseIdsSection(
           metronId: widget.issue.id,

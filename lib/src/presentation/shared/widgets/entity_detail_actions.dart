@@ -79,20 +79,41 @@ class FavoriteToggleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final padding = compact
+        ? EdgeInsets.zero
+        : const EdgeInsets.symmetric(vertical: 14);
 
-    return IconButton(
-      tooltip: isFavorite ? "Remove from favorites" : "Add to favorites",
-      icon: Icon(
-        isFavorite ? Icons.favorite : Icons.favorite_border,
-        color: isFavorite
-            ? theme.colorScheme.primary
-            : (isDark
-                  ? theme.colorScheme.onSurface
-                  : theme.colorScheme.onSurfaceVariant),
-        size: compact ? 20 : 24,
-      ),
-      onPressed: onToggleFavorite,
-    );
+    final button = isFavorite
+        ? FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.primaryContainer,
+              foregroundColor: theme.colorScheme.onPrimaryContainer,
+              padding: padding,
+              iconSize: compact ? 22 : 28,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: onToggleFavorite,
+            child: const Icon(Icons.favorite),
+          )
+        : FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.surfaceContainerHigh,
+              foregroundColor: theme.colorScheme.onSurfaceVariant,
+              padding: padding,
+              iconSize: compact ? 22 : 28,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: onToggleFavorite,
+            child: const Icon(Icons.favorite_border),
+          );
+
+    if (compact) {
+      return SizedBox(width: 44, height: 44, child: button);
+    }
+    return button;
   }
 }

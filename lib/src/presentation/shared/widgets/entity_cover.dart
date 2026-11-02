@@ -28,6 +28,8 @@ class EntityCover extends StatelessWidget {
   errorBuilder;
   final PlaceholderWidgetBuilder? placeholder;
 
+  final BoxFit fit;
+
   const EntityCover({
     super.key,
     this.imageUrl,
@@ -51,6 +53,7 @@ class EntityCover extends StatelessWidget {
     this.circular = false,
     this.errorBuilder,
     this.placeholder,
+    this.fit = BoxFit.cover,
   });
 
   @override
@@ -72,7 +75,7 @@ class EntityCover extends StatelessWidget {
               imageUrl != null && imageUrl!.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: imageUrl!,
-                      fit: BoxFit.cover,
+                      fit: fit,
                       alignment: alignment,
                       memCacheWidth: cacheWidth,
                       memCacheHeight: cacheHeight,

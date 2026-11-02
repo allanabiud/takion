@@ -203,7 +203,10 @@ class _ArcDetailsScreenState extends ConsumerState<ArcDetailsScreen>
       onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
-      initialChildSize: 0.55,
+      heroWidth: 160,
+      heroHeight: 240,
+      heroFit: BoxFit.cover,
+      initialChildSize: 0.60,
       sheetContentBuilder: (context, d, ref) =>
           _buildArcSheetSlivers(d, context, ref, localList),
     );

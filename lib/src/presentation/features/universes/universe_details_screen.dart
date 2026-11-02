@@ -70,9 +70,10 @@ class _UniverseDetailsScreenState extends ConsumerState<UniverseDetailsScreen>
       onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
-      heroWidth: 260,
+      heroWidth: 160,
       heroHeight: 240,
-      initialChildSize: 0.50,
+      heroFit: BoxFit.cover,
+      initialChildSize: 0.60,
       sheetContentBuilder: (context, d, ref) =>
           _buildUniverseSheetSlivers(d, context, ref),
     );

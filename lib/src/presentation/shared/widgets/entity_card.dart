@@ -18,6 +18,7 @@ class EntityCard extends ConsumerWidget {
     this.borderRadius = 10,
     this.cacheWidth,
     this.cacheHeight,
+    this.fit = BoxFit.cover,
   });
 
   final String entityType;
@@ -32,6 +33,7 @@ class EntityCard extends ConsumerWidget {
   final double borderRadius;
   final int? cacheWidth;
   final int? cacheHeight;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,13 +44,9 @@ class EntityCard extends ConsumerWidget {
     final effectiveCacheWidth =
         cacheWidth ??
         (effectiveImageWidth.isFinite
-            ? (effectiveImageWidth * 2).round()
-            : 300);
-    final effectiveCacheHeight =
-        cacheHeight ??
-        (effectiveImageHeight.isFinite
-            ? (effectiveImageHeight * 2).round()
-            : 450);
+            ? (effectiveImageWidth * 4).round()
+            : 500);
+    final effectiveCacheHeight = cacheHeight;
 
     var effectiveImageUrl = imageUrl;
     if ((effectiveImageUrl == null || effectiveImageUrl.trim().isEmpty) &&
@@ -81,6 +79,7 @@ class EntityCard extends ConsumerWidget {
                   width: effectiveImageWidth,
                   height: effectiveImageHeight,
                   borderRadius: 0,
+                  fit: fit,
                   aspectRatio: effectiveImageWidth / effectiveImageHeight,
                   cacheWidth: effectiveCacheWidth,
                   cacheHeight: effectiveCacheHeight,

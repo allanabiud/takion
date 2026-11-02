@@ -108,9 +108,8 @@ class SmartEntityImage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final effectiveCacheWidth =
-        cacheWidth ?? (width.isFinite ? (width * 2).round() : null);
-    final effectiveCacheHeight =
-        cacheHeight ?? (height.isFinite ? (height * 2).round() : null);
+        cacheWidth ?? (width.isFinite ? (width * 4).round() : null);
+    final effectiveCacheHeight = cacheHeight;
 
     var effectiveImageUrl = imageUrl;
     if ((effectiveImageUrl == null || effectiveImageUrl.trim().isEmpty) &&

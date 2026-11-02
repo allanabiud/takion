@@ -18,6 +18,7 @@ class EntityListTile extends ConsumerWidget {
   final double imageBorderRadius;
   final int? cacheWidth;
   final int? cacheHeight;
+  final BoxFit fit;
 
   const EntityListTile({
     super.key,
@@ -35,15 +36,15 @@ class EntityListTile extends ConsumerWidget {
     this.imageBorderRadius = 10,
     this.cacheWidth,
     this.cacheHeight,
+    this.fit = BoxFit.contain,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final effectiveCacheWidth =
-        cacheWidth ?? (imageWidth.isFinite ? (imageWidth * 2).round() : 120);
-    final effectiveCacheHeight =
-        cacheHeight ?? (imageHeight.isFinite ? (imageHeight * 2).round() : 180);
+        cacheWidth ?? (imageWidth.isFinite ? (imageWidth * 4).round() : 360);
+    final effectiveCacheHeight = cacheHeight;
 
     var effectiveImageUrl = imageUrl;
     if ((effectiveImageUrl == null || effectiveImageUrl.trim().isEmpty) &&
@@ -83,6 +84,7 @@ class EntityListTile extends ConsumerWidget {
                       width: imageWidth,
                       height: imageHeight,
                       borderRadius: 0,
+                      fit: fit,
                       aspectRatio: imageWidth / imageHeight,
                       iconSize: 20,
                       cacheWidth: effectiveCacheWidth,

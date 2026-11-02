@@ -1,3 +1,4 @@
+import "dart:math" as math;
 import "dart:ui";
 
 import "package:auto_route/auto_route.dart";
@@ -19,7 +20,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     this.entityId,
     this.loadingImageUrl,
     required this.entityType,
-    this.initialChildSize = 0.55,
+    this.initialChildSize = 0.60,
     required this.toImageUrl,
     this.toFallbackImageUrl,
     required this.toHeroTag,
@@ -33,12 +34,13 @@ class DetailScreenShell<T> extends ConsumerWidget {
     this.onOpenInBrowser,
     this.appBarTrailingAction,
     required this.sheetContentBuilder,
-    this.heroWidth = 250,
-    this.heroHeight = 250,
+    this.heroWidth = 220,
+    this.heroHeight = 220,
+    this.heroFit = BoxFit.cover,
     this.heroBorderRadius = 12,
     this.heroImageAlignment = Alignment.topCenter,
     this.circular = false,
-    this.headerHeight = 400,
+    this.headerHeight = 350,
     this.showHero = true,
     this.headerBackground,
     this.imageHeaders,
@@ -65,6 +67,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
   sheetContentBuilder;
   final double heroWidth;
   final double heroHeight;
+  final BoxFit heroFit;
   final double heroBorderRadius;
   final Alignment heroImageAlignment;
   final bool circular;
@@ -98,12 +101,15 @@ class DetailScreenShell<T> extends ConsumerWidget {
         : fallbackLoadingImage;
     final hasImage =
         effectiveLoadingImage != null && effectiveLoadingImage.isNotEmpty;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final sheetTop = screenHeight * (1.0 - initialChildSize);
+    final effectiveLoadingHeight = math.max(headerHeight, sheetTop + 48);
 
     return Scaffold(
       body: Stack(
         children: [
           SizedBox(
-            height: 350,
+            height: effectiveLoadingHeight,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -255,12 +261,33 @@ class DetailScreenShell<T> extends ConsumerWidget {
     final headerExtra = toHeaderExtra?.call(data);
     final trailingHeaderAction = toTrailingHeaderAction?.call(data);
     final hasImage = imageUrl != null && imageUrl.isNotEmpty;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final topPadding = MediaQuery.paddingOf(context).top;
+    final sheetTop = screenHeight * (1.0 - initialChildSize);
+    final effectiveHeaderHeight = math.max(headerHeight, sheetTop + 48);
+    final availableHeroHeight = sheetTop - topPadding - 14.0;
+
+    final double effectiveHeroWidth;
+    final double effectiveHeroHeight;
+
+    if (circular) {
+      final maxCircularSize = math.max(120.0, availableHeroHeight - 20.0);
+      final size = math.min(math.min(heroWidth, heroHeight), maxCircularSize);
+      effectiveHeroWidth = size;
+      effectiveHeroHeight = size;
+    } else {
+      final maxHeight = math.max(120.0, availableHeroHeight - 10.0);
+      final maxWidth = math.max(120.0, screenWidth - 40.0);
+      effectiveHeroWidth = math.min(heroWidth, maxWidth);
+      effectiveHeroHeight = math.min(heroHeight, maxHeight);
+    }
 
     return Scaffold(
       body: Stack(
         children: [
           SizedBox(
-            height: headerHeight,
+            height: effectiveHeaderHeight,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -307,34 +334,41 @@ class DetailScreenShell<T> extends ConsumerWidget {
                   ),
                 ],
                 if (showHero)
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 48),
-                        if (hasImage)
-                          Hero(
-                            tag: heroTag,
-                            child: GestureDetector(
-                              onTap: () => context.pushRoute(
-                                ImagePreviewRoute(
-                                  imageUrl: imageUrl,
-                                  title: title,
-                                  heroTag: heroTag,
+                  Positioned(
+                    top: topPadding + 8.0,
+                    bottom: (effectiveHeaderHeight - sheetTop) + 6.0,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: hasImage
+                          ? Hero(
+                              tag: heroTag,
+                              child: GestureDetector(
+                                onTap: () => context.pushRoute(
+                                  ImagePreviewRoute(
+                                    imageUrl: imageUrl,
+                                    title: title,
+                                    heroTag: heroTag,
+                                  ),
+                                ),
+                                child: _buildHeroClip(
+                                  context,
+                                  data,
+                                  title,
+                                  hasImage,
+                                  effectiveHeroWidth,
+                                  effectiveHeroHeight,
                                 ),
                               ),
-                              child: _buildHeroClip(
-                                context,
-                                data,
-                                title,
-                                hasImage,
-                              ),
+                            )
+                          : _buildHeroClip(
+                              context,
+                              data,
+                              title,
+                              hasImage,
+                              effectiveHeroWidth,
+                              effectiveHeroHeight,
                             ),
-                          )
-                        else
-                          _buildHeroClip(context, data, title, hasImage),
-                        const SizedBox(height: 24),
-                      ],
                     ),
                   ),
                 Positioned(
@@ -560,19 +594,24 @@ class DetailScreenShell<T> extends ConsumerWidget {
     T data,
     String title,
     bool hasImage,
+    double width,
+    double height,
   ) {
     final imageUrl = hasImage ? toImageUrl(data) : null;
     final fallbackImageUrl = toFallbackImageUrl?.call(data);
+    final effectiveAlignment = heroFit == BoxFit.contain
+        ? Alignment.center
+        : heroImageAlignment;
 
-    final child = SizedBox(
-      width: heroWidth,
-      height: heroHeight,
+    final content = SizedBox(
+      width: width,
+      height: height,
       child: hasImage
           ? _CachedImageWithFallback(
               imageUrl: imageUrl!,
               fallbackImageUrl: fallbackImageUrl,
-              fit: BoxFit.cover,
-              alignment: heroImageAlignment,
+              fit: heroFit,
+              alignment: effectiveAlignment,
               httpHeaders: imageHeaders,
               placeholder: (context, url) => bannerPlaceholder(context, title),
               errorWidget: (context, url, error) =>
@@ -581,12 +620,26 @@ class DetailScreenShell<T> extends ConsumerWidget {
           : bannerPlaceholder(context, title),
     );
 
-    if (circular) {
-      return ClipOval(child: child);
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(heroBorderRadius),
-      child: child,
+    final clipped = circular
+        ? ClipOval(child: content)
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(heroBorderRadius),
+            child: content,
+          );
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: circular ? null : BorderRadius.circular(heroBorderRadius),
+        shape: circular ? BoxShape.circle : BoxShape.rectangle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: clipped,
     );
   }
 
@@ -600,7 +653,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
           initials(name),
           style: TextStyle(
             color: Theme.of(context).colorScheme.primary,
-            fontSize: 48,
+            fontSize: 36,
             fontWeight: FontWeight.w700,
           ),
         ),

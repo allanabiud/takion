@@ -72,7 +72,10 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
       onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
-      initialChildSize: 0.55,
+      heroWidth: 160,
+      heroHeight: 240,
+      heroFit: BoxFit.cover,
+      initialChildSize: 0.60,
       sheetContentBuilder: (context, d, ref) =>
           _buildTeamSheetSlivers(d, context, ref),
     );
@@ -101,7 +104,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
     final totalIssueCount = issuesPreviewAsync.asData?.value.count ?? 0;
 
     if (hasDescription) {
-      yield const SliverToBoxAdapter(child: SizedBox(height: 20));
+      yield const SliverToBoxAdapter(child: SizedBox(height: 16));
       yield SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -110,7 +113,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
       );
     }
     if (hasCreators) {
-      yield const SliverToBoxAdapter(child: SizedBox(height: 20));
+      yield const SliverToBoxAdapter(child: SizedBox(height: 16));
       yield SliverToBoxAdapter(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +124,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 164,
+              height: 122,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -132,7 +135,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
                   return PersonCard(
                     creatorId: creator.id,
                     name: creator.name,
-                    width: 105,
+                    width: 95,
                   );
                 },
               ),
@@ -142,7 +145,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
       );
     }
     if (hasUniverses) {
-      yield const SliverToBoxAdapter(child: SizedBox(height: 20));
+      yield const SliverToBoxAdapter(child: SizedBox(height: 12));
       yield SliverToBoxAdapter(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,8 +168,10 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
                     entityType: "universe",
                     entityId: universe.id,
                     name: universe.name,
-                    width: 115,
-                    imageHeight: 105,
+                    width: 95,
+                    imageWidth: 84,
+                    imageHeight: 126,
+                    fit: BoxFit.cover,
                     onTap: () => context.pushRoute(
                       UniverseDetailsRoute(universeId: universe.id),
                     ),
@@ -178,7 +183,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
         ),
       );
     }
-    yield const SliverToBoxAdapter(child: SizedBox(height: 20));
+    yield const SliverToBoxAdapter(child: SizedBox(height: 16));
     yield SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -252,7 +257,7 @@ class _TeamDetailsScreenState extends ConsumerState<TeamDetailsScreen>
         ),
       ),
     );
-    yield const SliverToBoxAdapter(child: SizedBox(height: 20));
+    yield const SliverToBoxAdapter(child: SizedBox(height: 16));
     yield SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),

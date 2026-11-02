@@ -1,3 +1,4 @@
+import "dart:math" as math;
 import "dart:ui" show ImageFilter;
 
 import "package:auto_route/auto_route.dart";
@@ -621,8 +622,12 @@ class _ReadingListDetailsScreenState
     final theme = Theme.of(context);
     final String? firstCoverUrl = list.metronImageUrl ?? detail?.image;
 
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final sheetTop = screenHeight * (1.0 - 0.65);
+    final headerBackdropHeight = math.max(350.0, sheetTop + 48);
+
     return SizedBox(
-      height: 350,
+      height: headerBackdropHeight,
       child: Stack(
         fit: StackFit.expand,
         children: [

@@ -116,8 +116,8 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,
-      heroWidth: 260,
-      heroHeight: 260,
+      heroWidth: 200,
+      heroHeight: 200,
       toTrailingHeaderAction: (d) => FavoriteToggleButton(
         isFavorite: isFavorite,
         onToggleFavorite: _toggleFavorite,
@@ -218,7 +218,7 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
             ),
           ],
           if (hasCreators) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: _CharacterCreatorsCard(creators: data.creators),
             ),
@@ -227,7 +227,7 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
               isIssuesLoading ||
               issueListAsync.hasError ||
               totalIssueCount > 0) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -336,8 +336,10 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
                           entityType: "team",
                           entityId: team.id,
                           name: team.name,
-                          width: 115,
-                          imageHeight: 105,
+                          width: 95,
+                          imageWidth: 84,
+                          imageHeight: 126,
+                          fit: BoxFit.cover,
                           onTap: () => context.pushRoute(
                             TeamDetailsRoute(teamId: team.id),
                           ),
@@ -350,7 +352,7 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
             ),
           ],
           if (hasUniverses) ...[
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,8 +375,10 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
                           entityType: "universe",
                           entityId: universe.id,
                           name: universe.name,
-                          width: 115,
-                          imageHeight: 105,
+                          width: 95,
+                          imageWidth: 84,
+                          imageHeight: 126,
+                          fit: BoxFit.cover,
                           onTap: () => context.pushRoute(
                             UniverseDetailsRoute(universeId: universe.id),
                           ),
@@ -386,7 +390,7 @@ class _CharacterDetailsScreenState extends ConsumerState<CharacterDetailsScreen>
               ),
             ),
           ],
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -415,7 +419,7 @@ class _CharacterCreatorsCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 136,
+          height: 122,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),

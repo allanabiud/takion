@@ -1,3 +1,4 @@
+import "dart:math" as math;
 import "dart:ui";
 
 import "package:auto_route/auto_route.dart";
@@ -353,11 +354,16 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
       );
     }
 
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final topPadding = MediaQuery.paddingOf(context).top;
+    final sheetTop = screenHeight * (1.0 - 0.60);
+    final headerBackdropHeight = math.max(350.0, sheetTop + 48);
+
     return Scaffold(
       body: Stack(
         children: [
           SizedBox(
-            height: 350,
+            height: headerBackdropHeight,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -402,32 +408,38 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                     ),
                   ),
                 ),
-                Center(
-                  child: IssueCoverCarousel(
-                    currentIssueId: _currentIssueId,
-                    currentImageUrl:
-                        _currentCoverUrl ??
-                        (isCurrentData ? issue.image : null),
-                    slideDirection: _slideDirection,
-                    previousIssueId: previousIssueId,
-                    nextIssueId: nextIssueId,
-                    onPrevious: previousIssueId == null
-                        ? null
-                        : () => _navigateToIssue(
-                            previousIssueId,
-                            direction: -1,
-                            targetCoverUrl: previousImageUrl,
-                          ),
-                    onNext: nextIssueId == null
-                        ? null
-                        : () => _navigateToIssue(
-                            nextIssueId,
-                            direction: 1,
-                            targetCoverUrl: nextImageUrl,
-                          ),
-                    onTapCover: isCurrentData
-                        ? () => _openCoverGallery(displayIssue)
-                        : null,
+                Positioned(
+                  top: topPadding + 6.0,
+                  bottom: (headerBackdropHeight - sheetTop) + 18.0,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: IssueCoverCarousel(
+                      currentIssueId: _currentIssueId,
+                      currentImageUrl:
+                          _currentCoverUrl ??
+                          (isCurrentData ? issue.image : null),
+                      slideDirection: _slideDirection,
+                      previousIssueId: previousIssueId,
+                      nextIssueId: nextIssueId,
+                      onPrevious: previousIssueId == null
+                          ? null
+                          : () => _navigateToIssue(
+                              previousIssueId,
+                              direction: -1,
+                              targetCoverUrl: previousImageUrl,
+                            ),
+                      onNext: nextIssueId == null
+                          ? null
+                          : () => _navigateToIssue(
+                              nextIssueId,
+                              direction: 1,
+                              targetCoverUrl: nextImageUrl,
+                            ),
+                      onTapCover: isCurrentData
+                          ? () => _openCoverGallery(displayIssue)
+                          : null,
+                    ),
                   ),
                 ),
                 Positioned(
