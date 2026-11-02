@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-11-02
+
+### Changed
+
+- Detail screen headers now display larger images for universes, teams, story arcs, publishers, imprints, characters, and creators, with tighter spacing above and below so the image occupies more of the header without feeling crowded.
+- Issue detail screen cover carousel now has a little more breathing room between the cover and the bottom sheet.
+- Entity card and list tile images now load at higher resolution so covers and thumbnails are sharper.
+- Reduced the gap after the Creators section in team and character detail screens.
+
 ## [2.1.0] - 2026-11-01
 
 ### Added
