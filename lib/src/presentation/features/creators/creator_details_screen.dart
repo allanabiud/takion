@@ -92,8 +92,8 @@ class _CreatorDetailsScreenState extends ConsumerState<CreatorDetailsScreen>
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
       circular: true,
-      heroWidth: 200,
-      heroHeight: 200,
+      heroWidth: 220,
+      heroHeight: 220,
       toTrailingHeaderAction: (d) => FavoriteToggleButton(
         isFavorite: isFavorite,
         onToggleFavorite: _toggleFavorite,
