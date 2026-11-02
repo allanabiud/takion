@@ -272,7 +272,7 @@ class DetailScreenShell<T> extends ConsumerWidget {
     final double effectiveHeroHeight;
 
     if (circular) {
-      final maxCircularSize = math.max(120.0, availableHeroHeight - 20.0);
+      final maxCircularSize = math.max(120.0, availableHeroHeight - 10.0);
       final size = math.min(math.min(heroWidth, heroHeight), maxCircularSize);
       effectiveHeroWidth = size;
       effectiveHeroHeight = size;
