@@ -1,8 +1,10 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:intl/intl.dart" show DateFormat;
 import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/presentation/features/library/providers/daily_read_activity_provider.dart";
+import "package:takion/src/presentation/features/library/widgets/day_read_history_sheet.dart";
 import "package:takion/src/presentation/shared/alerts/takion_alerts.dart";
 import "package:takion/src/presentation/shared/widgets/components.dart";
 
@@ -256,10 +258,12 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
   }
 
   void _onDayTap(DateTime date, int count) {
-    final formatted = DateFormatter.comicDate(date);
-    final message = count > 0
-        ? '$formatted - $count issue${count == 1 ? '' : 's'} read'
-        : "$formatted - No reads";
-    TakionAlerts.info(context, message);
+    if (count > 0) {
+      HapticFeedback.lightImpact();
+      showDayReadHistorySheet(context, date);
+    } else {
+      final formatted = DateFormatter.comicDate(date);
+      TakionAlerts.info(context, "$formatted - No reads");
+    }
   }
 }
