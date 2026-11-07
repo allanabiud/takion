@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 
 ButtonStyle detailHeaderIconButtonStyle(ThemeData theme) {
   return IconButton.styleFrom(
@@ -94,7 +95,10 @@ class FavoriteToggleButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: onToggleFavorite,
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              onToggleFavorite();
+            },
             child: const Icon(Icons.favorite),
           )
         : FilledButton.tonal(
@@ -107,7 +111,10 @@ class FavoriteToggleButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: onToggleFavorite,
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              onToggleFavorite();
+            },
             child: const Icon(Icons.favorite_border),
           );
 

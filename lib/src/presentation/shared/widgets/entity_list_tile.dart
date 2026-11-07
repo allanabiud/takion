@@ -1,3 +1,5 @@
+import "dart:math" as math;
+
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
@@ -42,8 +44,13 @@ class EntityListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final multiplier = math.max(2.5, dpr);
     final effectiveCacheWidth =
-        cacheWidth ?? (imageWidth.isFinite ? (imageWidth * 4).round() : 360);
+        cacheWidth ??
+        (imageWidth.isFinite
+            ? (imageWidth * multiplier).round().clamp(80, 400)
+            : 360);
     final effectiveCacheHeight = cacheHeight;
 
     var effectiveImageUrl = imageUrl;

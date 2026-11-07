@@ -422,6 +422,8 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                       slideDirection: _slideDirection,
                       previousIssueId: previousIssueId,
                       nextIssueId: nextIssueId,
+                      previousImageUrl: previousImageUrl,
+                      nextImageUrl: nextImageUrl,
                       onPrevious: previousIssueId == null
                           ? null
                           : () => _navigateToIssue(

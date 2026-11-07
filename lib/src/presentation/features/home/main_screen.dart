@@ -41,9 +41,14 @@ class MainScreenState extends ConsumerState<MainScreen>
         _animController.status == AnimationStatus.completed) {
       return;
     }
+    if (_animController.isAnimating) return;
+
     _overlayVisible = true;
-    _animController.forward();
     setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_overlayVisible) return;
+      _animController.forward(from: 0.0);
+    });
   }
 
   void _dismissSearch([VoidCallback? onComplete]) {
@@ -101,6 +106,7 @@ class MainScreenState extends ConsumerState<MainScreen>
       }
     });
     _searchController.addListener(_onSearchChanged);
+    ref.read(searchStateProvider);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
@@ -475,7 +481,7 @@ class MainScreenState extends ConsumerState<MainScreen>
   }
 
   void _scrollToSelectedChip({required bool animate}) {
-    if (!mounted || !_overlayVisible) return;
+    if (!mounted || !_overlayVisible || _animController.isAnimating) return;
     final target = ref.read(searchStateProvider).target;
     final key = _chipKeys[target];
     final context = key?.currentContext;
@@ -558,6 +564,8 @@ class MainScreenState extends ConsumerState<MainScreen>
                   message: "No search history.",
                 )
               : ListView.builder(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   itemCount: state.history.length,
                   itemBuilder: (context, index) {
                     final item = state.history[index];

@@ -73,9 +73,9 @@ class _PublisherDetailsScreenState extends ConsumerState<PublisherDetailsScreen>
       onRetry: () => refreshDetails(context),
       onShare: (d) => shareResourceUrl(context, d),
       onOpenInBrowser: (d) => openResourceUrlInBrowser(context, d),
-      heroWidth: 170,
-      heroHeight: 220,
-      heroFit: BoxFit.contain,
+      heroWidth: 160,
+      heroHeight: 240,
+      heroFit: BoxFit.cover,
       heroImageAlignment: Alignment.center,
       initialChildSize: 0.55,
       sheetContentBuilder: (context, d, ref) =>

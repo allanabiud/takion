@@ -43,17 +43,29 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   await NotificationService.instance.init();
   await PeriodicSyncManager.instance.init();
 
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 120 * 1024 * 1024;
+  PaintingBinding.instance.imageCache.maximumSize = 1000;
+
   final db = AppDatabase();
-  final metronToken = await db.settingsDao.getString("metron_api_token");
-  if (metronToken != null && metronToken.trim().isNotEmpty) {
-    await PeriodicSyncManager.instance.scheduleMetronSync(database: db);
-  }
-
-  // Clean up legacy cache header keys from sync_meta since remote_cache_entries now manages validators
-  await db.syncMetaDao.deleteByPrefix("cache_headers:");
-
   final cacheHeaderStore = CacheHeaderStore();
   await cacheHeaderStore.init(db);
+
+  // Defer non-critical startup sync check and legacy cache pruning post-first-frame
+  unawaited(() async {
+    try {
+      final metronToken = await db.settingsDao.getString("metron_api_token");
+      if (metronToken != null && metronToken.trim().isNotEmpty) {
+        await PeriodicSyncManager.instance.scheduleMetronSync(database: db);
+      }
+      await db.syncMetaDao.deleteByPrefix("cache_headers:");
+    } catch (e, st) {
+      AppLogger.warning(
+        "Deferred bootstrap tasks failed",
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }());
 
   runApp(
     ProviderScope(

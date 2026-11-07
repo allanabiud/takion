@@ -1,3 +1,5 @@
+import "dart:math" as math;
+
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
@@ -107,8 +109,11 @@ class SmartEntityImage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final multiplier = math.max(2.5, dpr);
     final effectiveCacheWidth =
-        cacheWidth ?? (width.isFinite ? (width * 4).round() : null);
+        cacheWidth ??
+        (width.isFinite ? (width * multiplier).round().clamp(80, 500) : null);
     final effectiveCacheHeight = cacheHeight;
 
     var effectiveImageUrl = imageUrl;

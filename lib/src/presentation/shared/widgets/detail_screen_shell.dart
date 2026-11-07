@@ -627,8 +627,10 @@ class DetailScreenShell<T> extends ConsumerWidget {
             child: content,
           );
 
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
         borderRadius: circular ? null : BorderRadius.circular(heroBorderRadius),
         shape: circular ? BoxShape.circle : BoxShape.rectangle,
         boxShadow: [

@@ -10,6 +10,8 @@ class IssueCoverCarousel extends StatefulWidget {
     required this.slideDirection,
     this.previousIssueId,
     this.nextIssueId,
+    this.previousImageUrl,
+    this.nextImageUrl,
     this.onPrevious,
     this.onNext,
     this.onTapCover,
@@ -23,6 +25,8 @@ class IssueCoverCarousel extends StatefulWidget {
   slideDirection; // 1 for next/right-to-left, -1 for previous/left-to-right, 0 for initial
   final int? previousIssueId;
   final int? nextIssueId;
+  final String? previousImageUrl;
+  final String? nextImageUrl;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
   final VoidCallback? onTapCover;
@@ -34,7 +38,7 @@ class IssueCoverCarousel extends StatefulWidget {
 }
 
 class _IssueCoverCarouselState extends State<IssueCoverCarousel>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _exitSlideAnimation;
   late Animation<double> _exitFadeAnimation;
@@ -43,11 +47,18 @@ class _IssueCoverCarouselState extends State<IssueCoverCarousel>
   late Animation<double> _enterFadeAnimation;
   late Animation<double> _enterScaleAnimation;
 
+  late AnimationController _dragSettleController;
+  late Animation<double> _dragSettleAnimation;
+
   late int _displayedIssueId;
   String? _displayedImageUrl;
   int? _outgoingIssueId;
   String? _outgoingImageUrl;
   int _activeDirection = 1;
+
+  double _dragOffset = 0.0;
+  bool _isDragging = false;
+  bool _navigatedViaDrag = false;
 
   @override
   void initState() {
@@ -60,6 +71,12 @@ class _IssueCoverCarouselState extends State<IssueCoverCarousel>
       vsync: this,
       duration: const Duration(milliseconds: 280),
     );
+
+    _dragSettleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _dragSettleAnimation = const AlwaysStoppedAnimation(0.0);
 
     _buildAnimations();
     _controller.value = 1.0;
@@ -131,6 +148,15 @@ class _IssueCoverCarouselState extends State<IssueCoverCarousel>
   void didUpdateWidget(IssueCoverCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.currentIssueId != oldWidget.currentIssueId) {
+      if (_navigatedViaDrag) {
+        _navigatedViaDrag = false;
+        _displayedIssueId = widget.currentIssueId;
+        _displayedImageUrl = widget.currentImageUrl;
+        _outgoingIssueId = null;
+        _outgoingImageUrl = null;
+        return;
+      }
+
       _outgoingIssueId = _displayedIssueId;
       _outgoingImageUrl = _displayedImageUrl;
       _displayedIssueId = widget.currentIssueId;
@@ -148,18 +174,100 @@ class _IssueCoverCarouselState extends State<IssueCoverCarousel>
   @override
   void dispose() {
     _controller.dispose();
+    _dragSettleController.dispose();
     super.dispose();
   }
 
-  void _handleSwipe(DragEndDetails details) {
-    final velocity = details.primaryVelocity ?? 0;
-    if (velocity < -200 && widget.nextIssueId != null) {
-      HapticFeedback.lightImpact();
-      widget.onNext?.call();
-    } else if (velocity > 200 && widget.previousIssueId != null) {
-      HapticFeedback.lightImpact();
-      widget.onPrevious?.call();
+  void _onHorizontalDragStart(DragStartDetails details) {
+    if (_controller.isAnimating || _dragSettleController.isAnimating) return;
+    _isDragging = true;
+    _dragOffset = 0.0;
+  }
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    if (!_isDragging) return;
+    final delta = details.primaryDelta ?? 0.0;
+    final nextAllowed = widget.nextIssueId != null;
+    final prevAllowed = widget.previousIssueId != null;
+
+    setState(() {
+      final newOffset = _dragOffset + delta;
+      if (newOffset < 0 && !nextAllowed) {
+        // Friction resistance when no next issue
+        _dragOffset += delta * 0.25;
+      } else if (newOffset > 0 && !prevAllowed) {
+        // Friction resistance when no previous issue
+        _dragOffset += delta * 0.25;
+      } else {
+        _dragOffset = newOffset;
+      }
+    });
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails details) {
+    if (!_isDragging) return;
+    _isDragging = false;
+
+    final velocity = details.primaryVelocity ?? 0.0;
+    final nextAllowed = widget.nextIssueId != null;
+    final prevAllowed = widget.previousIssueId != null;
+
+    final threshold = widget.width * 0.35;
+    final shouldAdvanceNext =
+        nextAllowed &&
+        (_dragOffset < -threshold || (velocity < -300 && _dragOffset < -20));
+    final shouldAdvancePrev =
+        prevAllowed &&
+        (_dragOffset > threshold || (velocity > 300 && _dragOffset > 20));
+
+    if (shouldAdvanceNext) {
+      _animateSettle(
+        targetOffset: -widget.width,
+        onComplete: () {
+          _navigatedViaDrag = true;
+          HapticFeedback.lightImpact();
+          widget.onNext?.call();
+        },
+      );
+    } else if (shouldAdvancePrev) {
+      _animateSettle(
+        targetOffset: widget.width,
+        onComplete: () {
+          _navigatedViaDrag = true;
+          HapticFeedback.lightImpact();
+          widget.onPrevious?.call();
+        },
+      );
+    } else {
+      _animateSettle(targetOffset: 0.0);
     }
+  }
+
+  void _onHorizontalDragCancel() {
+    if (!_isDragging) return;
+    _isDragging = false;
+    _animateSettle(targetOffset: 0.0);
+  }
+
+  void _animateSettle({
+    required double targetOffset,
+    VoidCallback? onComplete,
+  }) {
+    _dragSettleAnimation = Tween<double>(begin: _dragOffset, end: targetOffset)
+        .animate(
+          CurvedAnimation(
+            parent: _dragSettleController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    _dragSettleController.forward(from: 0.0).then((_) {
+      if (!mounted) return;
+      setState(() {
+        _dragOffset = 0.0;
+      });
+      onComplete?.call();
+    });
   }
 
   Widget _buildCoverCard({
@@ -215,12 +323,109 @@ class _IssueCoverCarouselState extends State<IssueCoverCarousel>
     );
   }
 
+  Widget _buildInteractiveCarouselContent(BuildContext context, double offset) {
+    final progress = (offset / widget.width).clamp(-1.0, 1.0);
+    final currentScale = (1.0 - 0.08 * progress.abs()).clamp(0.92, 1.0);
+    final currentOpacity = (1.0 - 0.3 * progress.abs()).clamp(0.0, 1.0);
+
+    return SizedBox(
+      width: widget.width,
+      height: widget.height,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          // Next issue peek/slide (when dragging left, offset < 0)
+          if (offset < 0 && widget.nextIssueId != null) ...[
+            Builder(
+              builder: (context) {
+                final nextOffset = (widget.width + 12) + offset;
+                final nextScale = (0.92 + 0.08 * (-progress)).clamp(0.92, 1.0);
+                final nextOpacity = (0.35 + 0.65 * (-progress)).clamp(0.0, 1.0);
+                return Transform.translate(
+                  offset: Offset(nextOffset, 0),
+                  child: Transform.scale(
+                    scale: nextScale,
+                    child: Opacity(
+                      opacity: nextOpacity,
+                      child: _buildCoverCard(
+                        context: context,
+                        issueId: widget.nextIssueId!,
+                        imageUrl: widget.nextImageUrl,
+                        isInteractive: false,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+          // Previous issue peek/slide (when dragging right, offset > 0)
+          if (offset > 0 && widget.previousIssueId != null) ...[
+            Builder(
+              builder: (context) {
+                final prevOffset = (-widget.width - 12) + offset;
+                final prevScale = (0.92 + 0.08 * progress).clamp(0.92, 1.0);
+                final prevOpacity = (0.35 + 0.65 * progress).clamp(0.0, 1.0);
+                return Transform.translate(
+                  offset: Offset(prevOffset, 0),
+                  child: Transform.scale(
+                    scale: prevScale,
+                    child: Opacity(
+                      opacity: prevOpacity,
+                      child: _buildCoverCard(
+                        context: context,
+                        issueId: widget.previousIssueId!,
+                        imageUrl: widget.previousImageUrl,
+                        isInteractive: false,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+          // Active current cover tracking finger
+          Transform.translate(
+            offset: Offset(offset, 0),
+            child: Transform.scale(
+              scale: currentScale,
+              child: Opacity(
+                opacity: currentOpacity,
+                child: _buildCoverCard(
+                  context: context,
+                  issueId: _displayedIssueId,
+                  imageUrl: _displayedImageUrl,
+                  isInteractive: true,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     Widget centerContent;
-    if (_outgoingIssueId != null) {
+    if (_isDragging ||
+        _dragSettleController.isAnimating ||
+        _dragOffset != 0.0) {
+      if (_dragSettleController.isAnimating) {
+        centerContent = AnimatedBuilder(
+          animation: _dragSettleAnimation,
+          builder: (context, _) => _buildInteractiveCarouselContent(
+            context,
+            _dragSettleAnimation.value,
+          ),
+        );
+      } else {
+        centerContent = _buildInteractiveCarouselContent(context, _dragOffset);
+      }
+    } else if (_outgoingIssueId != null) {
       centerContent = AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -282,7 +487,10 @@ class _IssueCoverCarouselState extends State<IssueCoverCarousel>
     }
 
     return GestureDetector(
-      onHorizontalDragEnd: _handleSwipe,
+      onHorizontalDragStart: _onHorizontalDragStart,
+      onHorizontalDragUpdate: _onHorizontalDragUpdate,
+      onHorizontalDragEnd: _onHorizontalDragEnd,
+      onHorizontalDragCancel: _onHorizontalDragCancel,
       behavior: HitTestBehavior.opaque,
       child: Center(
         child: Row(

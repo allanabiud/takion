@@ -1,3 +1,5 @@
+import "dart:math" as math;
+
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/common/string_extensions.dart";
@@ -41,10 +43,12 @@ class EntityCard extends ConsumerWidget {
     final effectiveImageWidth = imageWidth ?? (width ?? 100);
     final effectiveImageHeight = imageHeight ?? effectiveImageWidth;
 
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final multiplier = math.max(2.5, dpr);
     final effectiveCacheWidth =
         cacheWidth ??
         (effectiveImageWidth.isFinite
-            ? (effectiveImageWidth * 4).round()
+            ? (effectiveImageWidth * multiplier).round().clamp(100, 600)
             : 500);
     final effectiveCacheHeight = cacheHeight;
 

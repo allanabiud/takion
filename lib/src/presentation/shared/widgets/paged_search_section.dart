@@ -86,6 +86,8 @@ class _PagedSearchSectionState<T> extends ConsumerState<PagedSearchSection<T>> {
                   onRefresh: widget.onRefresh,
                   child: CustomScrollView(
                     controller: _scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       if (!widget.isFiltering)
@@ -120,6 +122,8 @@ class _PagedSearchSectionState<T> extends ConsumerState<PagedSearchSection<T>> {
                   onRefresh: widget.onRefresh,
                   child: CustomScrollView(
                     controller: _scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       if (!widget.isFiltering)
