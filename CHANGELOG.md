@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-11-07
+
+### Added
+
+- Tapping any date with read issues on the reading activity calendar heatmap opens a bottom sheet listing all issues read that day, complete with read counts, issue cover art, ratings, and timestamps.
+- Interactive issue cover carousel with real-time finger drag tracking, adjacent cover peeking, spring physics, and fast-fling snapping when navigating between series issues.
+- Subtle tactile haptic feedback when toggling favorites, switching reading history filters, changing calendar months, and navigating weeks.
+- Android 14+ system predictive back gesture support.
+
+### Changed
+
+- Home screen search bar opening transition is now instant and fluid on first launch without frame drops or skipped animation.
+- Publisher and imprint detail headers now display in styled rounded cards with background contrast matching universes, teams, and story arcs.
+- In-memory image caching now dynamically adapts to your device pixel density (DPR) with a 120 MB maximum allocation limit, reducing RAM usage and preventing out-of-memory spikes during long catalog browsing.
+- Soft keyboard now automatically dismisses when dragging through search results and history lists.
+- Cold start time improved by deferring non-critical startup sync tasks until after the first frame renders.
+
 ## [2.1.1] - 2026-11-02
 
 ### Changed
