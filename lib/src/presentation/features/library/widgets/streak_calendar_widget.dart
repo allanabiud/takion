@@ -31,6 +31,7 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
         _visibleMonth.isAtSameMomentAs(earliestMonth)) {
       return;
     }
+    HapticFeedback.lightImpact();
     setState(() {
       _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month - 1);
     });
@@ -41,6 +42,7 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
         _visibleMonth.isAtSameMomentAs(currentMonth)) {
       return;
     }
+    HapticFeedback.lightImpact();
     setState(() {
       _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + 1);
     });
@@ -258,6 +260,11 @@ class _StreakCalendarWidgetState extends ConsumerState<StreakCalendarWidget> {
   }
 
   void _onDayTap(DateTime date, int count) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    if (date.isAfter(today)) {
+      return;
+    }
     if (count > 0) {
       HapticFeedback.lightImpact();
       showDayReadHistorySheet(context, date);

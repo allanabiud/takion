@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
 import "package:takion/src/presentation/features/releases/providers/selected_week_provider.dart";
@@ -46,8 +47,10 @@ class WeekPickerBar extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 icon: const Icon(Icons.chevron_left),
                 tooltip: "Previous week",
-                onPressed: () =>
-                    ref.read(selectedWeekProvider.notifier).previousWeek(),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(selectedWeekProvider.notifier).previousWeek();
+                },
               ),
               IconButton(
                 iconSize: 20,
@@ -63,6 +66,7 @@ class WeekPickerBar extends ConsumerWidget {
                     lastDate: DateTime(2100),
                   );
                   if (picked != null) {
+                    HapticFeedback.lightImpact();
                     ref.read(selectedWeekProvider.notifier).setDate(picked);
                   }
                 },
@@ -73,8 +77,10 @@ class WeekPickerBar extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 icon: const Icon(Icons.chevron_right),
                 tooltip: "Next week",
-                onPressed: () =>
-                    ref.read(selectedWeekProvider.notifier).nextWeek(),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(selectedWeekProvider.notifier).nextWeek();
+                },
               ),
             ],
           ),

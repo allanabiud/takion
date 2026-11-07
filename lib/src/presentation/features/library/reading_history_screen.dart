@@ -1,5 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:intl/intl.dart";
 import "package:takion/src/core/constants/date_formatter.dart";
@@ -51,6 +52,7 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
 
   void _onFilterChanged(HistoryFilter newFilter) {
     if (_filter == newFilter) return;
+    HapticFeedback.selectionClick();
     setState(() {
       _filter = newFilter;
       _expandedKeys.clear();
@@ -59,6 +61,7 @@ class _ReadingHistoryScreenState extends ConsumerState<ReadingHistoryScreen> {
   }
 
   void _toggleGroup(String key) {
+    HapticFeedback.selectionClick();
     setState(() {
       if (_expandedKeys.contains(key)) {
         _expandedKeys.remove(key);
