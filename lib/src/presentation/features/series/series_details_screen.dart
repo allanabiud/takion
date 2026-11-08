@@ -1,15 +1,16 @@
 import "package:auto_route/auto_route.dart";
 import "package:cached_network_image/cached_network_image.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/core/router/app_router.gr.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/issues/issue_card.dart";
 import "package:takion/src/presentation/features/library/providers/favorites_provider.dart";
+import "package:takion/src/presentation/features/library/providers/pulls_provider.dart";
 import "package:takion/src/presentation/features/series/providers/series_cover_provider.dart";
 import "package:takion/src/presentation/features/series/providers/series_details_provider.dart";
 import "package:takion/src/presentation/features/series/providers/series_issue_list_provider.dart";
-import "package:takion/src/presentation/features/series/providers/subscriptions_provider.dart";
 import "package:takion/src/presentation/features/series/widgets/series_associated_card.dart";
 import "package:takion/src/presentation/features/series/widgets/series_genres_card.dart";
 import "package:takion/src/presentation/features/series/widgets/series_info_card.dart";
@@ -82,10 +83,14 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
   }
 
   bool _isUpdatingSubscription = false;
+  bool? _optimisticSubscribed;
+  bool? _optimisticFavorite;
 
   Future<void> _setSeriesSubscription(bool enabled) async {
     if (_isUpdatingSubscription) return;
+    HapticFeedback.lightImpact();
     setState(() {
+      _optimisticSubscribed = enabled;
       _isUpdatingSubscription = true;
     });
     try {
@@ -105,21 +110,15 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
           icon: Icons.notifications,
           actionLabel: "Undo",
           onUndo: () async {
-            if (enabled) {
-              await subscriptionRepository.unsubscribe(widget.seriesId);
-              await ref
-                  .read(pullListRepositoryProvider)
-                  .deleteEntriesBySeriesId(widget.seriesId);
-            } else {
-              await subscriptionRepository.subscribe(
-                metronSeriesId: widget.seriesId,
-              );
-            }
+            _setSeriesSubscription(!enabled);
           },
         );
       }
     } catch (error) {
       if (mounted) {
+        setState(() {
+          _optimisticSubscribed = null;
+        });
         TakionAlerts.error(context, "Failed to update subscription");
       }
     } finally {
@@ -131,15 +130,28 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
     }
   }
 
-  Future<void> _toggleFavorite() {
-    return toggleFavoriteWithUndo(
-      context,
-      isFavorite: ref.read(isSeriesFavoriteProvider(widget.seriesId).future),
-      toggle: () async {
-        final repository = ref.read(favoritesRepositoryProvider);
-        await repository.toggleSeriesFavorite(widget.seriesId);
-      },
-    );
+  Future<void> _toggleFavorite() async {
+    final dbFavorite =
+        ref.read(isSeriesFavoriteProvider(widget.seriesId)).asData?.value ==
+        true;
+    final current = _optimisticFavorite ?? dbFavorite;
+    final next = !current;
+    setState(() => _optimisticFavorite = next);
+
+    try {
+      await toggleFavoriteWithUndo(
+        context,
+        isFavorite: Future.value(current),
+        toggle: () async {
+          final repository = ref.read(favoritesRepositoryProvider);
+          await repository.toggleSeriesFavorite(widget.seriesId);
+        },
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() => _optimisticFavorite = current);
+      }
+    }
   }
 
   @override
@@ -148,14 +160,18 @@ class _SeriesDetailsScreenState extends ConsumerState<SeriesDetailsScreen>
     final coverImageAsync = ref.watch(
       seriesCoverImageProvider(widget.seriesId),
     );
-    final isSubscribed = ref.watch(
-      subscribedSeriesIdsSetProvider.select(
-        (set) => set.contains(widget.seriesId),
-      ),
+    final subscriptionAsync = ref.watch(
+      seriesSubscriptionProvider(widget.seriesId),
     );
-    final isFavorite =
+    final dbSubscribed = subscriptionAsync.asData?.value?.isActive ?? false;
+    final isSubscribed = _optimisticSubscribed ?? dbSubscribed;
+    final dbFavorite =
         ref.watch(isSeriesFavoriteProvider(widget.seriesId)).asData?.value ==
         true;
+    if (_optimisticFavorite != null && _optimisticFavorite == dbFavorite) {
+      _optimisticFavorite = null;
+    }
+    final isFavorite = _optimisticFavorite ?? dbFavorite;
     final isSubscriptionLoading = _isUpdatingSubscription;
 
     return Scaffold(

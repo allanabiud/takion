@@ -3,10 +3,6 @@ import "package:takion/src/core/logging/app_logger.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_my_details_provider.dart";
 import "package:takion/src/presentation/features/issues/providers/issue_series_resolver.dart";
-import "package:takion/src/presentation/features/library/providers/category_stats_provider.dart";
-import "package:takion/src/presentation/features/library/providers/collection_stats_provider.dart";
-import "package:takion/src/presentation/features/library/providers/library_basic_stats_provider.dart";
-import "package:takion/src/presentation/features/library/providers/library_entity_stats_provider.dart";
 import "package:takion/src/presentation/features/settings/providers/settings_provider.dart";
 import "package:takion/src/presentation/providers/providers.dart";
 
@@ -114,130 +110,132 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
         final readAt = dateRead ?? DateTime.now().toUtc();
         final readLogs = await libraryRepository.getReadLogsByIssueId(_issueId);
 
-        // Enforce strict mutual exclusivity across collection and wishlist
-        if (targetIsCollected) {
-          await ref
-              .read(wishlistRepositoryProvider)
-              .removeFromWishListByIssueId(_issueId);
-        } else if (targetIsWishlisted) {
-          if (wasCollected) {
-            await libraryRepository.deleteItemByIssueId(_issueId);
-          }
-          await ref
-              .read(wishlistRepositoryProvider)
-              .addToWishList(
-                issueId: _issueId,
-                seriesId: seriesId,
-                seriesName: _context?.seriesName,
-                issueNumber: _context?.issueNumber,
-                imageUrl: _context?.imageUrl,
-              );
-        }
+        // Resolve metadata before opening database transaction so network is not held inside tx.
+        final metadata = await _resolveIssueMetadata();
+        final db = ref.read(driftDatabaseProvider);
 
-        if (!targetIsCollected && !targetIsRead && !targetIsWishlisted) {
-          if (existing != null) {
-            await libraryRepository.deleteItemByIssueId(_issueId);
+        await db.transaction(() async {
+          // Enforce strict mutual exclusivity across collection and wishlist
+          if (targetIsCollected) {
+            await ref
+                .read(wishlistRepositoryProvider)
+                .removeFromWishListByIssueId(_issueId);
+          } else if (targetIsWishlisted) {
+            if (wasCollected) {
+              await libraryRepository.deleteItemByIssueId(_issueId);
+            }
+            await ref
+                .read(wishlistRepositoryProvider)
+                .addToWishList(
+                  issueId: _issueId,
+                  seriesId: seriesId,
+                  seriesName: _context?.seriesName,
+                  issueNumber: _context?.issueNumber,
+                  imageUrl: _context?.imageUrl,
+                );
           }
-          await ref
-              .read(wishlistRepositoryProvider)
-              .removeFromWishListByIssueId(_issueId);
+
+          if (!targetIsCollected && !targetIsRead && !targetIsWishlisted) {
+            if (existing != null) {
+              await libraryRepository.deleteItemByIssueId(_issueId);
+            }
+            await ref
+                .read(wishlistRepositoryProvider)
+                .removeFromWishListByIssueId(_issueId);
+            await _recordActivityEvents(
+              seriesId: seriesId,
+              wasCollected: wasCollected,
+              isCollected: false,
+              wasWishlisted: wasWishlisted,
+              isWishlisted: false,
+              wasRead: wasRead,
+              isRead: false,
+              wasRating: existing?.rating,
+              isRating: null,
+              resolvedMetadata: metadata,
+            );
+            AppLogger.info("Scrobble: deleted item for issue #$_issueId");
+            return;
+          }
+
+          final effectiveRating = (rating != null && rating > 0)
+              ? rating
+              : (rating == null ? existing?.rating : null);
+          final sanitizedRating =
+              (effectiveRating != null && effectiveRating > 0)
+              ? effectiveRating
+              : null;
+
+          await libraryRepository.upsertItem(
+            metronIssueId: _issueId,
+            metronSeriesId: seriesId,
+            ownershipStatus: targetIsCollected
+                ? LibraryOwnershipStatus.owned
+                : (targetIsWishlisted
+                      ? LibraryOwnershipStatus.wishlist
+                      : LibraryOwnershipStatus.notOwned),
+            isRead: targetIsRead,
+            rating: targetIsRead ? sanitizedRating : null,
+            firstReadAt: targetIsRead
+                ? (existing?.firstReadAt ?? readAt)
+                : (() {
+                    if (existing?.firstReadAt == null) return null;
+                    final remaining = readLogs
+                        .where(
+                          (log) =>
+                              log.readAt.toUtc().toIso8601String() !=
+                              existing!.firstReadAt!.toUtc().toIso8601String(),
+                        )
+                        .toList();
+                    if (remaining.isEmpty) return null;
+                    remaining.sort((a, b) => a.readAt.compareTo(b.readAt));
+                    return remaining.first.readAt;
+                  })(),
+            format: existing?.format ?? _resolveDefaultFormat(),
+            acquiredOn:
+                existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
+          );
+
+          if (targetIsRead && !wasRead) {
+            await libraryRepository.addReadLog(
+              metronIssueId: _issueId,
+              readAt: readAt,
+              rating: sanitizedRating,
+            );
+            AppLogger.info(
+              "Scrobble: created read log for issue #$_issueId at $readAt",
+            );
+          } else if (!targetIsRead &&
+              wasRead &&
+              existing?.firstReadAt != null) {
+            final firstLog = readLogs
+                .where(
+                  (log) =>
+                      log.readAt.toUtc().toIso8601String() ==
+                      existing!.firstReadAt!.toUtc().toIso8601String(),
+                )
+                .cast()
+                .toList();
+            if (firstLog.isNotEmpty) {
+              await libraryRepository.deleteReadLogById(firstLog.first.id);
+              AppLogger.info("Scrobble: deleted read log for issue #$_issueId");
+            }
+          }
           await _recordActivityEvents(
             seriesId: seriesId,
             wasCollected: wasCollected,
-            isCollected: false,
+            isCollected: targetIsCollected,
             wasWishlisted: wasWishlisted,
-            isWishlisted: false,
+            isWishlisted: targetIsWishlisted,
             wasRead: wasRead,
-            isRead: false,
+            isRead: targetIsRead,
             wasRating: existing?.rating,
-            isRating: null,
+            isRating: rating,
+            resolvedMetadata: metadata,
           );
-          AppLogger.info("Scrobble: deleted item for issue #$_issueId");
-          ref.invalidate(collectionStatsProvider);
-          ref.invalidate(categoryInsightsProvider);
-          ref.invalidate(libraryBasicStatsProvider);
-          ref.invalidate(libraryEntityStatsProvider);
-          ref.invalidate(libraryReadingTrendsProvider);
-          ref.invalidate(libraryRecentlyFinishedProvider);
-          ref.invalidate(issueMyDetailsProvider(_issueId));
-          return;
-        }
-
-        final effectiveRating = (rating != null && rating > 0)
-            ? rating
-            : (rating == null ? existing?.rating : null);
-        final sanitizedRating = (effectiveRating != null && effectiveRating > 0)
-            ? effectiveRating
-            : null;
-
-        await libraryRepository.upsertItem(
-          metronIssueId: _issueId,
-          metronSeriesId: seriesId,
-          ownershipStatus: targetIsCollected
-              ? LibraryOwnershipStatus.owned
-              : (targetIsWishlisted
-                    ? LibraryOwnershipStatus.wishlist
-                    : LibraryOwnershipStatus.notOwned),
-          isRead: targetIsRead,
-          rating: targetIsRead ? sanitizedRating : null,
-          firstReadAt: targetIsRead
-              ? (existing?.firstReadAt ?? readAt)
-              : (() {
-                  if (existing?.firstReadAt == null) return null;
-                  final remaining = readLogs
-                      .where(
-                        (log) =>
-                            log.readAt.toUtc().toIso8601String() !=
-                            existing!.firstReadAt!.toUtc().toIso8601String(),
-                      )
-                      .toList();
-                  if (remaining.isEmpty) return null;
-                  remaining.sort((a, b) => a.readAt.compareTo(b.readAt));
-                  return remaining.first.readAt;
-                })(),
-          format: existing?.format ?? _resolveDefaultFormat(),
-          acquiredOn:
-              existing?.acquiredOn ?? dateRead ?? DateTime.now().toUtc(),
-        );
-
-        if (targetIsRead && !wasRead) {
-          await libraryRepository.addReadLog(
-            metronIssueId: _issueId,
-            readAt: readAt,
-            rating: sanitizedRating,
-          );
-          AppLogger.info(
-            "Scrobble: created read log for issue #$_issueId at $readAt",
-          );
-        } else if (!targetIsRead && wasRead && existing?.firstReadAt != null) {
-          final firstLog = readLogs
-              .where(
-                (log) =>
-                    log.readAt.toUtc().toIso8601String() ==
-                    existing!.firstReadAt!.toUtc().toIso8601String(),
-              )
-              .cast()
-              .toList();
-          if (firstLog.isNotEmpty) {
-            await libraryRepository.deleteReadLogById(firstLog.first.id);
-            AppLogger.info("Scrobble: deleted read log for issue #$_issueId");
-          }
-        }
-        await _recordActivityEvents(
-          seriesId: seriesId,
-          wasCollected: wasCollected,
-          isCollected: targetIsCollected,
-          wasWishlisted: wasWishlisted,
-          isWishlisted: targetIsWishlisted,
-          wasRead: wasRead,
-          isRead: targetIsRead,
-          wasRating: existing?.rating,
-          isRating: rating,
-        );
+        });
 
         AppLogger.info("Scrobble completed for issue #$_issueId");
-        ref.invalidate(collectionStatsProvider);
-        ref.invalidate(categoryInsightsProvider);
         ref.invalidate(issueMyDetailsProvider(_issueId));
       } finally {
         keepAlive.close();
@@ -255,8 +253,9 @@ class ScrobbleIssueController extends Notifier<AsyncValue<void>> {
     required bool isRead,
     int? wasRating,
     int? isRating,
+    _IssueMetadata? resolvedMetadata,
   }) async {
-    final metadata = await _resolveIssueMetadata();
+    final metadata = resolvedMetadata ?? await _resolveIssueMetadata();
     if (metadata == null) return;
 
     final repository = ref.read(activityRepositoryProvider);

@@ -79,99 +79,104 @@ class BulkScrobbleController extends Notifier<AsyncValue<void>> {
       try {
         final libraryRepository = ref.read(libraryRepositoryProvider);
         final activityRepository = ref.read(activityRepositoryProvider);
+        final db = ref.read(driftDatabaseProvider);
         final defaultFormat = _resolveDefaultFormat();
         final now = DateTime.now().toUtc();
         final readAt = dateRead ?? now;
         final readEventsToAdd = <LibraryActivityEvent>[];
 
-        for (final issueId in issueIds) {
-          final existing = await libraryRepository.getItemByIssueId(issueId);
-          final ctx = issueContexts?[issueId];
-          final seriesId = await resolveIssueSeriesId(
-            ref,
-            issueId,
-            existingSeriesId: ctx?.seriesId ?? existing?.metronSeriesId,
-          );
+        await db.transaction(() async {
+          for (final issueId in issueIds) {
+            final existing = await libraryRepository.getItemByIssueId(issueId);
+            final ctx = issueContexts?[issueId];
+            final seriesId = await resolveIssueSeriesId(
+              ref,
+              issueId,
+              existingSeriesId: ctx?.seriesId ?? existing?.metronSeriesId,
+            );
 
-          if (seriesId == null || seriesId <= 0) continue;
+            if (seriesId == null || seriesId <= 0) continue;
 
-          final wasCollected =
-              existing?.ownershipStatus == LibraryOwnershipStatus.owned;
-          final wasWishlisted =
-              existing?.ownershipStatus == LibraryOwnershipStatus.wishlist;
+            final wasCollected =
+                existing?.ownershipStatus == LibraryOwnershipStatus.owned;
+            final wasWishlisted =
+                existing?.ownershipStatus == LibraryOwnershipStatus.wishlist;
 
-          final targetIsRead =
-              markAsRead ?? (dateRead != null || (existing?.isRead ?? false));
-          final targetIsCollected = wasCollected; // Keep existing status.
-          final targetIsWishlisted = targetIsCollected ? false : wasWishlisted;
-          final wasRead = existing?.isRead ?? false;
+            final targetIsRead =
+                markAsRead ?? (dateRead != null || (existing?.isRead ?? false));
+            final targetIsCollected = wasCollected; // Keep existing status.
+            final targetIsWishlisted = targetIsCollected
+                ? false
+                : wasWishlisted;
+            final wasRead = existing?.isRead ?? false;
 
-          await libraryRepository.upsertItem(
-            metronIssueId: issueId,
-            metronSeriesId: seriesId,
-            ownershipStatus: targetIsCollected
-                ? LibraryOwnershipStatus.owned
-                : (targetIsWishlisted
-                      ? LibraryOwnershipStatus.wishlist
-                      : LibraryOwnershipStatus.notOwned),
-            isRead: targetIsRead,
-            rating: targetIsRead ? existing?.rating : null,
-            firstReadAt: targetIsRead
-                ? (existing?.firstReadAt ?? readAt)
-                : existing?.firstReadAt,
-            format: existing?.format ?? defaultFormat,
-            acquiredOn: existing?.acquiredOn ?? dateRead ?? now,
-          );
-
-          if (targetIsRead && !wasRead) {
-            await libraryRepository.addReadLog(
+            await libraryRepository.upsertItem(
               metronIssueId: issueId,
-              readAt: readAt,
+              metronSeriesId: seriesId,
+              ownershipStatus: targetIsCollected
+                  ? LibraryOwnershipStatus.owned
+                  : (targetIsWishlisted
+                        ? LibraryOwnershipStatus.wishlist
+                        : LibraryOwnershipStatus.notOwned),
+              isRead: targetIsRead,
+              rating: targetIsRead ? existing?.rating : null,
+              firstReadAt: targetIsRead
+                  ? (existing?.firstReadAt ?? readAt)
+                  : existing?.firstReadAt,
+              format: existing?.format ?? defaultFormat,
+              acquiredOn: existing?.acquiredOn ?? dateRead ?? now,
             );
-            final meta = await _resolveIssueMetadata(issueId, ctx);
-            readEventsToAdd.add(
-              LibraryActivityEvent(
-                id: "act-read-$issueId-${readAt.microsecondsSinceEpoch}",
-                userId: "local-user",
-                type: ActivityEventType.read,
-                issueId: issueId,
-                seriesId: seriesId,
-                seriesName: meta.seriesName,
-                issueNumber: meta.issueNumber,
-                imageUrl: meta.imageUrl,
-                timestamp: readAt,
-              ),
-            );
-          } else if (!targetIsRead &&
-              wasRead &&
-              existing?.firstReadAt != null) {
-            final readLogs = await libraryRepository.getReadLogsByIssueId(
-              issueId,
-            );
-            final firstLog = readLogs
-                .where(
-                  (log) =>
-                      log.readAt.toUtc().toIso8601String() ==
-                      existing!.firstReadAt!.toUtc().toIso8601String(),
-                )
-                .cast()
-                .toList();
-            if (firstLog.isNotEmpty) {
-              await libraryRepository.deleteReadLogById(firstLog.first.id);
-            }
-            await activityRepository.deleteEventsByIssueIds([
-              issueId,
-            ], type: ActivityEventType.read);
-          }
-        }
 
-        if (readEventsToAdd.isNotEmpty) {
-          final batchId = "batch_${DateTime.now().millisecondsSinceEpoch}";
-          await activityRepository.batchAddEvents(
-            readEventsToAdd,
-            batchId: batchId,
-          );
-        }
+            if (targetIsRead && !wasRead) {
+              await libraryRepository.addReadLog(
+                metronIssueId: issueId,
+                readAt: readAt,
+              );
+              final meta = await _resolveIssueMetadata(issueId, ctx);
+              readEventsToAdd.add(
+                LibraryActivityEvent(
+                  id: "act-read-$issueId-${readAt.microsecondsSinceEpoch}",
+                  userId: "local-user",
+                  type: ActivityEventType.read,
+                  issueId: issueId,
+                  seriesId: seriesId,
+                  seriesName: meta.seriesName,
+                  issueNumber: meta.issueNumber,
+                  imageUrl: meta.imageUrl,
+                  timestamp: readAt,
+                ),
+              );
+            } else if (!targetIsRead &&
+                wasRead &&
+                existing?.firstReadAt != null) {
+              final readLogs = await libraryRepository.getReadLogsByIssueId(
+                issueId,
+              );
+              final firstLog = readLogs
+                  .where(
+                    (log) =>
+                        log.readAt.toUtc().toIso8601String() ==
+                        existing!.firstReadAt!.toUtc().toIso8601String(),
+                  )
+                  .cast()
+                  .toList();
+              if (firstLog.isNotEmpty) {
+                await libraryRepository.deleteReadLogById(firstLog.first.id);
+              }
+              await activityRepository.deleteEventsByIssueIds([
+                issueId,
+              ], type: ActivityEventType.read);
+            }
+          }
+
+          if (readEventsToAdd.isNotEmpty) {
+            final batchId = "batch_${DateTime.now().millisecondsSinceEpoch}";
+            await activityRepository.batchAddEvents(
+              readEventsToAdd,
+              batchId: batchId,
+            );
+          }
+        });
       } finally {
         keepAlive.close();
       }

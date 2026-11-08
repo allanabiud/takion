@@ -266,7 +266,11 @@ class LocalLibraryRepository implements LibraryRepository {
     }
 
     final now = DateTime.now().toUtc();
-    final syncStatus = existing?.syncStatus ?? "pending";
+    final syncStatus =
+        existing?.syncStatus ??
+        (ownershipStatus == LibraryOwnershipStatus.owned
+            ? "pending"
+            : "synced");
     final item = LibraryItem(
       id: existing?.id ?? _idForIssue(metronIssueId),
       userId: _localUserId,

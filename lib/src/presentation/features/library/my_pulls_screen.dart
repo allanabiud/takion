@@ -23,49 +23,52 @@ class MyPullsScreen extends ConsumerWidget {
         pullsIssuesForWeekProvider(selectedDate).future,
       );
       final libraryRepository = ref.read(libraryRepositoryProvider);
+      final activityRepo = ref.read(activityRepositoryProvider);
+      final db = ref.read(driftDatabaseProvider);
       var affected = 0;
 
-      for (final issue in pulls) {
-        final issueId = issue.id;
-        final seriesId = issue.series?.id;
-        if (issueId == null || seriesId == null) continue;
+      await db.transaction(() async {
+        for (final issue in pulls) {
+          final issueId = issue.id;
+          final seriesId = issue.series?.id;
+          if (issueId == null || seriesId == null) continue;
 
-        final existing = await libraryRepository.getItemByIssueId(issueId);
-        final isCollected =
-            existing?.ownershipStatus == LibraryOwnershipStatus.owned;
-        if (isCollected) continue;
+          final existing = await libraryRepository.getItemByIssueId(issueId);
+          final isCollected =
+              existing?.ownershipStatus == LibraryOwnershipStatus.owned;
+          if (isCollected) continue;
 
-        await libraryRepository.upsertItem(
-          metronIssueId: issueId,
-          metronSeriesId: seriesId,
-          ownershipStatus: LibraryOwnershipStatus.owned,
-          isRead: existing?.isRead ?? false,
-          rating: existing?.rating,
-          purchaseDate: existing?.purchaseDate,
-          pricePaid: existing?.pricePaid,
-          quantityOwned: existing?.quantityOwned ?? 1,
-          format: existing?.format ?? LibraryItemFormat.print,
-          firstReadAt: existing?.firstReadAt,
-          conditionGrade: existing?.conditionGrade,
-          acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
-          notes: existing?.notes,
-        );
-        final activityRepo = ref.read(activityRepositoryProvider);
-        await activityRepo.addEvent(
-          LibraryActivityEvent(
-            id: "act-col-$issueId-${DateTime.now().microsecondsSinceEpoch}",
-            userId: "local-user",
-            type: ActivityEventType.collected,
-            issueId: issueId,
-            seriesId: seriesId,
-            seriesName: issue.series?.name ?? "Unknown Series",
-            issueNumber: issue.number,
-            imageUrl: issue.image,
-            timestamp: DateTime.now().toUtc(),
-          ),
-        );
-        affected++;
-      }
+          await libraryRepository.upsertItem(
+            metronIssueId: issueId,
+            metronSeriesId: seriesId,
+            ownershipStatus: LibraryOwnershipStatus.owned,
+            isRead: existing?.isRead ?? false,
+            rating: existing?.rating,
+            purchaseDate: existing?.purchaseDate,
+            pricePaid: existing?.pricePaid,
+            quantityOwned: existing?.quantityOwned ?? 1,
+            format: existing?.format ?? LibraryItemFormat.print,
+            firstReadAt: existing?.firstReadAt,
+            conditionGrade: existing?.conditionGrade,
+            acquiredOn: existing?.acquiredOn ?? DateTime.now().toUtc(),
+            notes: existing?.notes,
+          );
+          await activityRepo.addEvent(
+            LibraryActivityEvent(
+              id: "act-col-$issueId-${DateTime.now().microsecondsSinceEpoch}",
+              userId: "local-user",
+              type: ActivityEventType.collected,
+              issueId: issueId,
+              seriesId: seriesId,
+              seriesName: issue.series?.name ?? "Unknown Series",
+              issueNumber: issue.number,
+              imageUrl: issue.image,
+              timestamp: DateTime.now().toUtc(),
+            ),
+          );
+          affected++;
+        }
+      });
 
       if (!context.mounted) return;
       TakionAlerts.success(context, "$affected Added to Collection");
@@ -89,50 +92,56 @@ class MyPullsScreen extends ConsumerWidget {
         pullsIssuesForWeekProvider(selectedDate).future,
       );
       final libraryRepository = ref.read(libraryRepositoryProvider);
+      final activityRepo = ref.read(activityRepositoryProvider);
+      final db = ref.read(driftDatabaseProvider);
       var affected = 0;
 
-      for (final issue in pulls) {
-        final issueId = issue.id;
-        final seriesId = issue.series?.id;
-        if (issueId == null || seriesId == null) continue;
+      await db.transaction(() async {
+        for (final issue in pulls) {
+          final issueId = issue.id;
+          final seriesId = issue.series?.id;
+          if (issueId == null || seriesId == null) continue;
 
-        final existing = await libraryRepository.getItemByIssueId(issueId);
-        if (existing?.isRead == true) continue;
+          final existing = await libraryRepository.getItemByIssueId(issueId);
+          if (existing?.isRead == true) continue;
 
-        final now = DateTime.now().toUtc();
-        await libraryRepository.upsertItem(
-          metronIssueId: issueId,
-          metronSeriesId: seriesId,
-          ownershipStatus:
-              existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
-          isRead: true,
-          rating: existing?.rating,
-          purchaseDate: existing?.purchaseDate,
-          pricePaid: existing?.pricePaid,
-          quantityOwned: existing?.quantityOwned ?? 1,
-          format: existing?.format ?? LibraryItemFormat.print,
-          firstReadAt: existing?.firstReadAt ?? now,
-          conditionGrade: existing?.conditionGrade,
-          acquiredOn: existing?.acquiredOn ?? now,
-          notes: existing?.notes,
-        );
-        await libraryRepository.addReadLog(metronIssueId: issueId, readAt: now);
-        final activityRepo = ref.read(activityRepositoryProvider);
-        await activityRepo.addEvent(
-          LibraryActivityEvent(
-            id: "act-read-$issueId-${now.microsecondsSinceEpoch}",
-            userId: "local-user",
-            type: ActivityEventType.read,
-            issueId: issueId,
-            seriesId: seriesId,
-            seriesName: issue.series?.name ?? "Unknown Series",
-            issueNumber: issue.number,
-            imageUrl: issue.image,
-            timestamp: now,
-          ),
-        );
-        affected++;
-      }
+          final now = DateTime.now().toUtc();
+          await libraryRepository.upsertItem(
+            metronIssueId: issueId,
+            metronSeriesId: seriesId,
+            ownershipStatus:
+                existing?.ownershipStatus ?? LibraryOwnershipStatus.notOwned,
+            isRead: true,
+            rating: existing?.rating,
+            purchaseDate: existing?.purchaseDate,
+            pricePaid: existing?.pricePaid,
+            quantityOwned: existing?.quantityOwned ?? 1,
+            format: existing?.format ?? LibraryItemFormat.print,
+            firstReadAt: existing?.firstReadAt ?? now,
+            conditionGrade: existing?.conditionGrade,
+            acquiredOn: existing?.acquiredOn ?? now,
+            notes: existing?.notes,
+          );
+          await libraryRepository.addReadLog(
+            metronIssueId: issueId,
+            readAt: now,
+          );
+          await activityRepo.addEvent(
+            LibraryActivityEvent(
+              id: "act-read-$issueId-${now.microsecondsSinceEpoch}",
+              userId: "local-user",
+              type: ActivityEventType.read,
+              issueId: issueId,
+              seriesId: seriesId,
+              seriesName: issue.series?.name ?? "Unknown Series",
+              issueNumber: issue.number,
+              imageUrl: issue.image,
+              timestamp: now,
+            ),
+          );
+          affected++;
+        }
+      });
 
       if (!context.mounted) return;
       TakionAlerts.success(context, "$affected Marked as Read");

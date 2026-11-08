@@ -228,6 +228,24 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> {
     return query.map((row) => row.read(count) ?? 0).watchSingle();
   }
 
+  Stream<int> watchFailedCount({String? accountId}) {
+    final count = attachedDatabase.outboxOperations.id.count();
+    final query = selectOnly(attachedDatabase.outboxOperations)
+      ..addColumns([count])
+      ..where(
+        attachedDatabase.outboxOperations.state.isIn(const [
+          OutboxState.blocked,
+          OutboxState.conflict,
+        ]),
+      );
+    if (accountId != null) {
+      query.where(
+        attachedDatabase.outboxOperations.accountId.equals(accountId),
+      );
+    }
+    return query.map((row) => row.read(count) ?? 0).watchSingle();
+  }
+
   /// One-shot queue telemetry for the diagnostics sheet: pending operation
   /// count and the age of the oldest pending operation. Unlike
   /// [watchPendingCount] this does not subscribe to table changes.

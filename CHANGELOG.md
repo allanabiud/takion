@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-11-08
+
+### Added
+
+- Instant optimistic UI state updates and tactile haptic feedback when toggling series subscriptions, favorites, and selecting sort preferences.
+- Debounced rating updates (100ms) with auto-save in the scrobble sheet, providing instant responsive feedback without manual save buttons.
+
+### Fixed
+
+- Fixed rapid multi-flickering across library and detail views caused by non-atomic database writes and redundant stream invalidations.
+- Fixed series subscription toggle taking too long to reflect in the UI.
+- Fixed scrobble sheet unresponsive or lagging writes.
+- Fixed Metron sync triggering on every app resume or focus when switching apps or opening the notification shade.
+- Fixed sync overlay ("Changes queued to sync" cloud badge) persisting indefinitely on modified comics after sync.
+- Fixed Metron sync in settings showing "No changes to sync" when offline outbox mutations were queued.
+- Wrapped batch weekly pull actions, bulk scrobble, and reading list additions in atomic database transactions.
+
 ## [2.2.0] - 2026-11-07
 
 ### Added

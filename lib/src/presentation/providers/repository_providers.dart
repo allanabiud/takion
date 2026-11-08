@@ -510,13 +510,13 @@ final migrationNeededProvider = FutureProvider<bool>((ref) async {
 });
 
 final pendingOfflineWritesCountProvider = StreamProvider<int>((ref) {
-  final queue = ref.watch(offlineWriteQueueProvider);
-  return queue.watchPendingCount();
+  final db = ref.watch(driftDatabaseProvider);
+  return db.outboxDao.watchPendingCount();
 });
 
 final failedOfflineWritesCountProvider = StreamProvider<int>((ref) {
-  final queue = ref.watch(offlineWriteQueueProvider);
-  return queue.watchFailedCount();
+  final db = ref.watch(driftDatabaseProvider);
+  return db.outboxDao.watchFailedCount();
 });
 
 final cachePinningServiceProvider = Provider<CachePinningService>((ref) {

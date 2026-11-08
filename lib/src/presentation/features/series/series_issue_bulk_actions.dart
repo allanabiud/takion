@@ -307,39 +307,41 @@ Future<void> applySeriesIssueBulkAction({
       }
     }
 
-    if (itemsToUpsert.isNotEmpty) {
-      await libraryRepository.batchUpsertItems(seriesId, itemsToUpsert);
-    }
-    if (eventsToAdd.isNotEmpty) {
-      final batchId = "batch_${DateTime.now().millisecondsSinceEpoch}";
-      await activityRepository.batchAddEvents(eventsToAdd, batchId: batchId);
-    }
-    if (readLogsToAdd.isNotEmpty) {
-      await libraryRepository.batchAddReadLogs(readLogsToAdd);
-    }
-    if (issueIdsToDelete.isNotEmpty) {
-      await libraryRepository.batchDeleteItemsByIssueId(issueIdsToDelete);
-    }
-    if (readLogItemIdsToDelete.isNotEmpty) {
-      await libraryRepository.batchDeleteReadLogsByItemIds(
-        readLogItemIdsToDelete,
-      );
-    }
+    await ref.read(driftDatabaseProvider).transaction(() async {
+      if (itemsToUpsert.isNotEmpty) {
+        await libraryRepository.batchUpsertItems(seriesId, itemsToUpsert);
+      }
+      if (eventsToAdd.isNotEmpty) {
+        final batchId = "batch_${DateTime.now().millisecondsSinceEpoch}";
+        await activityRepository.batchAddEvents(eventsToAdd, batchId: batchId);
+      }
+      if (readLogsToAdd.isNotEmpty) {
+        await libraryRepository.batchAddReadLogs(readLogsToAdd);
+      }
+      if (issueIdsToDelete.isNotEmpty) {
+        await libraryRepository.batchDeleteItemsByIssueId(issueIdsToDelete);
+      }
+      if (readLogItemIdsToDelete.isNotEmpty) {
+        await libraryRepository.batchDeleteReadLogsByItemIds(
+          readLogItemIdsToDelete,
+        );
+      }
 
-    if (operation == SeriesIssueBulkOperation.removeFromCollection &&
-        issueIdsToDelete.isNotEmpty) {
-      await activityRepository.deleteEventsByIssueIds(
-        issueIdsToDelete,
-        type: ActivityEventType.collected,
-      );
-    }
-    if (operation == SeriesIssueBulkOperation.markAsUnread &&
-        affectedIssueIds.isNotEmpty) {
-      await activityRepository.deleteEventsByIssueIds(
-        affectedIssueIds.toList(),
-        type: ActivityEventType.read,
-      );
-    }
+      if (operation == SeriesIssueBulkOperation.removeFromCollection &&
+          issueIdsToDelete.isNotEmpty) {
+        await activityRepository.deleteEventsByIssueIds(
+          issueIdsToDelete,
+          type: ActivityEventType.collected,
+        );
+      }
+      if (operation == SeriesIssueBulkOperation.markAsUnread &&
+          affectedIssueIds.isNotEmpty) {
+        await activityRepository.deleteEventsByIssueIds(
+          affectedIssueIds.toList(),
+          type: ActivityEventType.read,
+        );
+      }
+    });
 
     if (context.mounted) {
       final actionText = switch (operation) {

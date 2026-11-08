@@ -29,7 +29,7 @@ class SessionCoordinator {
   final Ref _ref;
   SessionState _currentState = SessionState.booting;
   bool _metronCheckedForSession = false;
-  DateTime _lastMetronSyncAt = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _lastMetronSyncAt = DateTime.now();
 
   SessionState get state => _currentState;
 
@@ -78,6 +78,7 @@ class SessionCoordinator {
 
   /// Safely executes Metron synchronization (offline writes + migration + remote sync) when authenticated.
   Future<bool> syncMetronIfNeeded({bool forceFullSync = false}) async {
+    _lastMetronSyncAt = DateTime.now();
     final authState = _ref.read(authStateProvider).value;
     if (authState != AuthStatus.authenticated) return false;
 
@@ -154,8 +155,8 @@ class SessionCoordinator {
     await scheduleWeeklyPullNotification(_ref);
     if (DateTime.now().difference(_lastMetronSyncAt) >
         const Duration(minutes: 5)) {
-      final synced = await syncMetronIfNeeded();
-      if (synced) _lastMetronSyncAt = DateTime.now();
+      _lastMetronSyncAt = DateTime.now();
+      await syncMetronIfNeeded();
     } else {
       AppLogger.debug("Metron sync skipped: cooldown (< 5m since last sync)");
     }

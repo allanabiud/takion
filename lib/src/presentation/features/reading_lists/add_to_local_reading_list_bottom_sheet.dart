@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/domain/entities.dart";
 import "package:takion/src/presentation/providers/providers.dart";
@@ -58,33 +59,37 @@ class _AddToLocalReadingListBottomSheetState
   }
 
   Future<void> _addItems() async {
+    HapticFeedback.lightImpact();
     setState(() => _isAdding = true);
     try {
       final repository = ref.read(localReadingListRepositoryProvider);
+      final db = ref.read(driftDatabaseProvider);
       int addedCount = 0;
       int skippedCount = 0;
 
-      for (final listId in _selectedListIds) {
-        final alreadyExists = await repository.isItemInList(
-          listId,
-          _normalizedTargetId,
-        );
-        if (alreadyExists) {
-          skippedCount++;
-          continue;
-        }
+      await db.transaction(() async {
+        for (final listId in _selectedListIds) {
+          final alreadyExists = await repository.isItemInList(
+            listId,
+            _normalizedTargetId,
+          );
+          if (alreadyExists) {
+            skippedCount++;
+            continue;
+          }
 
-        await repository.addItemToList(
-          listId,
-          LocalReadingListItem(
-            targetId: _normalizedTargetId,
-            isSeries: widget.isSeries,
-            role: ItemRole.standard,
-            isRead: false,
-          ),
-        );
-        addedCount++;
-      }
+          await repository.addItemToList(
+            listId,
+            LocalReadingListItem(
+              targetId: _normalizedTargetId,
+              isSeries: widget.isSeries,
+              role: ItemRole.standard,
+              isRead: false,
+            ),
+          );
+          addedCount++;
+        }
+      });
 
       ref.invalidate(localReadingListsProvider);
       if (mounted) {
@@ -244,6 +249,7 @@ class _AddToLocalReadingListBottomSheetState
                             TakionAlerts.info(context, "Already in this list");
                             return;
                           }
+                          HapticFeedback.selectionClick();
                           setState(() {
                             if (isSelected) {
                               _selectedListIds.remove(list.id);

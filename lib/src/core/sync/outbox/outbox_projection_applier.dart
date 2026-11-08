@@ -18,6 +18,9 @@ class OutboxProjectionApplier {
       case OutboxEntityType.collection:
         await _applyCollectionResult(op, result, now);
         break;
+      case OutboxEntityType.scrobble:
+        await _applyScrobbleResult(op, result, now);
+        break;
       case OutboxEntityType.pullSeries:
         await _applyPullSeriesResult(op, result, now);
         break;
@@ -45,10 +48,10 @@ class OutboxProjectionApplier {
     }
 
     final query = _db.update(_db.libraryItems);
-    if (op.entityRemoteId != null) {
-      query.where((t) => t.metronCollectionId.equals(op.entityRemoteId!));
-    } else {
+    if (op.entityLocalId.isNotEmpty) {
       query.where((t) => t.id.equals(op.entityLocalId));
+    } else if (op.entityRemoteId != null) {
+      query.where((t) => t.metronCollectionId.equals(op.entityRemoteId!));
     }
 
     await query.write(
@@ -64,6 +67,28 @@ class OutboxProjectionApplier {
         updatedAt: Value(now),
       ),
     );
+  }
+
+  Future<void> _applyScrobbleResult(
+    OutboxOperation op,
+    OutboxActionResult result,
+    String now,
+  ) async {
+    final issueId =
+        op.entityRemoteId ??
+        int.tryParse(op.entityLocalId.replaceFirst("scrobble-", ""));
+    if (issueId != null) {
+      await (_db.update(_db.libraryItems)..where(
+            (t) =>
+                t.id.equals("lib-$issueId") | t.metronIssueId.equals(issueId),
+          ))
+          .write(
+            LibraryItemsCompanion(
+              syncStatus: const Value("synced"),
+              updatedAt: Value(now),
+            ),
+          );
+    }
   }
 
   Future<void> _applyPullSeriesResult(

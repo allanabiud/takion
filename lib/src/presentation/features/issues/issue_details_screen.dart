@@ -76,6 +76,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
   int _slideDirection = 0;
   String? _currentCoverUrl;
   IssueDetails? _lastLoadedIssue;
+  bool? _optimisticFavorite;
 
   @override
   void initState() {
@@ -91,6 +92,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
   }) {
     if (_currentIssueId == newIssueId) return;
     setState(() {
+      _optimisticFavorite = null;
       _slideDirection = direction;
       _currentIssueId = newIssueId;
       if (targetCoverUrl != null && targetCoverUrl.isNotEmpty) {
@@ -251,15 +253,28 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
     );
   }
 
-  Future<void> toggleFavorite() {
-    return toggleFavoriteWithUndo(
-      context,
-      isFavorite: ref.read(isIssueFavoriteProvider(_currentIssueId).future),
-      toggle: () async {
-        final repository = ref.read(favoritesRepositoryProvider);
-        await repository.toggleIssueFavorite(_currentIssueId);
-      },
-    );
+  Future<void> toggleFavorite() async {
+    final dbFavorite =
+        ref.read(isIssueFavoriteProvider(_currentIssueId)).asData?.value ==
+        true;
+    final current = _optimisticFavorite ?? dbFavorite;
+    final next = !current;
+    setState(() => _optimisticFavorite = next);
+
+    try {
+      await toggleFavoriteWithUndo(
+        context,
+        isFavorite: Future.value(current),
+        toggle: () async {
+          final repository = ref.read(favoritesRepositoryProvider);
+          await repository.toggleIssueFavorite(_currentIssueId);
+        },
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() => _optimisticFavorite = current);
+      }
+    }
   }
 
   Future<void> _setSeriesSubscription(bool enabled, int seriesId) async {
@@ -282,7 +297,13 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
       issuePullListEntryProvider(_currentIssueId),
     );
     final isInPullList = pullEntryAsync.asData?.value != null;
-    final isFavoriteAsync = ref.watch(isIssueFavoriteProvider(_currentIssueId));
+    final dbFavorite =
+        ref.watch(isIssueFavoriteProvider(_currentIssueId)).asData?.value ==
+        true;
+    if (_optimisticFavorite != null && _optimisticFavorite == dbFavorite) {
+      _optimisticFavorite = null;
+    }
+    final isFavorite = _optimisticFavorite ?? dbFavorite;
 
     final issue = issueAsync.asData?.value;
     final isCurrentData = issue != null && issue.id == _currentIssueId;
@@ -581,9 +602,7 @@ class _IssueDetailsScreenState extends ConsumerState<IssueDetailsScreen>
                     issueId: _currentIssueId,
                     collectionStatus: isCurrentData ? issueStatus : null,
                     isInPullList: isCurrentData ? effectiveIsPulled : false,
-                    isFavorite: isCurrentData
-                        ? (isFavoriteAsync.asData?.value ?? false)
-                        : false,
+                    isFavorite: isCurrentData ? isFavorite : false,
                     displayTitle: _displayTitle(displayIssue),
                     onShowScrobbleSheet: isCurrentData
                         ? scrobbleCurrentIssue

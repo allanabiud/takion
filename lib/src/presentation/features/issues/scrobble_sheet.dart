@@ -1,3 +1,4 @@
+import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -89,6 +90,7 @@ Future<void> showScrobbleSheet({
   var addToWishlist = false;
   var selectedRating = 0;
   IssueCollectionStatus? lastAdoptedStatus;
+  Timer? debounceTimer;
 
   TakionBottomSheet.show<void>(
     context: context,
@@ -121,6 +123,47 @@ Future<void> showScrobbleSheet({
           selectedRating = (collectionStatus?.rating ?? 0).clamp(0, 5);
         }
 
+        void triggerAutoSave({bool immediately = false}) {
+          debounceTimer?.cancel();
+          void executeSave() {
+            ref
+                .read(scrobbleIssueProvider(issueId).notifier)
+                .scrobble(
+                  addToCollection: addToCollection,
+                  markAsRead: markAsRead,
+                  addToWishlist: addToWishlist,
+                  rating: selectedRating > 0 ? selectedRating : null,
+                  dateRead: markAsRead ? DateTime.now().toUtc() : null,
+                );
+            if (markAsRead &&
+                effectiveSeriesId != null &&
+                effectiveSeriesId > 0 &&
+                callerContext.mounted) {
+              ref
+                  .read(seriesAllIssuesReadProvider(effectiveSeriesId).future)
+                  .then((isAllRead) {
+                    if (isAllRead && callerContext.mounted) {
+                      HapticFeedback.heavyImpact();
+                      TakionAlerts.celebration(
+                        callerContext,
+                        "Series Complete! 🎉 You finished this run!",
+                      );
+                    }
+                  })
+                  .catchError((_) {});
+            }
+          }
+
+          if (immediately) {
+            executeSave();
+          } else {
+            debounceTimer = Timer(
+              const Duration(milliseconds: 100),
+              executeSave,
+            );
+          }
+        }
+
         return StatefulBuilder(
           builder: (context, setModalState) {
             Color toggleColor(bool enabled) => enabled
@@ -140,14 +183,14 @@ Future<void> showScrobbleSheet({
                           : Icons.inventory_2_outlined,
                       label: "Collected",
                       color: toggleColor(addToCollection),
-                      onPressed: isSubmitting
-                          ? null
-                          : () {
-                              setModalState(() {
-                                addToCollection = !addToCollection;
-                                if (addToCollection) addToWishlist = false;
-                              });
-                            },
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        setModalState(() {
+                          addToCollection = !addToCollection;
+                          if (addToCollection) addToWishlist = false;
+                        });
+                        triggerAutoSave(immediately: true);
+                      },
                     ),
                     const SizedBox(width: 32),
                     _ScrobbleActionIcon(
@@ -156,14 +199,14 @@ Future<void> showScrobbleSheet({
                           : Icons.bookmark_added_outlined,
                       label: "Read",
                       color: toggleColor(markAsRead),
-                      onPressed: isSubmitting
-                          ? null
-                          : () {
-                              setModalState(() {
-                                markAsRead = !markAsRead;
-                                if (!markAsRead) selectedRating = 0;
-                              });
-                            },
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        setModalState(() {
+                          markAsRead = !markAsRead;
+                          if (!markAsRead) selectedRating = 0;
+                        });
+                        triggerAutoSave(immediately: true);
+                      },
                     ),
                     const SizedBox(width: 32),
                     _ScrobbleActionIcon(
@@ -172,14 +215,14 @@ Future<void> showScrobbleSheet({
                           : Icons.turned_in_not,
                       label: "Wishlist",
                       color: toggleColor(addToWishlist),
-                      onPressed: isSubmitting
-                          ? null
-                          : () {
-                              setModalState(() {
-                                addToWishlist = !addToWishlist;
-                                if (addToWishlist) addToCollection = false;
-                              });
-                            },
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        setModalState(() {
+                          addToWishlist = !addToWishlist;
+                          if (addToWishlist) addToCollection = false;
+                        });
+                        triggerAutoSave(immediately: true);
+                      },
                     ),
                   ],
                 ),
@@ -191,15 +234,19 @@ Future<void> showScrobbleSheet({
                     selectedRating: selectedRating,
                     enabled: !isSubmitting,
                     onChanged: (value) {
+                      HapticFeedback.selectionClick();
                       setModalState(() {
                         selectedRating = value;
                         markAsRead = true;
                       });
+                      triggerAutoSave();
                     },
                     onReset: () {
+                      HapticFeedback.lightImpact();
                       setModalState(() {
                         selectedRating = 0;
                       });
+                      triggerAutoSave(immediately: true);
                     },
                   ),
                 ),
@@ -337,61 +384,14 @@ Future<void> showScrobbleSheet({
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
-                    onPressed: isSubmitting
-                        ? null
-                        : () async {
-                            await ref
-                                .read(scrobbleIssueProvider(issueId).notifier)
-                                .scrobble(
-                                  addToCollection: addToCollection,
-                                  markAsRead: markAsRead,
-                                  addToWishlist: addToWishlist,
-                                  rating: selectedRating > 0
-                                      ? selectedRating
-                                      : null,
-                                  dateRead: markAsRead
-                                      ? DateTime.now().toUtc()
-                                      : null,
-                                );
-                            if (context.mounted &&
-                                !ref
-                                    .read(scrobbleIssueProvider(issueId))
-                                    .hasError) {
-                              Navigator.pop(context);
-                              if (markAsRead &&
-                                  effectiveSeriesId != null &&
-                                  effectiveSeriesId > 0 &&
-                                  callerContext.mounted) {
-                                ref
-                                    .read(
-                                      seriesAllIssuesReadProvider(
-                                        effectiveSeriesId,
-                                      ).future,
-                                    )
-                                    .then((isAllRead) {
-                                      if (isAllRead && callerContext.mounted) {
-                                        HapticFeedback.heavyImpact();
-                                        TakionAlerts.celebration(
-                                          callerContext,
-                                          "Series Complete! 🎉 You finished this run!",
-                                        );
-                                      }
-                                    })
-                                    .catchError((_) {});
-                              }
-                            }
-                          },
-                    child: isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text("Save Changes"),
+                  child: FilledButton.tonal(
+                    onPressed: () {
+                      if (debounceTimer != null && debounceTimer!.isActive) {
+                        triggerAutoSave(immediately: true);
+                      }
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Done"),
                   ),
                 ),
               ],
@@ -420,12 +420,15 @@ class _SubscribeTile extends ConsumerStatefulWidget {
 
 class _SubscribeTileState extends ConsumerState<_SubscribeTile> {
   bool _isUpdating = false;
+  bool? _optimisticSubscribed;
 
   @override
   Widget build(BuildContext context) {
     final subState = ref.watch(seriesSubscriptionProvider(widget.seriesId));
-    final subscribed =
-        subState.asData?.value?.isActive ?? widget.initialSubscribed;
+    final bool dbSubscribed = subState.hasValue
+        ? (subState.value?.isActive ?? false)
+        : widget.initialSubscribed;
+    final subscribed = _optimisticSubscribed ?? dbSubscribed;
 
     return ListTile(
       enabled: !_isUpdating,
@@ -450,7 +453,10 @@ class _SubscribeTileState extends ConsumerState<_SubscribeTile> {
       onTap: _isUpdating
           ? null
           : () async {
+              final target = !subscribed;
+              HapticFeedback.lightImpact();
               setState(() {
+                _optimisticSubscribed = target;
                 _isUpdating = true;
               });
               final container = ref.container;
@@ -458,9 +464,15 @@ class _SubscribeTileState extends ConsumerState<_SubscribeTile> {
                 await toggleSeriesSubscription(
                   context: widget.callerContext,
                   container: container,
-                  enabled: !subscribed,
+                  enabled: target,
                   seriesId: widget.seriesId,
                 );
+              } catch (_) {
+                if (mounted) {
+                  setState(() {
+                    _optimisticSubscribed = null;
+                  });
+                }
               } finally {
                 if (mounted) {
                   setState(() {

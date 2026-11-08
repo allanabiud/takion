@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:takion/src/presentation/providers/providers.dart";
 import "package:takion/src/domain/common/content_sorting.dart";
@@ -22,6 +23,7 @@ Future<void> showSortBottomSheet(
       groupValue: currentOption,
       onChanged: (value) {
         if (value != null) {
+          HapticFeedback.selectionClick();
           ref
               .read(sortPreferencesProvider.notifier)
               .setPreference(sortContext, value);

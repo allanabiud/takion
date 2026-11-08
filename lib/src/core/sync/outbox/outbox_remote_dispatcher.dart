@@ -28,6 +28,7 @@ class OutboxRemoteDispatcher {
 
     switch (op.entityType) {
       case OutboxEntityType.collection:
+      case OutboxEntityType.scrobble:
         return _executeCollection(op, payload);
       case OutboxEntityType.pullSeries:
         return _executePullSeries(op, payload);
@@ -44,7 +45,10 @@ class OutboxRemoteDispatcher {
   ) async {
     switch (op.operation) {
       case OutboxOperationType.create:
-        final issueId = (payload["issue_id"] as num?)?.toInt() ?? 0;
+        final issueId =
+            (payload["issue_id"] as num?)?.toInt() ??
+            (payload["issue"] as num?)?.toInt() ??
+            0;
         final res = await _collectionRemote.addToCollection(
           issueId: issueId,
           quantity: (payload["quantity"] as num?)?.toInt() ?? 1,
