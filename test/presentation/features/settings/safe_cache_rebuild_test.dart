@@ -20,10 +20,15 @@ void main() {
   late Directory tempDir;
   late ProviderContainer container;
   late CacheHeaderStore cacheHeaderStore;
+  late Directory sharedTempDir;
+
+  setUpAll(() {
+    sharedTempDir = Directory.systemTemp.createTempSync("takion_cache_rebuild");
+  });
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
-    tempDir = Directory.systemTemp.createTempSync("takion_cache_rebuild");
+    tempDir = sharedTempDir;
 
     // flutter_cache_manager resolves its disk cache through path_provider;
     // point it at a real temp directory so emptyCache() works in tests.
@@ -53,8 +58,11 @@ void main() {
           null,
         );
     await db.close();
-    if (tempDir.existsSync()) {
-      tempDir.deleteSync(recursive: true);
+  });
+
+  tearDownAll(() {
+    if (sharedTempDir.existsSync()) {
+      sharedTempDir.deleteSync(recursive: true);
     }
   });
 
