@@ -252,6 +252,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       try {
         PaintingBinding.instance.imageCache.clear();
         PaintingBinding.instance.imageCache.clearLiveImages();
+        await (await getTemporaryDirectory()).create(recursive: true);
         await DefaultCacheManager().emptyCache();
       } catch (e) {
         AppLogger.warning("Failed to clear image cache during rebuild: $e");
