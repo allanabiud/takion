@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed scrobble sheet content flickering when collection or reading status changes.
+- Fixed delayed background sync status updates rebuilding unrelated issue cards and causing visible screen flicker.
 - Removed the redundant Done button from the auto-saving scrobble sheet.
 
 ## [2.2.1] - 2026-11-08
