@@ -91,6 +91,8 @@ Future<void> showScrobbleSheet({
   var selectedRating = 0;
   IssueCollectionStatus? lastAdoptedStatus;
   Timer? debounceTimer;
+  Future<void>? saveInFlight;
+  var saveQueued = false;
 
   TakionBottomSheet.show<void>(
     context: context,
@@ -126,7 +128,12 @@ Future<void> showScrobbleSheet({
         void triggerAutoSave({bool immediately = false}) {
           debounceTimer?.cancel();
           void executeSave() {
-            ref
+            if (saveInFlight != null) {
+              saveQueued = true;
+              return;
+            }
+
+            final save = ref
                 .read(scrobbleIssueProvider(issueId).notifier)
                 .scrobble(
                   addToCollection: addToCollection,
@@ -135,6 +142,15 @@ Future<void> showScrobbleSheet({
                   rating: selectedRating > 0 ? selectedRating : null,
                   dateRead: markAsRead ? DateTime.now().toUtc() : null,
                 );
+            saveInFlight = save;
+            save.whenComplete(() {
+              saveInFlight = null;
+              if (saveQueued) {
+                saveQueued = false;
+                executeSave();
+              }
+            });
+
             if (markAsRead &&
                 effectiveSeriesId != null &&
                 effectiveSeriesId > 0 &&
@@ -269,40 +285,22 @@ Future<void> showScrobbleSheet({
                     isSeries: false,
                   ),
                 ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: isCollected
-                      ? ListTile(
-                          leading: const Icon(Icons.library_books_outlined),
-                          title: const Text("My Details"),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => showEditMyDetailsSheet(
-                            callerContext,
-                            ref,
-                            issueId,
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: isRead
-                      ? ListTile(
-                          leading: const Icon(Icons.history),
-                          title: const Text("Reading History"),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => showReadingHistorySheet(
-                            callerContext,
-                            ref,
-                            issueId,
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
+                if (isCollected)
+                  ListTile(
+                    leading: const Icon(Icons.library_books_outlined),
+                    title: const Text("My Details"),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () =>
+                        showEditMyDetailsSheet(callerContext, ref, issueId),
+                  ),
+                if (isRead)
+                  ListTile(
+                    leading: const Icon(Icons.history),
+                    title: const Text("Reading History"),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () =>
+                        showReadingHistorySheet(callerContext, ref, issueId),
+                  ),
                 ListTile(
                   leading: isSharing
                       ? const SizedBox(
@@ -381,19 +379,6 @@ Future<void> showScrobbleSheet({
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.tonal(
-                    onPressed: () {
-                      if (debounceTimer != null && debounceTimer!.isActive) {
-                        triggerAutoSave(immediately: true);
-                      }
-                      Navigator.pop(context);
-                    },
-                    child: const Text("Done"),
-                  ),
-                ),
               ],
             );
           },
