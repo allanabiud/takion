@@ -7,6 +7,10 @@ final collectionIssueStatusMapProvider = collectionStatusCacheProvider;
 final issueCollectionStatusProvider =
     Provider.family<IssueCollectionStatus?, int>((ref, issueId) {
       if (issueId <= 0) return null;
-      final cache = ref.watch(collectionStatusCacheProvider);
-      return cache.maybeWhen(data: (map) => map[issueId], orElse: () => null);
+      return ref.watch(
+        collectionStatusCacheProvider.select(
+          (cache) =>
+              cache.maybeWhen(data: (map) => map[issueId], orElse: () => null),
+        ),
+      );
     });
